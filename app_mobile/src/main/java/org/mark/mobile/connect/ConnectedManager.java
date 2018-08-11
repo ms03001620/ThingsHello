@@ -97,6 +97,15 @@ public class ConnectedManager {
         });
     }
 
+    public void sendMessage(final String message, final int type) {
+        mExecutorForWrite.execute(new Runnable() {
+            @Override
+            public void run() {
+                mDefaultConnect.sendMessage(message, type);
+            }
+        });
+    }
+
     public void addCallback(ClientMessageCallback callback) {
         if (!mCallbackList.contains(callback)) {
             mCallbackList.add(callback);

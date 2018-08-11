@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.gcssloop.widget.RockerView;
@@ -52,6 +53,26 @@ public class CtrlActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String message = edit.getText().toString();
                 ConnectedManager.getInstance().sendMessage(message);
+            }
+        });
+
+        SeekBar seekBar = findViewById(R.id.seek_speed);
+        seekBar.setMax(100);
+        seekBar.setProgress(10);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                ConnectedManager.getInstance().sendMessage(String.valueOf(i), 1);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
             }
         });
 

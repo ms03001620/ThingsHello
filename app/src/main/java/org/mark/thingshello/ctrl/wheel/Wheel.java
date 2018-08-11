@@ -96,4 +96,8 @@ public class Wheel {
         }
 
     }
+
+    public void setSpeed(int speed) {
+        this.speed = speed;
+    }
 }

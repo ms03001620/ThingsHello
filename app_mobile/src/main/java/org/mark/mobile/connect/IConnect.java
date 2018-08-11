@@ -7,5 +7,6 @@ public interface IConnect {
     void start();
     void stop();
     void sendMessage(String message);
+    void sendMessage(String message, int type);
     void release();
 }

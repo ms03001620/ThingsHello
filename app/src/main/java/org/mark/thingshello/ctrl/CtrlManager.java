@@ -27,7 +27,16 @@ public class CtrlManager {
                 Log.d("CtrlManager", "onReceiveMessage:" + message + ", type:" + type);
                 try {
                     int code = Integer.valueOf(message);
-                    mCommandReceiver.onCommand(code);
+                    switch (type){
+                        case 1:
+                            mActionWheel.setSpeed(code);
+                            break;
+                        case 2:
+                            mCommandReceiver.onCommand(code);
+                            break;
+                    }
+
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

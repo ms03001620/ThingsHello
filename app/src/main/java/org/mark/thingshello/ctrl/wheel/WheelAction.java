@@ -83,4 +83,9 @@ public class WheelAction implements IWheelAction {
         wheelLeft.release();
         wheelRight.release();
     }
+
+    public void setSpeed(int speed) {
+        wheelLeft.setSpeed(speed);
+        wheelRight.setSpeed(speed);
+    }
 }

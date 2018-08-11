@@ -29,8 +29,12 @@ public class ConnectedWifi implements IConnect {
         mConnectThread.stop(true);
     }
 
+    public void sendMessage(final String message, int type) {
+        mConnectThread.write(message, (byte) type);
+    }
+
     public void sendMessage(final String message) {
-        mConnectThread.write(message, (byte) 2);
+        sendMessage(message, (byte) 2);
     }
 
     @Override
