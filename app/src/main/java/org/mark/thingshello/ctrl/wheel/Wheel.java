@@ -9,22 +9,22 @@ import java.io.IOException;
  * Created by Mark on 2018/7/25
  */
 public class Wheel {
-    private final static int DEFAULT_SPEED = 50;
-    private Gpio gpioForward;
-    private Gpio gpioBack;
+    private final static int DEFAULT_SPEED = 10;
+    private Gpio in2;
+    private Gpio in1;
     private SoftPwm pwmSpeed;
     private int speed = DEFAULT_SPEED;
 
 
 
     public Wheel(Gpio forward, Gpio back, SoftPwm speed) {
-        gpioForward = forward;
-        gpioBack = back;
+        in2 = forward;
+        in1 = back;
         pwmSpeed = speed;
 
         try {
-            gpioForward.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
-            gpioBack.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
+            in1.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
+            in2.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
             pwmSpeed.setEnabled(true);
             pwmSpeed.setPwmFrequencyHz(300);
         } catch (IOException e) {
@@ -34,8 +34,8 @@ public class Wheel {
 
     public void forward() {
         try {
-            gpioForward.setValue(false);
-            gpioBack.setValue(true);
+            in1.setDirection(Gpio.ACTIVE_HIGH);
+            in2.setDirection(Gpio.ACTIVE_LOW);
             pwmSpeed.setPwmDutyCycle(speed);
         } catch (IOException e) {
             e.printStackTrace();
@@ -44,8 +44,8 @@ public class Wheel {
 
     public void back() {
         try {
-            gpioForward.setValue(true);
-            gpioBack.setValue(false);
+            in1.setDirection(Gpio.ACTIVE_LOW);
+            in2.setDirection(Gpio.ACTIVE_HIGH);
             pwmSpeed.setPwmDutyCycle(speed);
         } catch (IOException e) {
             e.printStackTrace();
@@ -54,8 +54,8 @@ public class Wheel {
 
     public void stop() {
         try {
-            gpioForward.setValue(false);
-            gpioBack.setValue(false);
+            in2.setDirection(Gpio.ACTIVE_LOW);
+            in1.setDirection(Gpio.ACTIVE_LOW);
             pwmSpeed.setPwmDutyCycle(speed);
         } catch (IOException e) {
             e.printStackTrace();
@@ -78,8 +78,8 @@ public class Wheel {
 
     public void release() {
         try {
-            gpioForward.close();
-            gpioBack.close();
+            in2.close();
+            in1.close();
             pwmSpeed.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -88,8 +88,8 @@ public class Wheel {
 
     public void forwardBuff() {
         try {
-            gpioForward.setDirection(Gpio.ACTIVE_HIGH);
-            gpioBack.setDirection(Gpio.ACTIVE_LOW);
+            in2.setDirection(Gpio.ACTIVE_HIGH);
+            in1.setDirection(Gpio.ACTIVE_LOW);
             pwmSpeed.setPwmDutyCycle(speed);
         } catch (IOException e) {
             e.printStackTrace();

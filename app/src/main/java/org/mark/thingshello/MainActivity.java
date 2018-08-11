@@ -2,6 +2,7 @@ package org.mark.thingshello;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.widget.TextView;
 
 import org.mark.lib_unit_socket.SocketManager;
@@ -27,6 +28,7 @@ import org.mark.thingshello.ctrl.CtrlManager;
  * @see <a href="https://github.com/androidthings/contrib-drivers#readme">https://github.com/androidthings/contrib-drivers#readme</a>
  */
 public class MainActivity extends Activity {
+    @Nullable
     private CtrlManager mCtrlManager;
     private TextView mTextLog;
 
@@ -36,22 +38,30 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         mTextLog = findViewById(R.id.text);
 
-        mCtrlManager = new CtrlManager(this, new SocketManager.OnReceiveMessage() {
-            @Override
-            public void onReceiveMessage(final String message, int type) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mTextLog.setText(message+", "+System.currentTimeMillis());
-                    }
-                });
-            }
-        });
+        try {
+            mCtrlManager = new CtrlManager(this, new SocketManager.OnReceiveMessage() {
+                @Override
+                public void onReceiveMessage(final String message, int type) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mTextLog.setText(message + ", " + System.currentTimeMillis());
+                        }
+                    });
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+            finish();
+        }
+
     }
 
     @Override
     protected void onDestroy() {
-        mCtrlManager.release();
+        if (mCtrlManager != null) {
+            mCtrlManager.release();
+        }
         super.onDestroy();
     }
 }

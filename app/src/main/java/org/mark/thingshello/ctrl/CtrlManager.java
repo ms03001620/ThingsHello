@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.util.Log;
 
 import org.mark.lib_unit_socket.SocketManager;
+import org.mark.thingshello.ctrl.voice.BuzzerAction;
 import org.mark.thingshello.ctrl.wheel.IWheelAction;
 import org.mark.thingshello.ctrl.wheel.WheelAction;
 
@@ -13,9 +14,11 @@ import org.mark.thingshello.ctrl.wheel.WheelAction;
  */
 public class CtrlManager {
     private WheelAction mActionWheel;
+    private BuzzerAction mBuzzerAction;
 
-    public CtrlManager(Activity activity, final SocketManager.OnReceiveMessage listener) {
+    public CtrlManager(Activity activity, final SocketManager.OnReceiveMessage listener) throws Exception{
         mActionWheel = new WheelAction();
+        mBuzzerAction = new BuzzerAction();
 
         SocketManager.getInstance().init(new SocketManager.OnReceiveMessage() {
             @Override
@@ -32,6 +35,8 @@ public class CtrlManager {
         });
 
         SocketManager.getInstance().start();
+        // 告知系统已就绪
+        mCommandReceiver.onCommand(8);
     }
 
 
@@ -54,6 +59,12 @@ public class CtrlManager {
                 case 4:
                     mActionWheel.right();
                     break;
+                case 8:
+                    mBuzzerAction.di();
+                    break;
+                case 9:
+                    mBuzzerAction.stop();
+                    break;
             }
         }
     };
@@ -62,5 +73,6 @@ public class CtrlManager {
     public void release() {
         SocketManager.getInstance().stop();
         mActionWheel.release();
+        mBuzzerAction.release();
     }
 }

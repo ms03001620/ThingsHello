@@ -22,25 +22,20 @@ public class WheelAction implements IWheelAction {
     private Wheel wheelLeft;
     private Wheel wheelRight;
 
-    public WheelAction() {
+    public WheelAction() throws Exception {
         PeripheralManager pioService = PeripheralManager.getInstance();
 
-        try {
-            wheelLeft = new Wheel(
-                    pioService.openGpio(BoardDefaults.getRpi3GPIO(21)),
-                    pioService.openGpio(BoardDefaults.getRpi3GPIO(20)),
-                    SoftPwm.openSoftPwm(BoardDefaults.getRpi3GPIO(16))
-            );
+        wheelLeft = new Wheel(
+                pioService.openGpio(BoardDefaults.getRpi3GPIO(21)),
+                pioService.openGpio(BoardDefaults.getRpi3GPIO(20)),
+                SoftPwm.openSoftPwm(BoardDefaults.getRpi3GPIO(16))
+        );
 
-            wheelRight = new Wheel(
-                    pioService.openGpio(BoardDefaults.getRpi3GPIO(26)),
-                    pioService.openGpio(BoardDefaults.getRpi3GPIO(19)),
-                    SoftPwm.openSoftPwm(BoardDefaults.getRpi3GPIO(13))
-            );
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        wheelRight = new Wheel(
+                pioService.openGpio(BoardDefaults.getRpi3GPIO(26)),
+                pioService.openGpio(BoardDefaults.getRpi3GPIO(19)),
+                SoftPwm.openSoftPwm(BoardDefaults.getRpi3GPIO(13))
+        );
     }
 
     @Override
