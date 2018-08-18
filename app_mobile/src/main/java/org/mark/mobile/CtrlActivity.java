@@ -109,7 +109,7 @@ public class CtrlActivity extends AppCompatActivity {
 
     ClientMessageCallback mClientMessageCallback = new ClientMessageCallback() {
         @Override
-        public void onReceiveMessage(String message, int type) {
+        public void onReceiveMessage(byte[] message, int type) {
 
         }
 

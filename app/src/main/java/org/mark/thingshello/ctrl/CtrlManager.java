@@ -25,17 +25,18 @@ public class CtrlManager {
 
         SocketManager.getInstance().init(new SocketManager.OnReceiveMessage() {
             @Override
-            public void onReceiveMessage(final String message, int type) {
-                listener.onReceiveMessage(message, type);
-                Log.d("CtrlManager", "onReceiveMessage:" + message + ", type:" + type);
+            public void onReceiveMessage(final byte[] bytes, int type) {
+                listener.onReceiveMessage(bytes, type);
+                Log.d("CtrlManager", "onReceiveMessage:" + bytes.length + ", type:" + type);
                 try {
-                    int code = Integer.valueOf(message);
                     switch (type){
                         case 1:
-                            mActionWheel.setSpeed(code);
+                            mActionWheel.setSpeed(Integer.valueOf(new String(bytes)));
                             break;
                         case 2:
-                            mCommandReceiver.onCommand(code);
+                            mCommandReceiver.onCommand(Integer.valueOf(new String(bytes)));
+                            break;
+                        case 3:
                             break;
                     }
 

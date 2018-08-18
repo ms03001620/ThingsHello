@@ -41,6 +41,7 @@ public class MainActivity extends Activity {
     @Nullable
     private CtrlManager mCtrlManager;
     private TextView mTextLog;
+    private Messenger mService = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,10 +49,10 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         mTextLog = findViewById(R.id.text);
 
-/*        try {
+        try {
             mCtrlManager = new CtrlManager(this, new SocketManager.OnReceiveMessage() {
                 @Override
-                public void onReceiveMessage(final String message, int type) {
+                public void onReceiveMessage(final byte[] message, int type) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -63,15 +64,13 @@ public class MainActivity extends Activity {
         } catch (Exception e) {
             e.printStackTrace();
             finish();
-        }*/
+        }
 
 
-        Intent intent = new Intent(this, CameraService.class);
-        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+        // Intent intent = new Intent(this, CameraService.class);
+        // bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
     }
-
-    Messenger mService = null;
 
     ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
@@ -89,7 +88,6 @@ public class MainActivity extends Activity {
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
             mService = null;
-
         }
     };
 

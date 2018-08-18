@@ -40,10 +40,10 @@ public class ConnectedManager {
             public void run() {
                 mDefaultConnect = new ConnectedWifi(host, port, new ClientMessageCallback() {
                     @Override
-                    public void onReceiveMessage(String message, int type) {
+                    public void onReceiveMessage(byte[] bytes, int type) {
                         if (mCallbackList.size() > 0) {
                             for (ClientMessageCallback callback : mCallbackList) {
-                                callback.onReceiveMessage(message, type);
+                                callback.onReceiveMessage(bytes, type);
                             }
                         }
                     }

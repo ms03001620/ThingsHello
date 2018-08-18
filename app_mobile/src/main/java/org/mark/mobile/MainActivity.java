@@ -47,8 +47,8 @@ public class MainActivity extends AppCompatActivity {
 
     public ClientMessageCallback mClientMessageCallback = new ClientMessageCallback() {
         @Override
-        public void onReceiveMessage(String message, int type) {
-            runUiText("message" + message + ", type:" + type);
+        public void onReceiveMessage(byte[] bytes, int type) {
+            runUiText(bytes.length + ", type:" + type);
         }
 
         @Override
