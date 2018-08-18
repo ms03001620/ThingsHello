@@ -8,7 +8,7 @@ import java.util.concurrent.Executors;
 
 public class SocketManager {
     public interface OnReceiveMessage{
-        void onReceiveMessage(String message, int type);
+        void onReceiveMessage(byte[] message, int type);
     }
     private static final String TAG = "SocketManager";
     private static volatile SocketManager instance;
@@ -33,8 +33,8 @@ public class SocketManager {
     public void init(final OnReceiveMessage listener) {
         mTextService = new SocketService(8010, new ClientMessageCallback() {
             @Override
-            public void onReceiveMessage(String message, int type) {
-                listener.onReceiveMessage(message, type);
+            public void onReceiveMessage(byte[] bytes, int type) {
+                listener.onReceiveMessage(bytes, type);
             }
 
             @Override

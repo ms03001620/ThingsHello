@@ -109,4 +109,12 @@ public class SocketService {
         mConnectedThread.write(message, type);
     }
 
+    public void writeBytes(byte[] bytes, byte type) {
+        if (mConnectedThread == null) {
+            mReceiveMessageCallback.onLogMessage("写入异常,没有接入", null);
+            return;
+        }
+        mConnectedThread.write(bytes, type);
+    }
+
 }

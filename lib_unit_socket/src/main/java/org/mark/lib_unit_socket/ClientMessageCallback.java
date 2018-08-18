@@ -10,7 +10,7 @@ public interface ClientMessageCallback {
     }
 
 
-    void onReceiveMessage(String message, int type);
+    void onReceiveMessage(byte[] bytes, int type);
 
     void onExceptionToReOpen(Exception e);
 

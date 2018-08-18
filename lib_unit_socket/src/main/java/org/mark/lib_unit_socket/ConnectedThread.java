@@ -101,8 +101,7 @@ public class ConnectedThread extends Thread {
 
                 byte[] bytesData = new byte[length];
                 int readMessageLen = mInputStream.read(bytesData);
-                String message = new String(bytesData);
-                mReceiveMessageCallback.onReceiveMessage(message, (int) bytesType[0]);
+                mReceiveMessageCallback.onReceiveMessage(bytesData, (int) bytesType[0]);
                 mReceiveMessageCallback.onLogMessage("读取消息长度" + readMessageLen, null);
 
             } catch (Exception e) {
@@ -130,10 +129,29 @@ public class ConnectedThread extends Thread {
         updateStatus(ClientMessageCallback.Status.NO_CONNECT);
     }
 
-
     public void write(String message, byte type) {
+        byte[] data = message.getBytes();
+        write(data, type);
+    }
+
+    public void write(byte[] data, byte type) {
         try {
-            int length = writeV2(message, type);
+            // 4 bit for head info
+            // 1 bit for types info
+            // n bit for data bits
+            final int finalLength = 4 + 1 + data.length;
+            byte[] finalBytes = new byte[finalLength];
+
+            int length = data.length + 1;
+            byte[] head = int2byte(length);
+            byte[] types = new byte[1];
+            types[0] = type;
+
+            System.arraycopy(head, 0, finalBytes, 0, head.length);
+            System.arraycopy(types, 0, finalBytes, head.length, 1);
+            System.arraycopy(data, 0, finalBytes, head.length + 1, data.length);
+
+            mmOutStream.write(finalBytes);
             mmOutStream.flush();
             mReceiveMessageCallback.onLogMessage("写入数据长度" + length, null);
         } catch (Exception e) {
@@ -142,28 +160,6 @@ public class ConnectedThread extends Thread {
             updateStatus(ClientMessageCallback.Status.NO_CONNECT);
         }
     }
-
-    private int writeV2(String message, byte type) throws IOException {
-        byte[] data = message.getBytes();
-        // 4 bit for head info
-        // 1 bit for types info
-        // n bit for data bits
-        final int finalLength = 4 + 1 + data.length;
-        byte[] finalBytes = new byte[finalLength];
-
-        int length = data.length + 1;
-        byte[] head = int2byte(length);
-        byte[] types = new byte[1];
-        types[0] = type;
-
-        System.arraycopy(head, 0, finalBytes, 0, head.length);
-        System.arraycopy(types, 0, finalBytes, head.length, 1);
-        System.arraycopy(data, 0, finalBytes, head.length + 1, data.length);
-
-        mmOutStream.write(finalBytes);
-        return length;
-    }
-
 
     public void cancel() {
         try {
