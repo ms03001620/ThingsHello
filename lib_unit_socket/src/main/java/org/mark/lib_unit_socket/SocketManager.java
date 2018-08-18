@@ -78,5 +78,14 @@ public class SocketManager {
         });
     }
 
+    public void send(@NonNull final byte[] bytes) {
+        mExecutorForWrite.execute(new Runnable() {
+            @Override
+            public void run() {
+                mTextService.writeBytes(bytes,(byte)2);
+            }
+        });
+    }
+
 
 }
