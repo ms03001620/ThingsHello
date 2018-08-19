@@ -122,7 +122,7 @@ public class DoorbellCamera {
         @Override
         public void onClosed(CameraDevice cameraDevice) {
             Log.d(TAG, "Closed camera, releasing");
-            mCameraDevice = null;
+            //mCameraDevice = null;
         }
     };
 
@@ -131,8 +131,6 @@ public class DoorbellCamera {
 
     public void preview(ImageReader.OnImageAvailableListener imageAvailableListener) {
         try {
-
-
             mImageReader.setOnImageAvailableListener(imageAvailableListener, mCameraHandler);
 
             final CaptureRequest.Builder builder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
@@ -179,7 +177,6 @@ public class DoorbellCamera {
             // Log.d("CameraService", "onCaptureFailed");
         }
     };
-
 
     public void shutDown() {
         if (mCameraDevice != null) {

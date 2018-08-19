@@ -1,4 +1,4 @@
-package org.mark.thingshello.video;
+package org.mark.base;
 
 import android.content.Context;
 import android.graphics.Bitmap;

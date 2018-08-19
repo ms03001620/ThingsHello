@@ -21,7 +21,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".CtrlActivity"></activity>
+        <activity android:name=".CtrlActivity" />
+        <activity android:name=".preview.PreviewActivity"></activity>
     </application>
 
 </manifest>

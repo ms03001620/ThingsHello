@@ -1,13 +1,13 @@
 package org.mark.thingshello.ctrl;
 
-import android.app.Activity;
 import android.util.Log;
 
 import org.mark.lib_unit_socket.SocketManager;
+import org.mark.thingshello.MainActivity;
 import org.mark.thingshello.ctrl.light.ForwardLightAction;
 import org.mark.thingshello.ctrl.voice.BuzzerAction;
-import org.mark.thingshello.ctrl.wheel.IWheelAction;
 import org.mark.thingshello.ctrl.wheel.WheelAction;
+import org.mark.thingshello.video.CameraAction;
 
 /**
  * Created by Mark on 2018/7/25
@@ -17,26 +17,27 @@ public class CtrlManager {
     private WheelAction mActionWheel;
     private BuzzerAction mBuzzerAction;
     private ForwardLightAction mForwardLightAction;
+    private CameraAction mCameraAction;
 
-    public CtrlManager(Activity activity, final SocketManager.OnReceiveMessage listener) throws Exception{
+    public CtrlManager(final MainActivity.OnCtrlResponse listener) throws Exception {
         mActionWheel = new WheelAction();
         mBuzzerAction = new BuzzerAction();
         mForwardLightAction = new ForwardLightAction();
+        mCameraAction = new CameraAction(listener);
 
         SocketManager.getInstance().init(new SocketManager.OnReceiveMessage() {
             @Override
             public void onReceiveMessage(final byte[] bytes, int type) {
                 listener.onReceiveMessage(bytes, type);
+                SocketManager.getInstance().send(bytes);
                 Log.d("CtrlManager", "onReceiveMessage:" + bytes.length + ", type:" + type);
                 try {
-                    switch (type){
+                    switch (type) {
                         case 1:
                             mActionWheel.setSpeed(Integer.valueOf(new String(bytes)));
                             break;
                         case 2:
                             mCommandReceiver.onCommand(Integer.valueOf(new String(bytes)));
-                            break;
-                        case 3:
                             break;
                     }
 
@@ -56,7 +57,7 @@ public class CtrlManager {
     private OnReceiverCommand mCommandReceiver = new OnReceiverCommand() {
         @Override
         public void onCommand(int code) {
-            switch (code){
+            switch (code) {
                 case 0:
                     mActionWheel.stop();
                     break;
@@ -84,10 +85,15 @@ public class CtrlManager {
                 case 11:
                     mForwardLightAction.testStop();
                     break;
+                case 12:
+                    mCameraAction.startPreview();
+                    break;
+                case 13:
+                    mCameraAction.stopPreview();
+                    break;
             }
         }
     };
-
 
     public void release() {
         SocketManager.getInstance().stop();

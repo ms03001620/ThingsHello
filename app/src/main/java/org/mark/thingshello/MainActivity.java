@@ -43,6 +43,13 @@ public class MainActivity extends Activity {
     private TextView mTextLog;
     private Messenger mService = null;
 
+    public interface OnCtrlResponse{
+        void onReceiveMessage(final byte[] message, int type);
+
+        @Nullable
+        Messenger getMessenger();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,15 +57,20 @@ public class MainActivity extends Activity {
         mTextLog = findViewById(R.id.text);
 
         try {
-            mCtrlManager = new CtrlManager(this, new SocketManager.OnReceiveMessage() {
+            mCtrlManager = new CtrlManager(new OnCtrlResponse() {
                 @Override
                 public void onReceiveMessage(final byte[] message, int type) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            mTextLog.setText(message + ", " + System.currentTimeMillis());
+                            mTextLog.setText(message.length + ", " + System.currentTimeMillis());
                         }
                     });
+                }
+
+                @Override
+                public Messenger getMessenger() {
+                    return mService;
                 }
             });
         } catch (Exception e) {
@@ -66,9 +78,8 @@ public class MainActivity extends Activity {
             finish();
         }
 
-
-        // Intent intent = new Intent(this, CameraService.class);
-        // bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+        Intent intent = new Intent(this, CameraService.class);
+        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
     }
 
@@ -76,13 +87,6 @@ public class MainActivity extends Activity {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             mService = new Messenger(iBinder);
-            Message message = Message.obtain();
-            message.what = 0;
-            try {
-                mService.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
         }
 
         @Override
@@ -96,7 +100,7 @@ public class MainActivity extends Activity {
         if (mCtrlManager != null) {
             mCtrlManager.release();
         }
-        if(mService!=null){
+        if (mService != null) {
             unbindService(mServiceConnection);
         }
         super.onDestroy();

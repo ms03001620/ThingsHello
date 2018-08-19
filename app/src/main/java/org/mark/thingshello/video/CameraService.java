@@ -12,29 +12,31 @@ import android.os.Message;
 import android.os.Messenger;
 import android.util.Log;
 
+
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 
 /**
  * Created by Mark on 2018/8/16
  */
-public class CameraService extends Service{
+public class CameraService extends Service {
     private static final String TAG = "CameraService";
     private MyHandler sHandler = new MyHandler(this);
     private Messenger mMessenger = new Messenger(sHandler);
 
     private static class MyHandler extends Handler {
         private final WeakReference<CameraService> mService;
+
         MyHandler(CameraService activity) {
             mService = new WeakReference<CameraService>(activity);
         }
 
         @Override
         public void handleMessage(Message msg) {
-            switch (msg.what){
-                case 0:
+            switch (msg.what) {
+                case 1:
                     CameraService service = mService.get();
-                    if(service!=null){
+                    if (service != null) {
                         DoorbellCamera.getInstance().preview(service.mOnImageAvailableListener);
                     }
                     break;

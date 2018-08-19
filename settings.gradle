@@ -1,1 +1,1 @@
-include ':app', ':lib_unit_socket', ':app_mobile'
+include ':app', ':lib_unit_socket', ':app_mobile', ':lib_base'

@@ -1,10 +1,12 @@
 package org.mark.mobile;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.SeekBar;
@@ -16,6 +18,7 @@ import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.mobile.connect.ConnectedManager;
 import org.mark.mobile.ctrl.CtrlPresent;
 import org.mark.mobile.ctrl.SimpleRockerListener;
+import org.mark.mobile.preview.PreviewActivity;
 
 public class CtrlActivity extends AppCompatActivity {
     private static final String TAG = "CtrlActivity";
@@ -53,6 +56,14 @@ public class CtrlActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String message = edit.getText().toString();
                 ConnectedManager.getInstance().sendMessage(message);
+            }
+        });
+
+        findViewById(R.id.btn_preview).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(CtrlActivity.this, PreviewActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -102,15 +113,14 @@ public class CtrlActivity extends AppCompatActivity {
             }
         }));
 
-
         ConnectedManager.getInstance().addCallback(mClientMessageCallback);
     }
 
 
     ClientMessageCallback mClientMessageCallback = new ClientMessageCallback() {
         @Override
-        public void onReceiveMessage(byte[] message, int type) {
-
+        public void onReceiveMessage(final byte[] message, int type) {
+            Log.d(TAG, "onReceiveMessage length" + message.length + ", type:" + type);
         }
 
         @Override

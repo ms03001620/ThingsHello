@@ -1,4 +1,4 @@
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 28
@@ -6,7 +6,6 @@ android {
 
 
     defaultConfig {
-        applicationId "org.mark.mobile"
         minSdkVersion 23
         targetSdkVersion 28
         versionCode 1
@@ -27,14 +26,9 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation project(':lib_unit_socket')
-    implementation project(':lib_base')
 
     implementation 'com.android.support:appcompat-v7:28.0.0-rc01'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-
-    implementation 'com.github.GcsSloop:Rocker:v1.1.1'
 }

@@ -12,22 +12,22 @@ import java.util.concurrent.Executors;
 /**
  * Created by Mark on 2018/8/10
  */
-public class ConnectedManager {
-    private static ConnectedManager instance;
+public class PreviewManager {
+    private static PreviewManager instance;
     private IConnect mDefaultConnect;
     private ExecutorService mExecutorForWrite;
     private List<ClientMessageCallback> mCallbackList;
 
-    private ConnectedManager() {
+    private PreviewManager() {
         mExecutorForWrite = Executors.newCachedThreadPool();
         mCallbackList = new ArrayList<>();
     }
 
-    public static ConnectedManager getInstance() {
+    public static PreviewManager getInstance() {
         if (instance == null) {
-            synchronized (ConnectedManager.class) {
+            synchronized (PreviewManager.class) {
                 if (instance == null) {
-                    instance = new ConnectedManager();
+                    instance = new PreviewManager();
                 }
             }
         }
@@ -75,10 +75,6 @@ public class ConnectedManager {
                         }
                     }
                 });
-
-
-                mDefaultConnect.start();
-
             }
         });
     }
@@ -120,5 +116,9 @@ public class ConnectedManager {
         if (mCallbackList.contains(callback)) {
             mCallbackList.remove(callback);
         }
+    }
+
+    public void release(){
+        mDefaultConnect.release();
     }
 }
