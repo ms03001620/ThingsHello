@@ -6,12 +6,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.IntRange;
 import android.support.annotation.Nullable;
+import android.util.Log;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.mark.lib_unit_socket.SocketManager;
@@ -41,6 +44,7 @@ public class MainActivity extends Activity {
     @Nullable
     private CtrlManager mCtrlManager;
     private TextView mTextLog;
+    private ImageView mImageView;
     private Messenger mService = null;
 
     public interface OnCtrlResponse{
@@ -48,6 +52,8 @@ public class MainActivity extends Activity {
 
         @Nullable
         Messenger getMessenger();
+
+        ImageView getImage();
     }
 
     @Override
@@ -55,6 +61,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mTextLog = findViewById(R.id.text);
+        mImageView = findViewById(R.id.image);
 
         try {
             mCtrlManager = new CtrlManager(new OnCtrlResponse() {
@@ -71,6 +78,11 @@ public class MainActivity extends Activity {
                 @Override
                 public Messenger getMessenger() {
                     return mService;
+                }
+
+                @Override
+                public ImageView getImage() {
+                    return mImageView;
                 }
             });
         } catch (Exception e) {
@@ -105,4 +117,6 @@ public class MainActivity extends Activity {
         }
         super.onDestroy();
     }
+
+
 }

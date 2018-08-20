@@ -6,10 +6,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.media.ImageReader;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 
 
@@ -20,15 +22,17 @@ import java.nio.ByteBuffer;
  * Created by Mark on 2018/8/16
  */
 public class CameraService extends Service {
-    private static final String TAG = "CameraService";
+    public static final String TAG = "CameraService";
     private MyHandler sHandler = new MyHandler(this);
     private Messenger mMessenger = new Messenger(sHandler);
+
+    private Messenger client;
 
     private static class MyHandler extends Handler {
         private final WeakReference<CameraService> mService;
 
         MyHandler(CameraService activity) {
-            mService = new WeakReference<CameraService>(activity);
+            mService = new WeakReference<>(activity);
         }
 
         @Override
@@ -37,6 +41,7 @@ public class CameraService extends Service {
                 case 1:
                     CameraService service = mService.get();
                     if (service != null) {
+                        service.client = msg.replyTo;
                         DoorbellCamera.getInstance().preview(service.mOnImageAvailableListener);
                     }
                     break;
@@ -90,7 +95,22 @@ public class CameraService extends Service {
         Log.d(TAG, "image bytes size:" + imageBytes.length + ", " + imageBytes.length / 1024.0 + "KB");
         if (imageBytes.length > 0) {
             // final Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+            //mMessenger.getBinder().
 
+            if (client != null) {
+                Message response = Message.obtain();
+                response.what = 100;
+                Bundle bundle = new Bundle();
+                bundle.putByteArray("image", imageBytes);
+                response.setData(bundle);
+
+                try {
+                    client.send(response);
+                    Log.d(TAG, "send to messager");
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
 
         }
     }

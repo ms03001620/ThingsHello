@@ -20,9 +20,9 @@ public class CtrlManager {
     private CameraAction mCameraAction;
 
     public CtrlManager(final MainActivity.OnCtrlResponse listener) throws Exception {
-        mActionWheel = new WheelAction();
-        mBuzzerAction = new BuzzerAction();
-        mForwardLightAction = new ForwardLightAction();
+        // mActionWheel = new WheelAction();
+        // mBuzzerAction = new BuzzerAction();
+        // mForwardLightAction = new ForwardLightAction();
         mCameraAction = new CameraAction(listener);
 
         SocketManager.getInstance().init(new SocketManager.OnReceiveMessage() {
@@ -50,7 +50,7 @@ public class CtrlManager {
 
         SocketManager.getInstance().start();
         // 告知系统已就绪
-        mCommandReceiver.onCommand(8);
+        // mCommandReceiver.onCommand(8);
     }
 
 

@@ -124,12 +124,12 @@ public class CtrlActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onExceptionToReOpen(Exception e) {
+        public void onExceptionToReOpen(@NonNull Exception e) {
 
         }
 
         @Override
-        public void onLogMessage(final String message, Exception e) {
+        public void onLogMessage(final String message, @Nullable Exception e) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

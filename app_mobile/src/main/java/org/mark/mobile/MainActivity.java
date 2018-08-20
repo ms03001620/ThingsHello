@@ -3,6 +3,7 @@ package org.mark.mobile;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.widget.CompoundButton;
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onExceptionToReOpen(final Exception e) {
+        public void onExceptionToReOpen(@NonNull final Exception e) {
             mSwitch.post(new Runnable() {
                 @Override
                 public void run() {
@@ -65,12 +66,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onLogMessage(String message, Exception e) {
-            if (e != null) {
-                runUiText("exception:" + e.toString());
-            } else {
-                runUiText("Log:" + message);
-            }
+        public void onLogMessage(String message, @Nullable Exception e) {
+            runUiText("Log:" + message);
         }
 
         @Override

@@ -1,6 +1,7 @@
 package org.mark.mobile.connect;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.mark.lib_unit_socket.ClientMessageCallback;
 
@@ -49,7 +50,7 @@ public class ConnectedManager {
                     }
 
                     @Override
-                    public void onExceptionToReOpen(final Exception e) {
+                    public void onExceptionToReOpen(@NonNull final Exception e) {
                         if (mCallbackList.size() > 0) {
                             for (ClientMessageCallback callback : mCallbackList) {
                                 callback.onExceptionToReOpen(e);
@@ -58,7 +59,7 @@ public class ConnectedManager {
                     }
 
                     @Override
-                    public void onLogMessage(String message, Exception e) {
+                    public void onLogMessage(String message, @Nullable Exception e) {
                         if (mCallbackList.size() > 0) {
                             for (ClientMessageCallback callback : mCallbackList) {
                                 callback.onLogMessage(message, e);

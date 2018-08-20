@@ -1,9 +1,15 @@
 package org.mark.thingshello.video;
 
+import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.util.Log;
 
+import org.mark.lib_unit_socket.SocketManager;
 import org.mark.thingshello.MainActivity;
 
 /**
@@ -29,6 +35,7 @@ public class CameraAction {
         if (messenger != null) {
             Message message = Message.obtain();
             message.what = what;
+            message.replyTo = replyMessager;
             try {
                 messenger.send(message);
             } catch (RemoteException e) {
@@ -36,4 +43,29 @@ public class CameraAction {
             }
         }
     }
+
+    private Messenger replyMessager = new Messenger(new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 100:
+                    Bundle bundle = msg.getData();
+                    final byte[] bytes = bundle.getByteArray("image");
+                    Log.d(CameraService.TAG, "收到图像数据" + bytes.length);
+                    // SocketManager.getInstance().send(bytes);
+
+                    listener.getImage().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Bitmap bitmap = CameraUtils.createFromBytes(bytes);
+                            listener.getImage().setImageBitmap(bitmap);
+                            // bitmap.recycle();
+                        }
+                    });
+
+                default:
+                    break;
+            }
+        }
+    });
 }
