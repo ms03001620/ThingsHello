@@ -67,11 +67,11 @@ public class ConnectedThread extends Thread {
     }
 
     public void run() {
-        while (mStatus == ClientMessageCallback.Status.CONNECTED) {
+        while (isConnected()) {
             try {
                 if (!mSocket.isConnected() || mSocket.isInputShutdown()) {
                     mReceiveMessageCallback.onLogMessage("已断开1", null);
-                    mReceiveMessageCallback.onExceptionToReOpen(null);
+                    mReceiveMessageCallback.onExceptionToReOpen(new Exception("已断开1"));
                     break;
                 }
 
@@ -79,7 +79,7 @@ public class ConnectedThread extends Thread {
 
                 if (headLen < 1) {
                     mReceiveMessageCallback.onLogMessage("已断开2", null);
-                    mReceiveMessageCallback.onExceptionToReOpen(null);
+                    mReceiveMessageCallback.onExceptionToReOpen(new Exception("已断开2"));
                     break;
                 }
 
@@ -87,7 +87,7 @@ public class ConnectedThread extends Thread {
 
                 if (typeLen < 1) {
                     mReceiveMessageCallback.onLogMessage("已断开3", null);
-                    mReceiveMessageCallback.onExceptionToReOpen(null);
+                    mReceiveMessageCallback.onExceptionToReOpen(new Exception("已断开3"));
                     break;
                 }
 
@@ -95,7 +95,7 @@ public class ConnectedThread extends Thread {
 
                 if (length < 1) {
                     mReceiveMessageCallback.onLogMessage("已断开4", null);
-                    mReceiveMessageCallback.onExceptionToReOpen(null);
+                    mReceiveMessageCallback.onExceptionToReOpen(new Exception("已断开4"));
                     break;
                 }
 
@@ -113,6 +113,10 @@ public class ConnectedThread extends Thread {
         }
 
         updateStatus(ClientMessageCallback.Status.NO_CONNECT);
+    }
+
+    public boolean isConnected() {
+        return mStatus == ClientMessageCallback.Status.CONNECTED;
     }
 
     public void stop(boolean ignore) {
@@ -135,6 +139,9 @@ public class ConnectedThread extends Thread {
     }
 
     public void write(byte[] data, byte type) {
+        if (!isConnected()) {
+            return;
+        }
         try {
             // 4 bit for head info
             // 1 bit for types info

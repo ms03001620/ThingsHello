@@ -1,5 +1,7 @@
 package org.mark.lib_unit_socket;
 
+import android.os.Parcelable;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -102,15 +104,18 @@ public class SocketService {
     }
 
     public void writeText(String message, byte type) {
+        writeBytes(message.getBytes(), type);
+    }
+
+    public boolean isConnected() {
         if (mConnectedThread == null) {
-            mReceiveMessageCallback.onLogMessage("写入异常,没有接入", null);
-            return;
+            return false;
         }
-        mConnectedThread.write(message, type);
+        return mConnectedThread.isConnected();
     }
 
     public void writeBytes(byte[] bytes, byte type) {
-        if (mConnectedThread == null) {
+        if (!isConnected()) {
             mReceiveMessageCallback.onLogMessage("写入异常,没有接入", null);
             return;
         }

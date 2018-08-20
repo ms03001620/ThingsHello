@@ -1,6 +1,7 @@
 package org.mark.lib_unit_socket;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.concurrent.ExecutorService;
@@ -38,14 +39,14 @@ public class SocketManager {
             }
 
             @Override
-            public void onExceptionToReOpen(Exception e) {
+            public void onExceptionToReOpen(@NonNull Exception e) {
                 Log.d(TAG, "重新启动", e);
                 mTextService.stop();
                 mTextService.start();
             }
 
             @Override
-            public void onLogMessage(String message, Exception e) {
+            public void onLogMessage(String message, @Nullable Exception e) {
                 Log.d(TAG, message, e);
             }
 
