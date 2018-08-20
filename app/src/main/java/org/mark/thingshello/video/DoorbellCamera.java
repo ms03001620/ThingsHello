@@ -25,14 +25,12 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureFailure;
 import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.media.ImageReader;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.util.Log;
-import android.view.Surface;
 
 import java.util.Collections;
 
@@ -42,7 +40,6 @@ import static android.content.Context.CAMERA_SERVICE;
  * Helper class to deal with methods to deal with images from the camera.
  */
 public class DoorbellCamera {
-    private static final String TAG = DoorbellCamera.class.getSimpleName();
     /*            0 = {Size@5230} "176x144"
                 1 = {Size@5231} "320x240"
                 2 = {Size@5232} "640x480"
@@ -56,12 +53,11 @@ public class DoorbellCamera {
 
     private HandlerThread mCameraThread;
     private Handler mCameraHandler;
+    private ImageReader.OnImageAvailableListener mImageAvailableListener;
+    private ImageReader mImageReader;
 
     // Lazy-loaded singleton, so only one instance of the camera is created.
     private DoorbellCamera() {
-        mCameraThread = new HandlerThread("CameraBackground");
-        mCameraThread.start();
-        mCameraHandler = new Handler(mCameraThread.getLooper());
     }
 
     private static class InstanceHolder {
@@ -72,28 +68,40 @@ public class DoorbellCamera {
         return InstanceHolder.mCamera;
     }
 
+    /**
+     * 获取相机并自动开启预览模式
+     *
+     * @param context
+     * @param imageAvailableListener
+     */
     @SuppressLint("MissingPermission")
-    public void initializeCamera(Context context) {
+    public void initializeCamera(Context context, ImageReader.OnImageAvailableListener imageAvailableListener) {
+        mCameraThread = new HandlerThread("CameraBackground");
+        mCameraThread.start();
+        mCameraHandler = new Handler(mCameraThread.getLooper());
+        mImageReader = ImageReader.newInstance(320, 240, ImageFormat.JPEG, 1);
+        mImageAvailableListener = imageAvailableListener;
         // Discover the camera instance
         CameraManager manager = (CameraManager) context.getSystemService(CAMERA_SERVICE);
         String[] camIds = {};
         try {
+            assert manager != null;
             camIds = manager.getCameraIdList();
 
             if (camIds.length < 1) {
-                Log.e(TAG, "No cameras found");
+                Log.e(CameraService.TAG, "No cameras found");
                 return;
             }
             String id = camIds[CameraCharacteristics.LENS_FACING_FRONT];
-            Log.d(TAG, "Using camera id " + id);
+            Log.d(CameraService.TAG, "Using camera id " + id);
 
             CameraCharacteristics cameraCharacteristics = manager.getCameraCharacteristics(id);
             CameraUtils.checkCameraCharacteristics(cameraCharacteristics);
             // Open the camera resource
             manager.openCamera(id, mStateCallback, mCameraHandler);
 
-        } catch (CameraAccessException e) {
-            Log.e(TAG, "Cam access exception getting IDs", e);
+        } catch (Exception e) {
+            Log.e(CameraService.TAG, "Cam access exception getting IDs", e);
         }
     }
 
@@ -103,35 +111,34 @@ public class DoorbellCamera {
     private final CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(CameraDevice cameraDevice) {
-            Log.d(TAG, "Opened camera.");
+            Log.d(CameraService.TAG, "Opened camera.");
             mCameraDevice = cameraDevice;
+            // 自动开启预览模式
+            preview();
         }
 
         @Override
         public void onDisconnected(CameraDevice cameraDevice) {
-            Log.d(TAG, "Camera disconnected, closing.");
+            Log.d(CameraService.TAG, "Camera disconnected, closing.");
             cameraDevice.close();
         }
 
         @Override
         public void onError(CameraDevice cameraDevice, int i) {
-            Log.d(TAG, "Camera device error, closing.");
+            Log.d(CameraService.TAG, "Camera device error, closing.");
             cameraDevice.close();
         }
 
         @Override
         public void onClosed(CameraDevice cameraDevice) {
-            Log.d(TAG, "Closed camera, releasing");
-            //mCameraDevice = null;
+            Log.d(CameraService.TAG, "Closed camera, releasing");
+            mCameraDevice = null;
         }
     };
 
-
-    final ImageReader mImageReader = ImageReader.newInstance(320, 240, ImageFormat.JPEG, 1);
-
-    public void preview(ImageReader.OnImageAvailableListener imageAvailableListener) {
+    public void preview() {
         try {
-            mImageReader.setOnImageAvailableListener(imageAvailableListener, mCameraHandler);
+            mImageReader.setOnImageAvailableListener(mImageAvailableListener, mCameraHandler);
 
             final CaptureRequest.Builder builder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
             builder.addTarget(mImageReader.getSurface());
@@ -162,28 +169,35 @@ public class DoorbellCamera {
         @Override
         public void onCaptureStarted(CameraCaptureSession session, CaptureRequest request, long timestamp, long frameNumber) {
             super.onCaptureStarted(session, request, timestamp, frameNumber);
-            // Log.d("CameraService", "onCaptureStarted");
+            Log.d(CameraService.TAG, "onCaptureStarted");
         }
 
         @Override
         public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
             super.onCaptureCompleted(session, request, result);
-            // Log.d("CameraService", "onCaptureCompleted");
+            ;
+            Log.d(CameraService.TAG, "onCaptureCompleted");
         }
 
         @Override
         public void onCaptureFailed(CameraCaptureSession session, CaptureRequest request, CaptureFailure failure) {
             super.onCaptureFailed(session, request, failure);
-            // Log.d("CameraService", "onCaptureFailed");
+            Log.d(CameraService.TAG, "onCaptureFailed");
         }
     };
 
     public void shutDown() {
+        if (mImageReader != null) {
+            mImageReader.close();
+            mImageReader = null;
+        }
         if (mCameraDevice != null) {
             mCameraDevice.close();
+            mCameraDevice = null;
         }
         if (mCameraThread != null) {
             mCameraThread.quitSafely();
+            mCameraThread = null;
         }
     }
 

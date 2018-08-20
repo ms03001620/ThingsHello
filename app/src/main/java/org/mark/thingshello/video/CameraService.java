@@ -37,12 +37,18 @@ public class CameraService extends Service {
 
         @Override
         public void handleMessage(Message msg) {
+            CameraService service = mService.get();
             switch (msg.what) {
                 case 1:
-                    CameraService service = mService.get();
                     if (service != null) {
                         service.client = msg.replyTo;
-                        DoorbellCamera.getInstance().preview(service.mOnImageAvailableListener);
+                        service.startPreview();
+                    }
+                    break;
+                case 2:
+                    if (service != null) {
+                        service.client = msg.replyTo;
+                        service.stopPreview();
                     }
                     break;
             }
@@ -59,12 +65,12 @@ public class CameraService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate");
-        DoorbellCamera.getInstance().initializeCamera(this);
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
         Log.d(TAG, "onUnbind");
+        DoorbellCamera.getInstance().shutDown();
         return super.onUnbind(intent);
     }
 
@@ -72,19 +78,23 @@ public class CameraService extends Service {
     public void onDestroy() {
         Log.d(TAG, "onDestroy");
         super.onDestroy();
+    }
+
+    void startPreview() {
+        DoorbellCamera.getInstance().initializeCamera(this, mImageAvailableListener);
+    }
+
+    void stopPreview() {
         DoorbellCamera.getInstance().shutDown();
     }
 
-
-    private ImageReader.OnImageAvailableListener mOnImageAvailableListener =
-            new ImageReader.OnImageAvailableListener() {
-                @Override
-                public void onImageAvailable(ImageReader reader) {
-                    Image image = reader.acquireNextImage();
-                    onPictureTaken(image);
-                }
-            };
-
+    private ImageReader.OnImageAvailableListener mImageAvailableListener = new ImageReader.OnImageAvailableListener() {
+        @Override
+        public void onImageAvailable(ImageReader reader) {
+            Image image = reader.acquireNextImage();
+            onPictureTaken(image);
+        }
+    };
 
     private void onPictureTaken(Image image) {
         ByteBuffer imageBuf = image.getPlanes()[0].getBuffer();
