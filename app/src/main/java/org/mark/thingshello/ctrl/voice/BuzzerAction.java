@@ -3,11 +3,13 @@ package org.mark.thingshello.ctrl.voice;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.annotation.NonNull;
 
 import com.google.android.things.pio.Gpio;
 import com.google.android.things.pio.PeripheralManager;
 
 import org.mark.thingshello.ctrl.BoardDefaults;
+import org.mark.thingshello.ctrl.OnReceiverCommand;
 
 import java.io.IOException;
 
@@ -15,7 +17,7 @@ import java.io.IOException;
 /**
  * Created by Mark on 2018/8/11
  */
-public class BuzzerAction {
+public class BuzzerAction extends OnReceiverCommand {
     private Gpio in;
     Handler handler;
 
@@ -28,7 +30,7 @@ public class BuzzerAction {
         handler = new Handler(Looper.myLooper(), new Handler.Callback() {
             @Override
             public boolean handleMessage(Message message) {
-                switch (message.what){
+                switch (message.what) {
                     case 0:
                         speak();
                         break;
@@ -60,7 +62,7 @@ public class BuzzerAction {
 
 
         handler.sendEmptyMessage(0);
-        handler.sendEmptyMessageDelayed(1,500);
+        handler.sendEmptyMessageDelayed(1, 500);
     }
 
     public void stop() {
@@ -82,4 +84,17 @@ public class BuzzerAction {
     }
 
 
+    @Override
+    public void onCommand(@NonNull byte[] bytes, int type) {
+        int data = decodeByteAsInteger(bytes);
+
+        switch (data) {
+            case 8:
+                di();
+                break;
+            case 9:
+                stop();
+                break;
+        }
+    }
 }

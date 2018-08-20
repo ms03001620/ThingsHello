@@ -1,16 +1,19 @@
 package org.mark.thingshello.ctrl.light;
 
+import android.support.annotation.NonNull;
+
 import com.google.android.things.pio.PeripheralManager;
 import com.leinardi.android.things.pio.SoftPwm;
 
 import org.mark.thingshello.ctrl.BoardDefaults;
+import org.mark.thingshello.ctrl.OnReceiverCommand;
 
 import java.io.IOException;
 
 /**
  * Created by Mark on 2018/8/12
  */
-public class ForwardLightAction {
+public class ForwardLightAction extends OnReceiverCommand {
     // LED_R = 22
     // LED_G = 27
     // LED_B = 24
@@ -61,6 +64,19 @@ public class ForwardLightAction {
             pwmBlue.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onCommand(@NonNull byte[] bytes, int type) {
+        int data = decodeByteAsInteger(bytes);
+        switch (data){
+            case 10:
+                test();
+                break;
+            case 11:
+                testStop();
+                break;
         }
     }
 }
