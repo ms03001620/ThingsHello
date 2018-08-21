@@ -79,7 +79,7 @@ public class DoorbellCamera {
         mCameraThread = new HandlerThread("CameraBackground");
         mCameraThread.start();
         mCameraHandler = new Handler(mCameraThread.getLooper());
-        mImageReader = ImageReader.newInstance(176, 144, ImageFormat.JPEG, 1);
+        mImageReader = ImageReader.newInstance(320, 240, ImageFormat.JPEG, 1);
         mImageAvailableListener = imageAvailableListener;
         // Discover the camera instance
         CameraManager manager = (CameraManager) context.getSystemService(CAMERA_SERVICE);

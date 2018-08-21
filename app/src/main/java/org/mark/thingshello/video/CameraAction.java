@@ -47,38 +47,38 @@ public class CameraAction extends OnReceiverCommand{
     }
 
     private Messenger replyMessager = new Messenger(new Handler() {
-        private long time;
-
         @Override
         public void handleMessage(Message msg) {
+            Bundle bundle= msg.getData();
+            final byte[] bytes = bundle.getByteArray("image");
             switch (msg.what) {
                 case 100:
-                    Bundle bundle = msg.getData();
-                    final byte[] bytes = bundle.getByteArray("image");
-                    Log.d(CameraService.TAG, "收到图像数据" + bytes.length / 1024 + "KB");
-
-                    long now = System.currentTimeMillis();
-                    if (now - time > 1000) {
-                        time = now;
-                        Log.d(CameraService.TAG, "send______________" + bytes.length / 1024 + "KB");
-                        SocketManager.getInstance().send(bytes);
-
-    /*                    listener.getImage().post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Bitmap bitmap = CameraUtils.createFromBytes(bytes);
-                                listener.getImage().setImageBitmap(bitmap);
-                                // bitmap.recycle();
-                            }
-                        });*/
-                    }
-
-
+                    sendFromSocket(bytes);
+                    break;
+                case 200:
+                    showInApp(bytes);
+                    break;
                 default:
                     break;
             }
         }
     });
+
+    private void sendFromSocket(byte[] bytes){
+        Log.d(CameraService.TAG, "发送数据" + bytes.length / 1024 + "KB");
+        SocketManager.getInstance().send(bytes);
+    }
+
+    private void showInApp(final byte[] bytes){
+        listener.getImage().post(new Runnable() {
+            @Override
+            public void run() {
+                Bitmap bitmap = CameraUtils.createFromBytes(bytes);
+                listener.getImage().setImageBitmap(bitmap);
+                // bitmap.recycle();
+            }
+        });
+    }
 
     @Override
     public void onCommand(@NonNull byte[] bytes, int type) {

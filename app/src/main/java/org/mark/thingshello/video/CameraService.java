@@ -27,6 +27,7 @@ public class CameraService extends Service {
     private Messenger mMessenger = new Messenger(sHandler);
     private Messenger client;
     private boolean isPreviewing;
+    private long time;
 
     private static class MyHandler extends Handler {
         private final WeakReference<CameraService> mService;
@@ -91,6 +92,7 @@ public class CameraService extends Service {
     }
 
     private ImageReader.OnImageAvailableListener mImageAvailableListener = new ImageReader.OnImageAvailableListener() {
+
         @Override
         public void onImageAvailable(ImageReader reader) {
             Image image = reader.acquireNextImage();
@@ -104,20 +106,27 @@ public class CameraService extends Service {
         imageBuf.get(imageBytes);
         image.close();
 
-        Log.d(TAG, "image bytes size:" + imageBytes.length + ", " + imageBytes.length / 1024.0 + "KB");
-        if (imageBytes.length > 0) {
-            if (client != null) {
-                Message response = Message.obtain();
-                response.what = 100;
-                Bundle bundle = new Bundle();
-                bundle.putByteArray("image", imageBytes);
-                response.setData(bundle);
+        long now = System.currentTimeMillis();
+        // 处理图片的频率
+        if (now - time > 300) {
+            time = now;
 
-                try {
-                    client.send(response);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
+            Log.d(TAG, "image bytes size:" + imageBytes.length + ", " + imageBytes.length / 1024.0 + "KB");
+            if (imageBytes.length > 0) {
+                if (client != null) {
+                    Message response = Message.obtain();
+                    response.what = 100;
+                    Bundle bundle = new Bundle();
+                    bundle.putByteArray("image", imageBytes);
+                    response.setData(bundle);
+
+                    try {
+                        client.send(response);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                 }
+
             }
 
         }
