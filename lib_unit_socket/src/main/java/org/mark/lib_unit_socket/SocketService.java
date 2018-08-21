@@ -115,11 +115,9 @@ public class SocketService {
     }
 
     public void writeBytes(byte[] bytes, byte type) {
-        if (!isConnected()) {
-            mReceiveMessageCallback.onLogMessage("写入异常,没有接入", null);
-            return;
+        if (mConnectedThread != null) {
+            mConnectedThread.write(bytes, type);
         }
-        mConnectedThread.write(bytes, type);
     }
 
 }

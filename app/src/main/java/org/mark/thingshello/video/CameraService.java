@@ -116,7 +116,6 @@ public class CameraService extends Service {
 
                 try {
                     client.send(response);
-                    Log.d(TAG, "send to messager");
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }

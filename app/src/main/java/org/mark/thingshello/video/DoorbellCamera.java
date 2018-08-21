@@ -79,7 +79,7 @@ public class DoorbellCamera {
         mCameraThread = new HandlerThread("CameraBackground");
         mCameraThread.start();
         mCameraHandler = new Handler(mCameraThread.getLooper());
-        mImageReader = ImageReader.newInstance(320, 240, ImageFormat.JPEG, 1);
+        mImageReader = ImageReader.newInstance(176, 144, ImageFormat.JPEG, 1);
         mImageAvailableListener = imageAvailableListener;
         // Discover the camera instance
         CameraManager manager = (CameraManager) context.getSystemService(CAMERA_SERVICE);
@@ -169,14 +169,13 @@ public class DoorbellCamera {
         @Override
         public void onCaptureStarted(CameraCaptureSession session, CaptureRequest request, long timestamp, long frameNumber) {
             super.onCaptureStarted(session, request, timestamp, frameNumber);
-            Log.d(CameraService.TAG, "onCaptureStarted");
+            // Log.d(CameraService.TAG, "onCaptureStarted");
         }
 
         @Override
         public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
             super.onCaptureCompleted(session, request, result);
-            ;
-            Log.d(CameraService.TAG, "onCaptureCompleted");
+            // Log.d(CameraService.TAG, "onCaptureCompleted");
         }
 
         @Override

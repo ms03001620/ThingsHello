@@ -16,21 +16,16 @@ import java.util.concurrent.Executors;
 public class ConnectedManager {
     private static ConnectedManager instance;
     private IConnect mDefaultConnect;
-    private ExecutorService mExecutorForWrite;
+    private ExecutorService mExecutorForWrite = Executors.newCachedThreadPool();
     private List<ClientMessageCallback> mCallbackList;
 
     private ConnectedManager() {
-        mExecutorForWrite = Executors.newCachedThreadPool();
         mCallbackList = new ArrayList<>();
     }
 
     public static ConnectedManager getInstance() {
         if (instance == null) {
-            synchronized (ConnectedManager.class) {
-                if (instance == null) {
-                    instance = new ConnectedManager();
-                }
-            }
+            instance = new ConnectedManager();
         }
         return instance;
     }

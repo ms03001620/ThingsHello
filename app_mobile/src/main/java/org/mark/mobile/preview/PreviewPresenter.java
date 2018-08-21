@@ -1,6 +1,8 @@
 package org.mark.mobile.preview;
 
 import android.graphics.Bitmap;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -14,20 +16,27 @@ import org.mark.mobile.connect.ConnectedManager;
  */
 public class PreviewPresenter {
     PreviewActivity mView;
+    WorkThreadHandler mWorkThreadHandler;
 
     public PreviewPresenter(PreviewActivity previewActivity) {
         mView = previewActivity;
+        mWorkThreadHandler = new WorkThreadHandler();
         ConnectedManager.getInstance().addCallback(mClientMessageCallback);
-        ConnectedManager.getInstance().sendMessage("12");
     }
 
-    private ClientMessageCallback mClientMessageCallback =new ClientMessageCallback(){
+    private ClientMessageCallback mClientMessageCallback = new ClientMessageCallback() {
 
         @Override
-        public void onReceiveMessage(byte[] bytes, int type) {
-            Log.d("camera", "bytes:"+bytes.length);
-            Bitmap bitmap = CameraUtils.createFromBytes(bytes);
-            mView.updateImage(bitmap);
+        public void onReceiveMessage(final byte[] bytes, int type) {
+            Log.d("camera", "bytes:" + bytes.length);
+            mWorkThreadHandler.runBackground(new Runnable() {
+                @Override
+                public void run() {
+                    Bitmap bitmap = CameraUtils.createFromBytes(bytes);
+                    mView.updateImage(bitmap);
+                }
+            });
+
         }
 
         @Override
@@ -50,5 +59,15 @@ public class PreviewPresenter {
     public void release() {
         ConnectedManager.getInstance().removeCallback(mClientMessageCallback);
         mView = null;
+        mWorkThreadHandler.release();
+    }
+
+    public void onStart() {
+        ConnectedManager.getInstance().sendMessage("12");
+    }
+
+
+    public void onStop() {
+        ConnectedManager.getInstance().sendMessage("13");
     }
 }

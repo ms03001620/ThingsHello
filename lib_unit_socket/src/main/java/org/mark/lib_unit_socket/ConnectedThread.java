@@ -1,5 +1,7 @@
 package org.mark.lib_unit_socket;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -93,12 +95,13 @@ public class ConnectedThread extends Thread {
 
                 int length = bytesToInt(bytesLength, 0) - 1;
 
-                if (length < 1) {
-                    mReceiveMessageCallback.onLogMessage("已断开4", null);
-                    mReceiveMessageCallback.onExceptionToReOpen(new Exception("已断开4"));
-                    break;
+                if (length < 1 || length > 500 * 1024) {
+                    Log.d("_______", "放弃数据错误:"+length);
+                    // mReceiveMessageCallback.onLogMessage("数据错误：" + length, null);
+                    continue;
                 }
 
+                Log.d("_______", "length:" + length + ", bytesLength:" + bytesLength.length + ", headLen:" + headLen);
                 byte[] bytesData = new byte[length];
                 int readMessageLen = mInputStream.read(bytesData);
                 mReceiveMessageCallback.onReceiveMessage(bytesData, (int) bytesType[0]);
@@ -140,6 +143,7 @@ public class ConnectedThread extends Thread {
 
     public void write(byte[] data, byte type) {
         if (!isConnected()) {
+            mReceiveMessageCallback.onLogMessage("无法写入没有连接", null);
             return;
         }
         try {

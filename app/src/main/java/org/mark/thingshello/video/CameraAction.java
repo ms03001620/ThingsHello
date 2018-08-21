@@ -47,23 +47,32 @@ public class CameraAction extends OnReceiverCommand{
     }
 
     private Messenger replyMessager = new Messenger(new Handler() {
+        private long time;
+
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 100:
                     Bundle bundle = msg.getData();
                     final byte[] bytes = bundle.getByteArray("image");
-                    Log.d(CameraService.TAG, "收到图像数据" + bytes.length);
-                    // SocketManager.getInstance().send(bytes);
+                    Log.d(CameraService.TAG, "收到图像数据" + bytes.length / 1024 + "KB");
 
-                    listener.getImage().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Bitmap bitmap = CameraUtils.createFromBytes(bytes);
-                            listener.getImage().setImageBitmap(bitmap);
-                            // bitmap.recycle();
-                        }
-                    });
+                    long now = System.currentTimeMillis();
+                    if (now - time > 1000) {
+                        time = now;
+                        Log.d(CameraService.TAG, "send______________" + bytes.length / 1024 + "KB");
+                        SocketManager.getInstance().send(bytes);
+
+    /*                    listener.getImage().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Bitmap bitmap = CameraUtils.createFromBytes(bytes);
+                                listener.getImage().setImageBitmap(bitmap);
+                                // bitmap.recycle();
+                            }
+                        });*/
+                    }
+
 
                 default:
                     break;
