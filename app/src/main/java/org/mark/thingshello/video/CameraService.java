@@ -25,8 +25,8 @@ public class CameraService extends Service {
     public static final String TAG = "CameraService";
     private MyHandler sHandler = new MyHandler(this);
     private Messenger mMessenger = new Messenger(sHandler);
-
     private Messenger client;
+    private boolean isPreviewing;
 
     private static class MyHandler extends Handler {
         private final WeakReference<CameraService> mService;
@@ -40,13 +40,13 @@ public class CameraService extends Service {
             CameraService service = mService.get();
             switch (msg.what) {
                 case 1:
-                    if (service != null) {
+                    if (service != null && !service.isPreviewing) {
                         service.client = msg.replyTo;
                         service.startPreview();
                     }
                     break;
                 case 2:
-                    if (service != null) {
+                    if (service != null && service.isPreviewing) {
                         service.client = msg.replyTo;
                         service.stopPreview();
                     }
@@ -82,10 +82,12 @@ public class CameraService extends Service {
 
     void startPreview() {
         DoorbellCamera.getInstance().initializeCamera(this, mImageAvailableListener);
+        isPreviewing = true;
     }
 
     void stopPreview() {
         DoorbellCamera.getInstance().shutDown();
+        isPreviewing = false;
     }
 
     private ImageReader.OnImageAvailableListener mImageAvailableListener = new ImageReader.OnImageAvailableListener() {
@@ -104,9 +106,6 @@ public class CameraService extends Service {
 
         Log.d(TAG, "image bytes size:" + imageBytes.length + ", " + imageBytes.length / 1024.0 + "KB");
         if (imageBytes.length > 0) {
-            // final Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-            //mMessenger.getBinder().
-
             if (client != null) {
                 Message response = Message.obtain();
                 response.what = 100;
