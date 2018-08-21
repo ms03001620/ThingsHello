@@ -10,6 +10,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.mobile.connect.ConnectedManager;
@@ -87,10 +88,15 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean on) {
             if (on) {
-                final String textHost = editTextHost.getText().toString();
-                final String text = editTextPost.getText().toString();
-                final int port = Integer.valueOf(text);
-                ConnectedManager.getInstance().init(textHost, port);
+                try {
+                    final String textHost = editTextHost.getText().toString();
+                    final String text = editTextPost.getText().toString();
+                    final int port = Integer.valueOf(text);
+                    ConnectedManager.getInstance().init(textHost, port);
+                } catch (Exception e) {
+                    Toast.makeText(getApplicationContext(), "输入错误", Toast.LENGTH_LONG).show();
+                }
+
             } else {
                 ConnectedManager.getInstance().stop();
             }

@@ -31,7 +31,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_toLeftOf="@+id/btn_send"
-                android:text="10" />
+                android:text="12" />
 
             <Button
                 android:id="@+id/btn_send"
