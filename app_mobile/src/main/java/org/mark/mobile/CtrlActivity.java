@@ -64,6 +64,7 @@ public class CtrlActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(CtrlActivity.this, PreviewActivity.class);
                 startActivity(intent);
+                finish();
             }
         });
 
@@ -130,12 +131,7 @@ public class CtrlActivity extends AppCompatActivity {
 
         @Override
         public void onLogMessage(final String message, @Nullable Exception e) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mEditMessage.setText(message);
-                }
-            });
+            Log.d(TAG, "onLogMessage length" + message);
         }
 
         @Override

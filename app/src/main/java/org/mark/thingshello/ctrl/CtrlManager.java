@@ -28,7 +28,7 @@ public class CtrlManager {
             @Override
             public void onReceiveMessage(final byte[] bytes, int type) {
                 listener.onReceiveMessage(bytes, type);
-                SocketManager.getInstance().send(bytes);
+                //SocketManager.getInstance().send(bytes);
                 Log.d("CtrlManager", "onReceiveMessage:" + bytes.length + ", type:" + type);
                 mDeviceHelper.onCommand(bytes, type);
             }

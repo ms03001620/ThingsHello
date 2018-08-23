@@ -88,5 +88,12 @@ public class SocketManager {
         });
     }
 
+    public boolean isConnection() {
+        if (mTextService != null) {
+            return mTextService.isConnected();
+        }
+        return false;
+    }
+
 
 }

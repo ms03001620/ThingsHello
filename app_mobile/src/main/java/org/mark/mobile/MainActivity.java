@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -50,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     public ClientMessageCallback mClientMessageCallback = new ClientMessageCallback() {
         @Override
         public void onReceiveMessage(byte[] bytes, int type) {
-            runUiText(bytes.length + ", type:" + type);
+            Log.d("Log", bytes.length + ", type:" + type);
         }
 
         @Override
@@ -68,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onLogMessage(String message, @Nullable Exception e) {
-            runUiText("Log:" + message);
+            Log.d("Log:" , message);
         }
 
         @Override

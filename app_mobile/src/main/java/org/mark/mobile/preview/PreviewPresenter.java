@@ -51,7 +51,9 @@ public class PreviewPresenter {
 
         @Override
         public void onStatusChange(@NonNull Status status) {
-
+            if(status == Status.NO_CONNECT){
+                mView.finish();
+            }
         }
     };
 

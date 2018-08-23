@@ -6,7 +6,10 @@ import android.support.annotation.Nullable;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,12 +18,13 @@ import java.util.concurrent.Executors;
  */
 public class ConnectedManager {
     private static ConnectedManager instance;
+    @Nullable
     private IConnect mDefaultConnect;
     private ExecutorService mExecutorForWrite = Executors.newCachedThreadPool();
-    private List<ClientMessageCallback> mCallbackList;
+    private Vector<ClientMessageCallback> mCallbackList;
 
     private ConnectedManager() {
-        mCallbackList = new ArrayList<>();
+        mCallbackList = new Vector<>();
     }
 
     public static ConnectedManager getInstance() {
@@ -56,8 +60,8 @@ public class ConnectedManager {
                     @Override
                     public void onLogMessage(String message, @Nullable Exception e) {
                         if (mCallbackList.size() > 0) {
-                            for (ClientMessageCallback callback : mCallbackList) {
-                                callback.onLogMessage(message, e);
+                            for (ClientMessageCallback element : mCallbackList) {
+                                element.onLogMessage(message, e);
                             }
                         }
                     }
@@ -83,7 +87,9 @@ public class ConnectedManager {
         mExecutorForWrite.execute(new Runnable() {
             @Override
             public void run() {
-                mDefaultConnect.stop();
+                if (mDefaultConnect != null) {
+                    mDefaultConnect.stop();
+                }
             }
         });
     }
@@ -92,7 +98,9 @@ public class ConnectedManager {
         mExecutorForWrite.execute(new Runnable() {
             @Override
             public void run() {
-                mDefaultConnect.sendMessage(message);
+                if (mDefaultConnect != null) {
+                    mDefaultConnect.sendMessage(message);
+                }
             }
         });
     }
@@ -101,7 +109,9 @@ public class ConnectedManager {
         mExecutorForWrite.execute(new Runnable() {
             @Override
             public void run() {
-                mDefaultConnect.sendMessage(message, type);
+                if (mDefaultConnect != null) {
+                    mDefaultConnect.sendMessage(message, type);
+                }
             }
         });
     }
@@ -113,8 +123,13 @@ public class ConnectedManager {
     }
 
     public void removeCallback(ClientMessageCallback callback) {
-        if (mCallbackList.contains(callback)) {
-            mCallbackList.remove(callback);
+        Iterator<ClientMessageCallback> iterator = mCallbackList.iterator();
+        while (iterator.hasNext()) {
+            ClientMessageCallback element = iterator.next();
+            if (element.equals(callback)) {
+                iterator.remove();
+            }
         }
+
     }
 }

@@ -14,8 +14,7 @@ public class ConnectedThread extends Thread {
     private final Socket mSocket;
     private final InputStream mInputStream;
     private final OutputStream mmOutStream;
-    private byte[] bytesLength = new byte[4];
-    private byte[] bytesType = new byte[1];
+    private byte[] headBytes = new byte[5];
     private ClientMessageCallback mReceiveMessageCallback;
     private ClientMessageCallback.Status mStatus;
 
@@ -69,51 +68,59 @@ public class ConnectedThread extends Thread {
     }
 
     public void run() {
+        Exception exception = null;
         while (isConnected()) {
             try {
+                sleep(150);
                 if (!mSocket.isConnected() || mSocket.isInputShutdown()) {
-                    mReceiveMessageCallback.onLogMessage("已断开1", null);
-                    mReceiveMessageCallback.onExceptionToReOpen(new Exception("已断开1"));
-                    break;
+                    throw new Exception("Socket没有连接或关闭");
                 }
 
-                int headLen = mInputStream.read(bytesLength);
+                int headLen = mInputStream.read(headBytes);
 
-                if (headLen < 1) {
-                    mReceiveMessageCallback.onLogMessage("已断开2", null);
-                    mReceiveMessageCallback.onExceptionToReOpen(new Exception("已断开2"));
-                    break;
+                sleep(150);
+
+                if (headLen == -1) {
+                    throw new Exception("读取head错误（-1）");
                 }
 
-                int typeLen = mInputStream.read(bytesType);
-
-                if (typeLen < 1) {
-                    mReceiveMessageCallback.onLogMessage("已断开3", null);
-                    mReceiveMessageCallback.onExceptionToReOpen(new Exception("已断开3"));
-                    break;
-                }
-
-                int length = bytesToInt(bytesLength, 0) - 1;
-
-                if (length < 1 || length > 500 * 1024) {
-                    Log.d("ConnectedThreadError", "放弃数据错误:"+length);
+                if (headLen != 5) {
+                    mReceiveMessageCallback.onLogMessage("读取head错误，放弃数据:" + headLen, null);
                     continue;
                 }
 
-                byte[] bytesData = new byte[length];
-                int readMessageLen = mInputStream.read(bytesData);
-                mReceiveMessageCallback.onReceiveMessage(bytesData, (int) bytesType[0]);
+                byte[] headInfo = new byte[4];
+                headInfo[0] = headBytes[0];
+                headInfo[1] = headBytes[1];
+                headInfo[2] = headBytes[2];
+                headInfo[3] = headBytes[3];
+
+                int length = bytesToInt(headInfo, 0);
+
+                if (length < 1 || length > 500 * 1024) {
+                    mReceiveMessageCallback.onLogMessage("解析head错误，放弃数据:" + length, null);
+                    continue;
+                }
+
+                byte[] bodyBytes = new byte[length];
+                int readMessageLen = mInputStream.read(bodyBytes);
+                if (readMessageLen != length) {
+                    throw new Exception("读取body错误（-1）");
+                }
+                mReceiveMessageCallback.onReceiveMessage(bodyBytes, (int) headBytes[4]);
                 mReceiveMessageCallback.onLogMessage("读取消息长度" + readMessageLen, null);
 
             } catch (Exception e) {
-                mReceiveMessageCallback.onLogMessage("读取异常", e);
-                mReceiveMessageCallback.onExceptionToReOpen(e);
-                stop(false);
+                exception = e;
                 break;
             }
         }
 
-        updateStatus(ClientMessageCallback.Status.NO_CONNECT);
+        if (exception != null) {
+            mReceiveMessageCallback.onLogMessage("读取异常", exception);
+            mReceiveMessageCallback.onExceptionToReOpen(exception);
+            stop(false);
+        }
     }
 
     public boolean isConnected() {
@@ -148,10 +155,9 @@ public class ConnectedThread extends Thread {
             // 4 bit for head info
             // 1 bit for types info
             // n bit for data bits
-            final int finalLength = 4 + 1 + data.length;
-            byte[] finalBytes = new byte[finalLength];
+            byte[] finalBytes = new byte[4 + 1 + data.length];
 
-            int length = data.length + 1;
+            int length = data.length;
             byte[] head = int2byte(length);
             byte[] types = new byte[1];
             types[0] = type;
@@ -162,12 +168,29 @@ public class ConnectedThread extends Thread {
 
             mmOutStream.write(finalBytes);
             mmOutStream.flush();
-            mReceiveMessageCallback.onLogMessage("写入数据长度" + length, null);
+            mReceiveMessageCallback.onLogMessage("写入数据长度" + data.length, null);
         } catch (Exception e) {
             mReceiveMessageCallback.onLogMessage("写入异常", e);
             mReceiveMessageCallback.onExceptionToReOpen(e);
             updateStatus(ClientMessageCallback.Status.NO_CONNECT);
         }
+    }
+
+    public static byte[] packageData(byte[] data, int type){
+        // 4 bit for head info
+        // 1 bit for types info
+        // n bit for data bits
+        byte[] result = new byte[4 + 1 + data.length];
+
+        byte[] head = int2byte(data.length);
+        byte[] types = new byte[1];
+        types[0] = (byte) type;
+
+        System.arraycopy(head, 0, result, 0, head.length);
+        System.arraycopy(types, 0, result, head.length, 1);
+        System.arraycopy(data, 0, result, head.length + 1, data.length);
+
+        return result;
     }
 
     public void cancel() {

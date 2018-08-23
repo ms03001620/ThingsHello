@@ -115,8 +115,10 @@ public class SocketService {
     }
 
     public void writeBytes(byte[] bytes, byte type) {
-        if (mConnectedThread != null) {
+        if (isConnected()) {
             mConnectedThread.write(bytes, type);
+        } else {
+            mReceiveMessageCallback.onLogMessage("没有连接无法写入", null);
         }
     }
 

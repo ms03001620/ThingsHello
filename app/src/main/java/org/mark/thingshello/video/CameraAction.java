@@ -66,7 +66,12 @@ public class CameraAction extends OnReceiverCommand{
 
     private void sendFromSocket(byte[] bytes){
         Log.d(CameraService.TAG, "发送数据" + bytes.length / 1024 + "KB");
-        SocketManager.getInstance().send(bytes);
+
+        if (SocketManager.getInstance().isConnection()) {
+            SocketManager.getInstance().send(bytes);
+        } else {
+            stopPreview();
+        }
     }
 
     private void showInApp(final byte[] bytes){
