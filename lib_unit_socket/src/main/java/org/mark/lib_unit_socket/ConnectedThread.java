@@ -71,7 +71,7 @@ public class ConnectedThread extends Thread {
         Exception exception = null;
         while (isConnected()) {
             try {
-                sleep(100);
+                // sleep(100);
                 if (!mSocket.isConnected() || mSocket.isInputShutdown()) {
                     throw new Exception("Socket没有连接或关闭");
                 }
@@ -83,7 +83,7 @@ public class ConnectedThread extends Thread {
                     throw new Exception("读取head错误（-1）");
                 }
 
-                sleep(100);
+                //sleep(100);
 
                 if (headLen != 5) {
                     mReceiveMessageCallback.onLogMessage("读取head错误，放弃数据:" + headLen, null);
@@ -105,9 +105,15 @@ public class ConnectedThread extends Thread {
 
                 byte[] bodyBytes = new byte[length];
                 int readMessageLen = mInputStream.read(bodyBytes);
-                if (readMessageLen != length) {
-                    throw new Exception("读取body错误 总长度:" + length + ", 读取了:" + readMessageLen);
+                while (readMessageLen < length) {
+                    mReceiveMessageCallback.onLogMessage("读取body错误 总长度:" + length + ", 读取了:" + readMessageLen, null);
+                    int unReadLength = length - readMessageLen;
+
+                    int readLength = mInputStream.read(bodyBytes, readMessageLen, unReadLength);
+
+                    readMessageLen += readLength;
                 }
+
                 mReceiveMessageCallback.onReceiveMessage(bodyBytes, (int) headBytes[4]);
                 mReceiveMessageCallback.onLogMessage("读取消息长度" + readMessageLen, null);
 
