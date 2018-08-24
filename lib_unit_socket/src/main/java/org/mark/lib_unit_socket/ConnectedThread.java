@@ -71,18 +71,19 @@ public class ConnectedThread extends Thread {
         Exception exception = null;
         while (isConnected()) {
             try {
-                sleep(150);
+                sleep(100);
                 if (!mSocket.isConnected() || mSocket.isInputShutdown()) {
                     throw new Exception("Socket没有连接或关闭");
                 }
 
                 int headLen = mInputStream.read(headBytes);
 
-                sleep(150);
 
                 if (headLen == -1) {
                     throw new Exception("读取head错误（-1）");
                 }
+
+                sleep(100);
 
                 if (headLen != 5) {
                     mReceiveMessageCallback.onLogMessage("读取head错误，放弃数据:" + headLen, null);
@@ -105,7 +106,7 @@ public class ConnectedThread extends Thread {
                 byte[] bodyBytes = new byte[length];
                 int readMessageLen = mInputStream.read(bodyBytes);
                 if (readMessageLen != length) {
-                    throw new Exception("读取body错误（-1）");
+                    throw new Exception("读取body错误 总长度:" + length + ", 读取了:" + readMessageLen);
                 }
                 mReceiveMessageCallback.onReceiveMessage(bodyBytes, (int) headBytes[4]);
                 mReceiveMessageCallback.onLogMessage("读取消息长度" + readMessageLen, null);
@@ -117,7 +118,7 @@ public class ConnectedThread extends Thread {
         }
 
         if (exception != null) {
-            mReceiveMessageCallback.onLogMessage("读取异常", exception);
+            mReceiveMessageCallback.onLogMessage("Socket read错误", exception);
             mReceiveMessageCallback.onExceptionToReOpen(exception);
             stop(false);
         }
@@ -152,21 +153,9 @@ public class ConnectedThread extends Thread {
             return;
         }
         try {
-            // 4 bit for head info
-            // 1 bit for types info
-            // n bit for data bits
-            byte[] finalBytes = new byte[4 + 1 + data.length];
+            byte[] bytes = packageData(data, type);
 
-            int length = data.length;
-            byte[] head = int2byte(length);
-            byte[] types = new byte[1];
-            types[0] = type;
-
-            System.arraycopy(head, 0, finalBytes, 0, head.length);
-            System.arraycopy(types, 0, finalBytes, head.length, 1);
-            System.arraycopy(data, 0, finalBytes, head.length + 1, data.length);
-
-            mmOutStream.write(finalBytes);
+            mmOutStream.write(bytes);
             mmOutStream.flush();
             mReceiveMessageCallback.onLogMessage("写入数据长度" + data.length, null);
         } catch (Exception e) {
@@ -181,13 +170,10 @@ public class ConnectedThread extends Thread {
         // 1 bit for types info
         // n bit for data bits
         byte[] result = new byte[4 + 1 + data.length];
-
         byte[] head = int2byte(data.length);
-        byte[] types = new byte[1];
-        types[0] = (byte) type;
 
         System.arraycopy(head, 0, result, 0, head.length);
-        System.arraycopy(types, 0, result, head.length, 1);
+        System.arraycopy(new byte[]{(byte) type}, 0, result, head.length, 1);
         System.arraycopy(data, 0, result, head.length + 1, data.length);
 
         return result;

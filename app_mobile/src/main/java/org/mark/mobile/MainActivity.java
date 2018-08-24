@@ -51,7 +51,6 @@ public class MainActivity extends AppCompatActivity {
     public ClientMessageCallback mClientMessageCallback = new ClientMessageCallback() {
         @Override
         public void onReceiveMessage(byte[] bytes, int type) {
-            Log.d("Log", bytes.length + ", type:" + type);
         }
 
         @Override
@@ -69,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onLogMessage(String message, @Nullable Exception e) {
-            Log.d("Log:" , message);
+            Log.e("Log:" , message, e);
         }
 
         @Override

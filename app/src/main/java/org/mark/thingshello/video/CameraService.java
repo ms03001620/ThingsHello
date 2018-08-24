@@ -108,7 +108,7 @@ public class CameraService extends Service {
 
         long now = System.currentTimeMillis();
         // 处理图片的频率
-        if (now - time > 1000) {
+        if (now - time > 200) {
             time = now;
 
             Log.d(TAG, "image bytes size:" + imageBytes.length + ", " + imageBytes.length / 1024.0 + "KB");

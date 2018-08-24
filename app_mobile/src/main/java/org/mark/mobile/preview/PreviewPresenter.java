@@ -28,7 +28,6 @@ public class PreviewPresenter {
 
         @Override
         public void onReceiveMessage(final byte[] bytes, int type) {
-            Log.d("camera", "bytes:" + bytes.length);
             mWorkThreadHandler.runBackground(new Runnable() {
                 @Override
                 public void run() {
