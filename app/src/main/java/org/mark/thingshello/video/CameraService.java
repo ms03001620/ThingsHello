@@ -15,6 +15,8 @@ import android.os.RemoteException;
 import android.util.Log;
 
 
+import org.mark.thingshello.video.sender.ConnectSelector;
+
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 
@@ -25,9 +27,9 @@ public class CameraService extends Service {
     public static final String TAG = "CameraService";
     private MyHandler sHandler = new MyHandler(this);
     private Messenger mMessenger = new Messenger(sHandler);
-    private Messenger client;
     private boolean isPreviewing;
     private long time;
+    private ConnectSelector mConnectSelector;
 
     private static class MyHandler extends Handler {
         private final WeakReference<CameraService> mService;
@@ -42,14 +44,14 @@ public class CameraService extends Service {
             switch (msg.what) {
                 case 1:
                     if (service != null && !service.isPreviewing) {
-                        service.client = msg.replyTo;
                         service.startPreview();
+                        service.startSender(msg.replyTo);
                     }
                     break;
                 case 2:
                     if (service != null && service.isPreviewing) {
-                        service.client = msg.replyTo;
                         service.stopPreview();
+                        service.stopSender();
                     }
                     break;
             }
@@ -91,6 +93,14 @@ public class CameraService extends Service {
         isPreviewing = false;
     }
 
+    void startSender(Messenger messenger){
+        mConnectSelector = new ConnectSelector("tcp", messenger);
+    }
+
+    void stopSender(){
+        mConnectSelector.release();
+    }
+
     private ImageReader.OnImageAvailableListener mImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 
         @Override
@@ -113,22 +123,8 @@ public class CameraService extends Service {
 
             Log.d(TAG, "image bytes size:" + imageBytes.length + ", " + imageBytes.length / 1024.0 + "KB");
             if (imageBytes.length > 0) {
-                if (client != null) {
-                    Message response = Message.obtain();
-                    response.what = 100;
-                    Bundle bundle = new Bundle();
-                    bundle.putByteArray("image", imageBytes);
-                    response.setData(bundle);
-
-                    try {
-                        client.send(response);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                }
-
+                mConnectSelector.send(imageBytes);
             }
-
         }
     }
 
