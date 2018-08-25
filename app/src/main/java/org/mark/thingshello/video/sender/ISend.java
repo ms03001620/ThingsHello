@@ -5,4 +5,5 @@ package org.mark.thingshello.video.sender;
  */
 public interface ISend {
     void send(byte[] bytes);
+    void release();
 }

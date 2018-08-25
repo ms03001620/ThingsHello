@@ -29,6 +29,7 @@ public class ConnectSelector implements ISend {
     }
 
     public void release() {
+        mSender.release();
     }
 
 
@@ -50,12 +51,22 @@ public class ConnectSelector implements ISend {
                 }
             }
         }
+
+        @Override
+        public void release() {
+
+        }
     }
 
     class UdpSender implements ISend {
 
         @Override
         public void send(byte[] bytes) {
+
+        }
+
+        @Override
+        public void release() {
 
         }
     }
