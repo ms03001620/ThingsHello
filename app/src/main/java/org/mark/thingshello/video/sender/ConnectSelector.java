@@ -58,19 +58,6 @@ public class ConnectSelector implements ISend {
         }
     }
 
-    class UdpSender implements ISend {
-
-        @Override
-        public void send(byte[] bytes) {
-
-        }
-
-        @Override
-        public void release() {
-
-        }
-    }
-
 }
 
 
