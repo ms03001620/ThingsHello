@@ -69,26 +69,19 @@ public class ConnectedThread extends Thread {
 
     public void run() {
         Exception exception = null;
+        long startTime = 0;
         while (isConnected()) {
             try {
-                // sleep(100);
                 if (!mSocket.isConnected() || mSocket.isInputShutdown()) {
                     throw new Exception("Socket没有连接或关闭");
                 }
 
-                int headLen = mInputStream.read(headBytes);
-
-
+                int headLen = readStillFinish(mInputStream, headBytes);
                 if (headLen == -1) {
                     throw new Exception("读取head错误（-1）");
                 }
 
-                //sleep(100);
-
-                if (headLen != 5) {
-                    mReceiveMessageCallback.onLogMessage("读取head错误，放弃数据:" + headLen, null);
-                    continue;
-                }
+                startTime = System.currentTimeMillis();
 
                 byte[] headInfo = new byte[4];
                 headInfo[0] = headBytes[0];
@@ -104,18 +97,11 @@ public class ConnectedThread extends Thread {
                 }
 
                 byte[] bodyBytes = new byte[length];
-                int readMessageLen = mInputStream.read(bodyBytes);
-                while (readMessageLen < length) {
-                    mReceiveMessageCallback.onLogMessage("读取body错误 总长度:" + length + ", 读取了:" + readMessageLen, null);
-                    int unReadLength = length - readMessageLen;
-
-                    int readLength = mInputStream.read(bodyBytes, readMessageLen, unReadLength);
-
-                    readMessageLen += readLength;
-                }
+                int readTotalLen = readStillFinish(mInputStream, bodyBytes);
 
                 mReceiveMessageCallback.onReceiveMessage(bodyBytes, (int) headBytes[4]);
-                mReceiveMessageCallback.onLogMessage("读取消息长度" + readMessageLen, null);
+                mReceiveMessageCallback.onLogMessage("读取消息长度" + readTotalLen
+                        + ", pass:" + (System.currentTimeMillis() - startTime), null);
 
             } catch (Exception e) {
                 exception = e;
@@ -128,6 +114,20 @@ public class ConnectedThread extends Thread {
             mReceiveMessageCallback.onExceptionToReOpen(exception);
             stop(false);
         }
+    }
+
+    private int readStillFinish(InputStream inputStream, byte[] bodyBytes) throws IOException {
+        int total = bodyBytes.length;
+        int current = inputStream.read(bodyBytes);
+        if (current == -1) {
+            return -1;
+        }
+        while (current < total) {
+            int unRead = total - current;
+            int readLength = inputStream.read(bodyBytes, current, unRead);
+            current += readLength;
+        }
+        return current;
     }
 
     public boolean isConnected() {

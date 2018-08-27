@@ -15,10 +15,10 @@ import org.mark.mobile.connect.ConnectedManager;
  * Created by Mark on 2018/8/19
  */
 public class PreviewPresenter {
-    PreviewActivity mView;
-    WorkThreadHandler mWorkThreadHandler;
+    private PreviewActivity mView;
+    private WorkThreadHandler mWorkThreadHandler;
 
-    public PreviewPresenter(PreviewActivity previewActivity) {
+    public PreviewPresenter(@Nullable PreviewActivity previewActivity) {
         mView = previewActivity;
         mWorkThreadHandler = new WorkThreadHandler();
         ConnectedManager.getInstance().addCallback(mClientMessageCallback);
@@ -58,9 +58,9 @@ public class PreviewPresenter {
 
 
     public void release() {
+        mWorkThreadHandler.release();
         ConnectedManager.getInstance().removeCallback(mClientMessageCallback);
         mView = null;
-        mWorkThreadHandler.release();
     }
 
     public void onStart() {

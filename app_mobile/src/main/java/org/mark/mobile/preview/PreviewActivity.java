@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.widget.ImageView;
 
 import org.mark.mobile.R;
-import org.mark.mobile.connect.ConnectedManager;
 
 public class PreviewActivity extends AppCompatActivity {
     PreviewPresenter mPresent;

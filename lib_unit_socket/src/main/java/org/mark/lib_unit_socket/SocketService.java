@@ -97,7 +97,7 @@ public class SocketService {
         public void cancel() {
             try {
                 mServerSocket.close();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 mReceiveMessageCallback.onLogMessage("AcceptThread cancel", e);
             }
         }

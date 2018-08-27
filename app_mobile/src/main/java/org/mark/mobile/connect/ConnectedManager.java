@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,11 +21,12 @@ public class ConnectedManager {
     private static ConnectedManager instance;
     @Nullable
     private IConnect mDefaultConnect;
-    private ExecutorService mExecutorForWrite = Executors.newCachedThreadPool();
-    private Vector<ClientMessageCallback> mCallbackList;
+    private ExecutorService mExecutorForWrite;
+    private List<ClientMessageCallback> mCallbackList;
 
     private ConnectedManager() {
-        mCallbackList = new Vector<>();
+        mExecutorForWrite = Executors.newCachedThreadPool();
+        mCallbackList = new CopyOnWriteArrayList<>();
     }
 
     public static ConnectedManager getInstance() {
@@ -123,13 +125,8 @@ public class ConnectedManager {
     }
 
     public void removeCallback(ClientMessageCallback callback) {
-        Iterator<ClientMessageCallback> iterator = mCallbackList.iterator();
-        while (iterator.hasNext()) {
-            ClientMessageCallback element = iterator.next();
-            if (element.equals(callback)) {
-                iterator.remove();
-            }
+        if (mCallbackList.contains(callback)) {
+            mCallbackList.remove(callback);
         }
-
     }
 }
