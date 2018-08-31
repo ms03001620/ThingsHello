@@ -22,8 +22,12 @@ public class PreferUtils {
         return mSharedPreferences.getString(KEY_HOST, "");
     }
 
+    public int getPortNumber() {
+        return mSharedPreferences.getInt(KEY_PORT, 0);
+    }
+
     public String getPort() {
-        int port = mSharedPreferences.getInt(KEY_PORT, 0);
+        int port = getPortNumber();
         return String.valueOf(port);
     }
 
