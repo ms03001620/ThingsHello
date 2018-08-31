@@ -44,6 +44,9 @@ public class UdpSender implements ISend {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        // 启动线程等待udp client链接到服务器
+        start();
     }
 
 
