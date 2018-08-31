@@ -16,6 +16,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.util.Size;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -113,6 +114,49 @@ public class CameraUtils {
     public static Bitmap createFromBytes(@NonNull byte[] bytes) {
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
     }
+
+
+    /**
+     * 为2k的图片数据进行压缩处理
+     * @param bytes
+     * @return
+     */
+    public static byte[] compress2kImages(@NonNull byte[] bytes) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 8;
+        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.WEBP, 80, stream);
+        byte[] byteArray = stream.toByteArray();
+        bitmap.recycle();
+
+        return byteArray;
+    }
+
+
+    public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) > reqHeight
+                    && (halfWidth / inSampleSize) > reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
 
     public Bitmap preprocessImage(final Image image) {
 

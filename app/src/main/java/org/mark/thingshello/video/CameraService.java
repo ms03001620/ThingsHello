@@ -2,20 +2,17 @@ package org.mark.thingshello.video;
 
 import android.app.Service;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.media.ImageReader;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
 import android.util.Log;
 
-
+import org.mark.base.CameraUtils;
 import org.mark.thingshello.video.sender.ConnectSelector;
+import org.mark.thingshello.video.sender.ImageProcess;
 
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
@@ -106,11 +103,11 @@ public class CameraService extends Service {
         @Override
         public void onImageAvailable(ImageReader reader) {
             Image image = reader.acquireNextImage();
-            onPictureTaken(image);
+            sendBytesWithCompress(image);
         }
     };
 
-    private void onPictureTaken(Image image) {
+    private void sendBytes(Image image) {
         ByteBuffer imageBuf = image.getPlanes()[0].getBuffer();
         final byte[] imageBytes = new byte[imageBuf.remaining()];
         imageBuf.get(imageBytes);
@@ -126,6 +123,30 @@ public class CameraService extends Service {
                 mConnectSelector.send(imageBytes);
             }
         }
+    }
+
+    private void sendBytesWithCompress(Image image) {
+        ByteBuffer imageBuf = image.getPlanes()[0].getBuffer();
+        final byte[] imageBytes = new byte[imageBuf.remaining()];
+        imageBuf.get(imageBytes);
+        image.close();
+
+        ImageProcess.getInstance().run(new Runnable() {
+            @Override
+            public void run() {
+                long start = System.currentTimeMillis();
+
+                byte[] smallBytes = CameraUtils.compress2kImages(imageBytes);
+
+                Log.d(TAG, "image bytes size:"
+                        + (imageBytes.length - smallBytes.length)
+                        + ", " + smallBytes.length / 1024.0 + "KB"
+                        + ", pass:" + (System.currentTimeMillis() - start));
+
+                mConnectSelector.send(smallBytes);
+            }
+        });
+
     }
 
     public byte[] mockBytes(int lines){

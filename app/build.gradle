@@ -29,4 +29,5 @@ dependencies {
 
     implementation 'io.reactivex:rxjava:1.2.6'
     implementation 'io.reactivex:rxandroid:1.2.1'
+    implementation project(path: ':lib_base')
 }

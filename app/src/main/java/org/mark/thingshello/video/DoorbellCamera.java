@@ -32,6 +32,8 @@ import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import org.mark.base.CameraUtils;
+
 import java.util.Collections;
 
 import static android.content.Context.CAMERA_SERVICE;
@@ -79,7 +81,7 @@ public class DoorbellCamera {
         mCameraThread = new HandlerThread("CameraBackground");
         mCameraThread.start();
         mCameraHandler = new Handler(mCameraThread.getLooper());
-        mImageReader = ImageReader.newInstance(320, 240, ImageFormat.JPEG, 1);
+        mImageReader = ImageReader.newInstance(2560, 1440, ImageFormat.JPEG, 1);
         mImageAvailableListener = imageAvailableListener;
         // Discover the camera instance
         CameraManager manager = (CameraManager) context.getSystemService(CAMERA_SERVICE);

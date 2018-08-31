@@ -1,5 +1,7 @@
 package org.mark.lib_unit_socket.udp;
 
+import android.support.annotation.NonNull;
+
 import org.mark.lib_unit_socket.ClientMessageCallback;
 
 import java.util.concurrent.ExecutorService;
@@ -24,7 +26,7 @@ public class UdpManager {
                 }
 
                 @Override
-                public void onExceptionToReOpen(Exception e) {
+                public void onExceptionToReOpen(@NonNull Exception e) {
 
                 }
 
@@ -33,7 +35,7 @@ public class UdpManager {
                 }
 
                 @Override
-                public void onStatusChange(Status status) {
+                public void onStatusChange(@NonNull Status status) {
                 }
             });
         } catch (Exception e) {

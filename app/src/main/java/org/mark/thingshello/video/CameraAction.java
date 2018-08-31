@@ -10,6 +10,7 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import org.mark.base.CameraUtils;
 import org.mark.lib_unit_socket.SocketManager;
 import org.mark.thingshello.MainActivity;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
