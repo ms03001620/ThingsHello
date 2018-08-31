@@ -10,6 +10,8 @@ import android.util.Log;
 import org.mark.base.CameraUtils;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.mobile.connect.ConnectedManager;
+import org.mark.mobile.connect.udp.IReceiver;
+import org.mark.mobile.connect.udp.VideoManager;
 
 /**
  * Created by Mark on 2018/8/19
@@ -18,10 +20,14 @@ public class PreviewPresenter {
     private PreviewActivity mView;
     private WorkThreadHandler mWorkThreadHandler;
 
+    private IReceiver mIReceiver;
+
     public PreviewPresenter(@Nullable PreviewActivity previewActivity) {
         mView = previewActivity;
         mWorkThreadHandler = new WorkThreadHandler();
-        ConnectedManager.getInstance().addCallback(mClientMessageCallback);
+
+        mIReceiver = new VideoManager("tcp");
+        mIReceiver.addCallback(mClientMessageCallback);
     }
 
     private ClientMessageCallback mClientMessageCallback = new ClientMessageCallback() {
@@ -50,7 +56,7 @@ public class PreviewPresenter {
 
         @Override
         public void onStatusChange(@NonNull Status status) {
-            if(status == Status.NO_CONNECT){
+            if (status == Status.NO_CONNECT) {
                 mView.finish();
             }
         }
@@ -59,16 +65,16 @@ public class PreviewPresenter {
 
     public void release() {
         mWorkThreadHandler.release();
-        ConnectedManager.getInstance().removeCallback(mClientMessageCallback);
+        mIReceiver.removeCallback(mClientMessageCallback);
         mView = null;
     }
 
     public void onStart() {
-        ConnectedManager.getInstance().sendMessage("12");
+        mIReceiver.start();
     }
 
 
     public void onStop() {
-        ConnectedManager.getInstance().sendMessage("13");
+        mIReceiver.stop();
     }
 }
