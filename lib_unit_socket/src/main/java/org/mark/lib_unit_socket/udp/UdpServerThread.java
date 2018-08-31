@@ -6,14 +6,12 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
 public class UdpServerThread  {
-    private byte[] receMsgs = new byte[UdpConnection.MAX_LENGTH];
     private UdpConnection mConnection;
 
     public UdpServerThread(int port, ClientMessageCallback callback) throws Exception {
         DatagramSocket socket = new DatagramSocket(port);
-        DatagramPacket packet = new DatagramPacket(receMsgs, receMsgs.length);
 
-        mConnection = new UdpConnection(socket, packet, callback);
+        mConnection = new UdpConnection(null, socket, callback);
     }
 
     public void write(byte[] bytes, int type) {
@@ -26,6 +24,10 @@ public class UdpServerThread  {
 
     public void stop(boolean ignore) {
         mConnection.stop(ignore);
+    }
+
+    public boolean hasClientLinked() {
+        return mConnection.hasClientLinked();
     }
 }
 
