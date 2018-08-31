@@ -17,6 +17,7 @@ import org.mark.mobile.connect.udp.VideoManager;
  * Created by Mark on 2018/8/19
  */
 public class PreviewPresenter {
+    @Nullable
     private PreviewActivity mView;
     private WorkThreadHandler mWorkThreadHandler;
 
@@ -38,7 +39,9 @@ public class PreviewPresenter {
                 @Override
                 public void run() {
                     Bitmap bitmap = CameraUtils.createFromBytes(bytes);
-                    mView.updateImage(bitmap);
+                    if (mView != null) {
+                        mView.updateImage(bitmap);
+                    }
                 }
             });
 
@@ -57,7 +60,9 @@ public class PreviewPresenter {
         @Override
         public void onStatusChange(@NonNull Status status) {
             if (status == Status.NO_CONNECT) {
-                mView.finish();
+                if (mView != null) {
+                    mView.finish();
+                }
             }
         }
     };
