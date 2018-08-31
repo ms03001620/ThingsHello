@@ -26,7 +26,7 @@ public class PreviewPresenter {
         mView = previewActivity;
         mWorkThreadHandler = new WorkThreadHandler();
 
-        mIReceiver = new VideoManager("tcp");
+        mIReceiver = new VideoManager("udp", previewActivity);
         mIReceiver.addCallback(mClientMessageCallback);
     }
 

@@ -1,5 +1,6 @@
 package org.mark.mobile.connect.udp;
 
+import android.content.Context;
 import android.widget.VideoView;
 
 import org.mark.lib_unit_socket.ClientMessageCallback;
@@ -9,11 +10,15 @@ import org.mark.lib_unit_socket.ClientMessageCallback;
  */
 public class VideoManager implements IReceiver {
 
-    IReceiver mIReceiver;
+    private IReceiver mIReceiver;
 
-    public VideoManager(String name){
-        if("tcp".equals(name)){
+    public VideoManager(String name, Context context) {
+        if ("tcp".equals(name)) {
             mIReceiver = new TcpReceiver();
+        }
+
+        if ("udp".equals(name)) {
+            mIReceiver = new UdpReceiver(context);
         }
     }
 
