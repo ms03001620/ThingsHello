@@ -103,7 +103,7 @@ public class CameraService extends Service {
         @Override
         public void onImageAvailable(ImageReader reader) {
             Image image = reader.acquireNextImage();
-            sendBytesWithCompress(image);
+            sendBytes(image);
         }
     };
 
@@ -118,31 +118,19 @@ public class CameraService extends Service {
         if (now - time > 0) {
             time = now;
 
-            Log.d(TAG, "image bytes size:" + imageBytes.length + ", " + imageBytes.length / 1024.0 + "KB");
             if (imageBytes.length > 0) {
-                mConnectSelector.send(imageBytes);
+                // Log.d(TAG, "image bytes size:" + imageBytes.length + ", " + imageBytes.length / 1024.0 + "KB");
+                // mConnectSelector.send(imageBytes);
+
+                ImageProcess.getInstance().run(new Runnable() {
+                    @Override
+                    public void run() {
+                        byte[] smallBytes = CameraUtils.compressOriginImages(imageBytes);
+                        mConnectSelector.send(smallBytes);
+                    }
+                });
             }
         }
-    }
-
-    private void sendBytesWithCompress(Image image) {
-        ByteBuffer imageBuf = image.getPlanes()[0].getBuffer();
-        final byte[] imageBytes = new byte[imageBuf.remaining()];
-        imageBuf.get(imageBytes);
-        image.close();
-
-        ImageProcess.getInstance().run(new Runnable() {
-            @Override
-            public void run() {
-
-                byte[] smallBytes = CameraUtils.compress2kImages(imageBytes);
-
-
-
-                mConnectSelector.send(smallBytes);
-            }
-        });
-
     }
 
 }

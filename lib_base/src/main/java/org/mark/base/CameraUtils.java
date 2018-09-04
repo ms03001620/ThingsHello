@@ -117,31 +117,32 @@ public class CameraUtils {
 
 
     /**
-     * 为2k的图片数据进行压缩处理
-     * @param bytes
-     * @return
+     * 从相机获取到的原始图片一般都非常巨大。几乎每种分辨率原始图片都如此
+     * 在这里有2个途径解决这个问题
+     * 1.图片分辨率过大的。可以再次修改其分辨率为小尺寸
+     * 2.压缩图片数据
      */
-    public static byte[] compress2kImages(@NonNull byte[] bytes) {
+    public static byte[] compressOriginImages(@NonNull byte[] bytes) {
         long start = System.currentTimeMillis();
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
 
-        Log.d(TAG, "compress2kImages origin width:" + options.outWidth + ", height:" + options.outHeight);
+        Log.d(TAG, "compressOriginImages origin width:" + options.outWidth + ", height:" + options.outHeight);
 
-        options.inSampleSize = 2;
+        // options.inSampleSize = 2;
         options.inJustDecodeBounds = false;
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
 
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.WEBP, 100, stream);
+        bitmap.compress(Bitmap.CompressFormat.WEBP, 80, stream);
         byte[] byteArray = stream.toByteArray();
         bitmap.recycle();
 
 
-        Log.d(TAG, "compress2kImages remove:"
+        Log.d(TAG, "compressOriginImages remove:"
                 + (bytes.length - byteArray.length)
                 + ", " + byteArray.length / 1024 + "KB"
                 + ", pass:" + (System.currentTimeMillis() - start)
