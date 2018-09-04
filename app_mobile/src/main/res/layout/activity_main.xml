@@ -26,16 +26,19 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <EditText
+
+            <AutoCompleteTextView
                 android:id="@+id/edit_host"
+                android:completionThreshold="0"
                 android:layout_width="200dp"
-                android:layout_height="wrap_content"
-                android:hint="host ip address" />
+                android:hint="host ip address"
+                android:layout_height="wrap_content" />
 
             <EditText
                 android:id="@+id/edit_port"
                 android:layout_width="80dp"
                 android:inputType="number"
+                android:text="8010"
                 android:layout_height="wrap_content"
                 android:hint="port" />
 

@@ -22,7 +22,12 @@ public class UdpReceiver implements IReceiver {
     public UdpReceiver(Context context) {
         PreferUtils utils = new PreferUtils(context);
 
-        String ip = utils.getHost();
+        String[] ipx = utils.getAddress();
+        if (ipx == null) {
+            throw new IllegalArgumentException("无法在share中找到IP地址");
+        }
+
+        String ip = ipx[0];
 
         mUdpClientThread = new UdpClientThread(ip, 8000, new ClientMessageCallback() {
             @Override
@@ -65,10 +70,11 @@ public class UdpReceiver implements IReceiver {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                // 启动后主动给服务器发送hello信息。报告自己的ip
                 mUdpClientThread.write("hello".getBytes(), 5);
             }
         }).start();

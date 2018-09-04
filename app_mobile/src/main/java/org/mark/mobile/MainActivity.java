@@ -7,6 +7,9 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -21,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTextLogs;
     private PreferUtils mPreferUtils;
     private Switch mSwitch;
-    private EditText editTextHost;
+    private AutoCompleteTextView editTextHost;
     private EditText editTextPost;
 
     @Override
@@ -36,15 +39,38 @@ public class MainActivity extends AppCompatActivity {
 
         mSwitch = findViewById(R.id.fab);
         mSwitch.setOnCheckedChangeListener(mListener);
-        initLastIp();
+        setupAutoFillIp();
         ConnectedManager.getInstance().addCallback(mClientMessageCallback);
     }
 
-    private void initLastIp() {
+    private void setupAutoFillIp() {
         mPreferUtils = new PreferUtils(this);
-        if (mPreferUtils.hasCached()) {
-            editTextHost.setText(mPreferUtils.getHost());
-            editTextPost.setText(mPreferUtils.getPort());
+        String[] autoString = mPreferUtils.getAddress();
+        if (autoString != null && autoString.length > 0) {
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, autoString);
+            // 0是最近使用的
+            editTextHost.setText(autoString[0]);
+            editTextHost.setAdapter(adapter);
+
+            editTextHost.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View view, boolean hasFocus) {
+                    if (hasFocus) {
+                        editTextHost.showDropDown();
+                    } else {
+                        editTextHost.dismissDropDown();
+                    }
+                }
+            });
+
+            editTextHost.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (editTextHost.hasFocus()) {
+                        editTextHost.showDropDown();
+                    }
+                }
+            });
         }
     }
 
@@ -68,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onLogMessage(String message, @Nullable Exception e) {
-            Log.e("Log:" , message, e);
+            Log.e("Log:", message, e);
         }
 
         @Override
@@ -78,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
                 final String textHost = editTextHost.getText().toString();
                 final String text = editTextPost.getText().toString();
                 final int port = Integer.valueOf(text);
-                mPreferUtils.save(textHost, port);
+                mPreferUtils.add(textHost, port);
                 startActivity(new Intent(MainActivity.this, CtrlActivity.class));
             }
         }
