@@ -4,26 +4,30 @@ import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import org.mark.mobile.R;
 
 public class PreviewActivity extends AppCompatActivity {
     PreviewPresenter mPresent;
     private ImageView mPreview;
+    private TextView mTextInfo;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_preview);
         mPresent = new PreviewPresenter(this);
         mPreview = findViewById(R.id.image);
+        mTextInfo = findViewById(R.id.text);
     }
 
 
-    public void updateImage(final Bitmap bitmap){
+    public void updateImage(final Bitmap bitmap, final String sizeString) {
         mPreview.post(new Runnable() {
             @Override
             public void run() {
                 mPreview.setImageBitmap(bitmap);
+                mTextInfo.setText(sizeString);
             }
         });
     }

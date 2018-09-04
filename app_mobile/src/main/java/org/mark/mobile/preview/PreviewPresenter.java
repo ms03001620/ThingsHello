@@ -1,15 +1,12 @@
 package org.mark.mobile.preview;
 
 import android.graphics.Bitmap;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.mark.base.CameraUtils;
 import org.mark.lib_unit_socket.ClientMessageCallback;
-import org.mark.mobile.connect.ConnectedManager;
 import org.mark.mobile.connect.udp.IReceiver;
 import org.mark.mobile.connect.udp.VideoManager;
 
@@ -17,6 +14,7 @@ import org.mark.mobile.connect.udp.VideoManager;
  * Created by Mark on 2018/8/19
  */
 public class PreviewPresenter {
+    private static final String TAG = "PreviewPresenter";
     @Nullable
     private PreviewActivity mView;
     private WorkThreadHandler mWorkThreadHandler;
@@ -35,16 +33,15 @@ public class PreviewPresenter {
 
         @Override
         public void onReceiveMessage(final byte[] bytes, int type) {
-            mWorkThreadHandler.runBackground(new Runnable() {
+            mWorkThreadHandler.runWorkThread(new Runnable() {
                 @Override
                 public void run() {
                     Bitmap bitmap = CameraUtils.createFromBytes(bytes);
                     if (mView != null) {
-                        mView.updateImage(bitmap);
+                        mView.updateImage(bitmap, bytes.length / 1024 + " KB");
                     }
                 }
             });
-
         }
 
         @Override
@@ -59,14 +56,9 @@ public class PreviewPresenter {
 
         @Override
         public void onStatusChange(@NonNull Status status) {
-            if (status == Status.NO_CONNECT) {
-                if (mView != null) {
-                    mView.finish();
-                }
-            }
+
         }
     };
-
 
     public void release() {
         mWorkThreadHandler.release();
