@@ -122,14 +122,30 @@ public class CameraUtils {
      * @return
      */
     public static byte[] compress2kImages(@NonNull byte[] bytes) {
+        long start = System.currentTimeMillis();
+
         BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = 8;
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+
+        Log.d(TAG, "compress2kImages origin width:" + options.outWidth + ", height:" + options.outHeight);
+
+        options.inSampleSize = 2;
+        options.inJustDecodeBounds = false;
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
 
+
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.WEBP, 80, stream);
+        bitmap.compress(Bitmap.CompressFormat.WEBP, 100, stream);
         byte[] byteArray = stream.toByteArray();
         bitmap.recycle();
+
+
+        Log.d(TAG, "compress2kImages remove:"
+                + (bytes.length - byteArray.length)
+                + ", " + byteArray.length / 1024 + "KB"
+                + ", pass:" + (System.currentTimeMillis() - start)
+                + ", w:" + options.outWidth + ", h:" + options.outHeight);
 
         return byteArray;
     }

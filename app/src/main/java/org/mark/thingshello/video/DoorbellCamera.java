@@ -49,7 +49,14 @@ public class DoorbellCamera {
                 4 = {Size@5234} "1280x720"
                 5 = {Size@5235} "1640x1232"
                 6 = {Size@5236} "1920x1080"
-                7 = {Size@5237} "2560x1440"*/
+                7 = {Size@5237} "2560x1440"
+
+                0 = {Size@5321} "160x120"
+                1 = {Size@5322} "176x144"
+                2 = {Size@5323} "320x240"
+                3 = {Size@5324} "352x288"
+                4 = {Size@5325} "640x480"
+                */
 
     private CameraDevice mCameraDevice;
 
@@ -81,7 +88,7 @@ public class DoorbellCamera {
         mCameraThread = new HandlerThread("CameraBackground");
         mCameraThread.start();
         mCameraHandler = new Handler(mCameraThread.getLooper());
-        mImageReader = ImageReader.newInstance(2560, 1440, ImageFormat.JPEG, 1);
+        mImageReader = ImageReader.newInstance(640, 480, ImageFormat.JPEG, 1);
         mImageAvailableListener = imageAvailableListener;
         // Discover the camera instance
         CameraManager manager = (CameraManager) context.getSystemService(CAMERA_SERVICE);

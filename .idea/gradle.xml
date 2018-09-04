@@ -10,6 +10,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/app_mobile" />
+            <option value="$PROJECT_DIR$/lib_base" />
             <option value="$PROJECT_DIR$/lib_unit_socket" />
           </set>
         </option>

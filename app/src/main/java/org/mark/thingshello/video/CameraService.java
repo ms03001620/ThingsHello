@@ -134,14 +134,10 @@ public class CameraService extends Service {
         ImageProcess.getInstance().run(new Runnable() {
             @Override
             public void run() {
-                long start = System.currentTimeMillis();
 
                 byte[] smallBytes = CameraUtils.compress2kImages(imageBytes);
 
-                Log.d(TAG, "image bytes size:"
-                        + (imageBytes.length - smallBytes.length)
-                        + ", " + smallBytes.length / 1024.0 + "KB"
-                        + ", pass:" + (System.currentTimeMillis() - start));
+
 
                 mConnectSelector.send(smallBytes);
             }
