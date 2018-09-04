@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         mTextLogs = findViewById(R.id.text_log);
 
         mSwitch = findViewById(R.id.fab);
-        mSwitch.setOnCheckedChangeListener(mListener);
+        mSwitch.setOnCheckedChangeListener(mSwitchListener);
         setupAutoFillIp();
         ConnectedManager.getInstance().addCallback(mClientMessageCallback);
     }
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     mSwitch.setOnCheckedChangeListener(null);
                     mSwitch.setChecked(false);
-                    mSwitch.setOnCheckedChangeListener(mListener);
+                    mSwitch.setOnCheckedChangeListener(mSwitchListener);
                     runUiText("exception:" + e.toString());
                 }
             });
@@ -101,16 +101,22 @@ public class MainActivity extends AppCompatActivity {
         public void onStatusChange(@NonNull Status status) {
             runUiText("Status:" + status.name());
             if (status == Status.CONNECTED) {
-                final String textHost = editTextHost.getText().toString();
-                final String text = editTextPost.getText().toString();
-                final int port = Integer.valueOf(text);
-                mPreferUtils.add(textHost, port);
-                startActivity(new Intent(MainActivity.this, CtrlActivity.class));
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final String textHost = editTextHost.getText().toString();
+                        final String text = editTextPost.getText().toString();
+                        final int port = Integer.valueOf(text);
+                        mPreferUtils.add(textHost, port);
+                        startActivity(new Intent(MainActivity.this, CtrlActivity.class));
+                    }
+                });
             }
         }
     };
 
-    CompoundButton.OnCheckedChangeListener mListener = new CompoundButton.OnCheckedChangeListener() {
+    // 连接启动开关
+    CompoundButton.OnCheckedChangeListener mSwitchListener = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean on) {
             if (on) {
