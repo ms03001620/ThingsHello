@@ -12,7 +12,7 @@ import java.net.DatagramSocket;
  * 发送和接收，主要操作pocket
  */
 public class UdpConnection extends Thread {
-    public final static int MAX_LENGTH = 1024 * 10;
+    public final static int MAX_LENGTH = 1024 * 64;
     private DatagramSocket mSocket;
     private DatagramPacket mPacketReceive;
     @Nullable
