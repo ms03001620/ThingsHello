@@ -4,13 +4,16 @@ import android.app.Service;
 import android.content.Intent;
 import android.media.Image;
 import android.media.ImageReader;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 
 import org.mark.base.CameraUtils;
+import org.mark.thingshello.tensorflow.Test;
 import org.mark.thingshello.video.sender.ConnectSelector;
 import org.mark.thingshello.video.sender.ImageProcess;
 
@@ -25,8 +28,9 @@ public class CameraService extends Service {
     private MyHandler sHandler = new MyHandler(this);
     private Messenger mMessenger = new Messenger(sHandler);
     private boolean isPreviewing;
-    private long time;
+    private long time = System.currentTimeMillis() + 5 * 1000;
     private ConnectSelector mConnectSelector;
+    Test mTest;
 
     private static class MyHandler extends Handler {
         private final WeakReference<CameraService> mService;
@@ -64,6 +68,8 @@ public class CameraService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        mTest = new Test(getApplicationContext());
         Log.d(TAG, "onCreate");
     }
 
@@ -115,22 +121,24 @@ public class CameraService extends Service {
 
         long now = System.currentTimeMillis();
         // 处理图片的频率
-        if (now - time > 0) {
+        if (now - time > 1000) {
             time = now;
 
             if (imageBytes.length > 0) {
-                // Log.d(TAG, "image bytes size:" + imageBytes.length + ", " + imageBytes.length / 1024.0 + "KB");
-                // mConnectSelector.send(imageBytes);
-
                 ImageProcess.getInstance().run(new Runnable() {
                     @Override
                     public void run() {
                         byte[] smallBytes = CameraUtils.compressOriginImages(imageBytes);
                         mConnectSelector.send(smallBytes);
+
+                        mTest.classifyFrame(smallBytes);
                     }
                 });
             }
         }
     }
+
+
+
 
 }

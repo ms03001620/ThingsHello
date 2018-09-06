@@ -1,6 +1,7 @@
 package org.mark.thingshello.ctrl;
 
 import org.mark.thingshello.ctrl.voice.BuzzerAction;
+import org.mark.thingshello.video.CameraAction;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,6 +43,14 @@ public class DeviceHelper {
         if (o instanceof BuzzerAction) {
             BuzzerAction buzzerAction = (BuzzerAction) o;
             buzzerAction.di();
+        }
+    }
+
+    public void startCamera() {
+        Object o = deviceMap.get(CameraAction.class.getSimpleName());
+        if (o instanceof CameraAction) {
+            CameraAction action = (CameraAction) o;
+            action.sendWhat(1);
         }
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
@@ -129,24 +130,32 @@ public class CameraUtils {
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
 
-        Log.d(TAG, "compressOriginImages origin width:" + options.outWidth + ", height:" + options.outHeight);
+        int ow = options.outWidth;
+        int oh = options.outHeight;
 
         // options.inSampleSize = 2;
         options.inJustDecodeBounds = false;
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
 
 
+        bitmap = zoomImage(bitmap, 224,224);
+
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.WEBP, 80, stream);
         byte[] byteArray = stream.toByteArray();
+
+        int w = bitmap.getWidth();
+        int h = bitmap.getHeight();
+
         bitmap.recycle();
 
 
-        Log.d(TAG, "compressOriginImages remove:"
+        Log.d(TAG, "compress remove:"
                 + (bytes.length - byteArray.length)
-                + ", " + byteArray.length / 1024 + "KB"
-                + ", pass:" + (System.currentTimeMillis() - start)
-                + ", w:" + options.outWidth + ", h:" + options.outHeight);
+                + ", (" + byteArray.length / 1024 + "KB)"
+                + ", ow:" + ow + ", oh:" + oh
+                + ", w:" + w + ", h:" + h
+                + ", pass:" + (System.currentTimeMillis() - start));
 
         return byteArray;
     }
@@ -209,4 +218,31 @@ public class CameraUtils {
         }
     }
 
+
+    /***
+     * 图片的缩放方法
+     *
+     * @param origin
+     *            ：源图片资源
+     * @param newWidth
+     *            ：缩放后宽度
+     * @param newHeight
+     *            ：缩放后高度
+     * @return
+     */
+    public static Bitmap zoomImage(Bitmap origin, double newWidth, double newHeight) {
+        // 获取这个图片的宽和高
+        float width = origin.getWidth();
+        float height = origin.getHeight();
+        // 创建操作图片用的matrix对象
+        Matrix matrix = new Matrix();
+        // 计算宽高缩放率
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+        // 缩放图片动作
+        matrix.postScale(scaleWidth, scaleHeight);
+        Bitmap target = Bitmap.createBitmap(origin, 0, 0, (int) width,
+                (int) height, matrix, true);
+        return target;
+    }
 }

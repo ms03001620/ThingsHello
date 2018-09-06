@@ -44,7 +44,6 @@ public class MainActivity extends Activity {
     @Nullable
     private CtrlManager mCtrlManager;
     private TextView mTextLog;
-    private ImageView mImageView;
     private Messenger mService = null;
 
     public interface OnCtrlResponse{
@@ -52,8 +51,6 @@ public class MainActivity extends Activity {
 
         @Nullable
         Messenger getMessenger();
-
-        ImageView getImage();
     }
 
     @Override
@@ -61,7 +58,6 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mTextLog = findViewById(R.id.text);
-        mImageView = findViewById(R.id.image);
 
         try {
             mCtrlManager = new CtrlManager(new OnCtrlResponse() {
@@ -80,10 +76,6 @@ public class MainActivity extends Activity {
                     return mService;
                 }
 
-                @Override
-                public ImageView getImage() {
-                    return mImageView;
-                }
             });
         } catch (Exception e) {
             e.printStackTrace();
@@ -99,6 +91,8 @@ public class MainActivity extends Activity {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             mService = new Messenger(iBinder);
+
+            // mCtrlManager.autoStartCamera();
         }
 
         @Override

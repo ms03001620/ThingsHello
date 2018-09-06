@@ -43,4 +43,8 @@ public class CtrlManager {
         SocketManager.getInstance().stop();
         mDeviceHelper.release();
     }
+
+    public void autoStartCamera(){
+        mDeviceHelper.startCamera();
+    }
 }

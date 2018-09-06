@@ -25,15 +25,8 @@ public class CameraAction extends OnReceiverCommand{
         this.listener = listener;
     }
 
-    public void startPreview() {
-        sendWhat(1);
-    }
 
-    public void stopPreview() {
-        sendWhat(2);
-    }
-
-    private void sendWhat(int what) {
+    public void sendWhat(int what) {
         Messenger messenger = listener.getMessenger();
         if (messenger != null) {
             Message message = Message.obtain();
@@ -56,9 +49,6 @@ public class CameraAction extends OnReceiverCommand{
                 case 100:
                     sendFromSocket(bytes);
                     break;
-                case 200:
-                    showInApp(bytes);
-                    break;
                 default:
                     break;
             }
@@ -71,19 +61,8 @@ public class CameraAction extends OnReceiverCommand{
         if (SocketManager.getInstance().isConnection()) {
             SocketManager.getInstance().send(bytes);
         } else {
-            stopPreview();
+            sendWhat(2);
         }
-    }
-
-    private void showInApp(final byte[] bytes){
-        listener.getImage().post(new Runnable() {
-            @Override
-            public void run() {
-                Bitmap bitmap = CameraUtils.createFromBytes(bytes);
-                listener.getImage().setImageBitmap(bitmap);
-                // bitmap.recycle();
-            }
-        });
     }
 
     @Override
@@ -91,10 +70,10 @@ public class CameraAction extends OnReceiverCommand{
         int data = decodeByteAsInteger(bytes);
         switch (data){
             case 12:
-                startPreview();
+                sendWhat(1);
                 break;
             case 13:
-                stopPreview();
+                sendWhat(2);
                 break;
         }
     }

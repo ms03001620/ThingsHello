@@ -1,31 +1,18 @@
 package org.mark.base;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.junit.Assert.*;
-
 /**
- * Instrumented test, which will execute on an Android device.
- *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ * Created by Mark on 2018/9/6
  */
 @RunWith(AndroidJUnit4.class)
-public class ExampleInstrumentedTest {
-    @Test
-    public void useAppContext() {
-        // Context of the app under test.
-        Context appContext = InstrumentationRegistry.getTargetContext();
-
-        assertEquals("org.mark.lib_base.test", appContext.getPackageName());
-    }
+public class CameraUtilsTest {
 
     @Test
     public void zoomImage() {
