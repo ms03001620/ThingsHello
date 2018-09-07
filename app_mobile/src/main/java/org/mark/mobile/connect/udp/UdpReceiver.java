@@ -12,14 +12,10 @@ import org.mark.mobile.utils.PreferUtils;
 /**
  * Created by Mark on 2018/8/31
  */
-public class UdpReceiver implements IReceiver {
-
+public class UdpReceiver {
     private UdpClientThread mUdpClientThread;
 
-    @Nullable
-    private ClientMessageCallback mClientMessageCallback;
-
-    public UdpReceiver(Context context) {
+    public UdpReceiver(Context context, ClientMessageCallback callback) {
         PreferUtils utils = new PreferUtils(context);
 
         String[] ipx = utils.getAddress();
@@ -29,39 +25,10 @@ public class UdpReceiver implements IReceiver {
 
         String ip = ipx[0];
 
-        mUdpClientThread = new UdpClientThread(ip, 8000, new ClientMessageCallback() {
-            @Override
-            public void onReceiveMessage(byte[] bytes, int type) {
-                if (mClientMessageCallback != null) {
-                    mClientMessageCallback.onReceiveMessage(bytes, type);
-                }
-            }
-
-            @Override
-            public void onExceptionToReOpen(@NonNull Exception e) {
-                if (mClientMessageCallback != null) {
-                    mClientMessageCallback.onExceptionToReOpen(e);
-                }
-            }
-
-            @Override
-            public void onLogMessage(String message, @Nullable Exception e) {
-                if (mClientMessageCallback != null) {
-                    mClientMessageCallback.onLogMessage(message, e);
-                }
-            }
-
-            @Override
-            public void onStatusChange(@NonNull Status status) {
-                if (mClientMessageCallback != null) {
-                    mClientMessageCallback.onStatusChange(status);
-                }
-            }
-        });
+        mUdpClientThread = new UdpClientThread(ip, 8000, callback);
     }
 
 
-    @Override
     public void start() {
         ConnectedManager.getInstance().sendMessage("12");
 
@@ -80,19 +47,9 @@ public class UdpReceiver implements IReceiver {
         }).start();
     }
 
-    @Override
+
     public void stop() {
         mUdpClientThread.stop(false);
         ConnectedManager.getInstance().sendMessage("13");
-    }
-
-    @Override
-    public void addCallback(ClientMessageCallback callback) {
-        mClientMessageCallback = callback;
-    }
-
-    @Override
-    public void removeCallback(ClientMessageCallback callback) {
-        mClientMessageCallback = null;
     }
 }

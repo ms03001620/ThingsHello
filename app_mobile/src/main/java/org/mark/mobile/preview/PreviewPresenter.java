@@ -3,12 +3,10 @@ package org.mark.mobile.preview;
 import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import org.mark.base.CameraUtils;
 import org.mark.lib_unit_socket.ClientMessageCallback;
-import org.mark.mobile.connect.udp.IReceiver;
-import org.mark.mobile.connect.udp.VideoManager;
+import org.mark.mobile.connect.udp.UdpReceiver;
 
 /**
  * Created by Mark on 2018/8/19
@@ -19,14 +17,13 @@ public class PreviewPresenter {
     private PreviewActivity mView;
     private WorkThreadHandler mWorkThreadHandler;
 
-    private IReceiver mIReceiver;
+    private UdpReceiver mIReceiver;
 
     public PreviewPresenter(@Nullable PreviewActivity previewActivity) {
         mView = previewActivity;
         mWorkThreadHandler = new WorkThreadHandler();
 
-        mIReceiver = new VideoManager("udp", previewActivity);
-        mIReceiver.addCallback(mClientMessageCallback);
+        mIReceiver = new UdpReceiver(previewActivity, mClientMessageCallback);
     }
 
     private ClientMessageCallback mClientMessageCallback = new ClientMessageCallback() {
@@ -62,7 +59,6 @@ public class PreviewPresenter {
 
     public void release() {
         mWorkThreadHandler.release();
-        mIReceiver.removeCallback(mClientMessageCallback);
         mView = null;
     }
 
