@@ -96,6 +96,10 @@ public class ConnectedManager {
         });
     }
 
+    public void sendMessage(final int message) {
+        sendMessage(String.valueOf(message));
+    }
+
     public void sendMessage(final String message) {
         mExecutorForWrite.execute(new Runnable() {
             @Override

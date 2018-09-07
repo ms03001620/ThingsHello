@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import com.google.android.things.pio.PeripheralManager;
 import com.leinardi.android.things.pio.SoftPwm;
 
+import org.mark.base.CommandConstant;
 import org.mark.thingshello.ctrl.BoardDefaults;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
 
@@ -101,19 +102,19 @@ public class WheelAction extends OnReceiverCommand implements IWheelAction {
         }
 
         switch (data) {
-            case 0:
+            case CommandConstant.Wheel.STOP:
                 stop();
                 break;
-            case 1:
+            case CommandConstant.Wheel.FORWARD:
                 forward();
                 break;
-            case 2:
+            case CommandConstant.Wheel.BACK:
                 back();
                 break;
-            case 3:
+            case CommandConstant.Wheel.ROUND_LEFT:
                 left();
                 break;
-            case 4:
+            case CommandConstant.Wheel.ROUND_RIGHT:
                 right();
                 break;
         }

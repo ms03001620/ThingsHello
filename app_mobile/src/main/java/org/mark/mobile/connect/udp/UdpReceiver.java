@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.mark.base.CommandConstant;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.lib_unit_socket.udp.UdpClientThread;
 import org.mark.mobile.connect.ConnectedManager;
@@ -30,7 +31,7 @@ public class UdpReceiver {
 
 
     public void start() {
-        ConnectedManager.getInstance().sendMessage("12");
+        ConnectedManager.getInstance().sendMessage(CommandConstant.CAMERA.START);
 
         mUdpClientThread.start();
         new Thread(new Runnable() {
@@ -50,6 +51,6 @@ public class UdpReceiver {
 
     public void stop() {
         mUdpClientThread.stop(false);
-        ConnectedManager.getInstance().sendMessage("13");
+        ConnectedManager.getInstance().sendMessage(CommandConstant.CAMERA.STOP);
     }
 }

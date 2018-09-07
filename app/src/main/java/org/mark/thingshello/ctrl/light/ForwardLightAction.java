@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import com.google.android.things.pio.PeripheralManager;
 import com.leinardi.android.things.pio.SoftPwm;
 
+import org.mark.base.CommandConstant;
 import org.mark.thingshello.ctrl.BoardDefaults;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
 
@@ -71,10 +72,10 @@ public class ForwardLightAction extends OnReceiverCommand {
     public void onCommand(@NonNull byte[] bytes, int type) {
         int data = decodeByteAsInteger(bytes);
         switch (data){
-            case 10:
+            case CommandConstant.LIGHT.START:
                 test();
                 break;
-            case 11:
+            case CommandConstant.LIGHT.STOP:
                 testStop();
                 break;
         }

@@ -1,16 +1,13 @@
 package org.mark.thingshello.video;
 
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
-import org.mark.base.CameraUtils;
+import org.mark.base.CommandConstant;
 import org.mark.lib_unit_socket.SocketManager;
 import org.mark.thingshello.MainActivity;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
@@ -18,7 +15,7 @@ import org.mark.thingshello.ctrl.OnReceiverCommand;
 /**
  * Created by Mark on 2018/8/19
  */
-public class CameraAction extends OnReceiverCommand{
+public class CameraAction extends OnReceiverCommand {
     MainActivity.OnCtrlResponse listener;
 
     public CameraAction(MainActivity.OnCtrlResponse listener) {
@@ -31,7 +28,7 @@ public class CameraAction extends OnReceiverCommand{
         if (messenger != null) {
             Message message = Message.obtain();
             message.what = what;
-            message.replyTo = replyMessager;
+            message.replyTo = mMessengerFromCameraService;
             try {
                 messenger.send(message);
             } catch (RemoteException e) {
@@ -40,16 +37,16 @@ public class CameraAction extends OnReceiverCommand{
         }
     }
 
-    private Messenger replyMessager = new Messenger(new Handler() {
+    private Messenger mMessengerFromCameraService = new Messenger(new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            Bundle bundle= msg.getData();
+            Bundle bundle = msg.getData();
             final byte[] bytes = bundle.getByteArray("text");
             sendFromSocket(bytes);
         }
     });
 
-    private void sendFromSocket(byte[] bytes){
+    private void sendFromSocket(byte[] bytes) {
         //Log.d(CameraService.TAG, "发送数据" + bytes.length / 1024 + "KB");
 
         if (SocketManager.getInstance().isConnection()) {
@@ -60,12 +57,12 @@ public class CameraAction extends OnReceiverCommand{
     @Override
     public void onCommand(@NonNull byte[] bytes, int type) {
         int data = decodeByteAsInteger(bytes);
-        switch (data){
-            case 12:
-                sendWhat(1);
+        switch (data) {
+            case CommandConstant.CAMERA.START:
+                sendWhat(CameraService.CameraServiceAction.CAMERA_OPEN);
                 break;
-            case 13:
-                sendWhat(2);
+            case CommandConstant.CAMERA.STOP:
+                sendWhat(CameraService.CameraServiceAction.CAMERA_CLOSE);
                 break;
         }
     }

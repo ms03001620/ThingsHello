@@ -22,6 +22,12 @@ import java.nio.ByteBuffer;
  * Created by Mark on 2018/8/16
  */
 public class CameraService extends Service {
+
+    public static class CameraServiceAction {
+        public static final int CAMERA_OPEN = 1;
+        public static final int CAMERA_CLOSE = 2;
+    }
+
     public static final String TAG = "CameraService";
     private MyHandler sHandler = new MyHandler(this);
     private Messenger mMessenger = new Messenger(sHandler);
@@ -41,13 +47,13 @@ public class CameraService extends Service {
         public void handleMessage(Message msg) {
             CameraService service = mService.get();
             switch (msg.what) {
-                case 1:
+                case CameraServiceAction.CAMERA_OPEN:
                     if (service != null && !service.isPreviewing) {
                         service.startPreview();
                         service.startSender(msg.replyTo);
                     }
                     break;
-                case 2:
+                case CameraServiceAction.CAMERA_CLOSE:
                     if (service != null && service.isPreviewing) {
                         service.stopPreview();
                         service.stopSender();
@@ -82,6 +88,7 @@ public class CameraService extends Service {
     @Override
     public void onDestroy() {
         Log.d(TAG, "onDestroy");
+        mTest.onDestroy();
         super.onDestroy();
     }
 
@@ -95,11 +102,11 @@ public class CameraService extends Service {
         isPreviewing = false;
     }
 
-    void startSender(Messenger messenger){
+    void startSender(Messenger messenger) {
         mConnectSelector = new ConnectSelector("udp", messenger);
     }
 
-    void stopSender(){
+    void stopSender() {
         mConnectSelector.release();
     }
 

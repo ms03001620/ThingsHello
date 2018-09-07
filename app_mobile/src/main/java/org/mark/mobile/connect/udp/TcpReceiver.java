@@ -1,5 +1,6 @@
 package org.mark.mobile.connect.udp;
 
+import org.mark.base.CommandConstant;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.mobile.connect.ConnectedManager;
 
@@ -9,12 +10,12 @@ import org.mark.mobile.connect.ConnectedManager;
 public class TcpReceiver implements IReceiver {
     @Override
     public void start() {
-        ConnectedManager.getInstance().sendMessage("12");
+        ConnectedManager.getInstance().sendMessage(CommandConstant.CAMERA.START);
     }
 
     @Override
     public void stop() {
-        ConnectedManager.getInstance().sendMessage("13");
+        ConnectedManager.getInstance().sendMessage(CommandConstant.CAMERA.STOP);
     }
 
     @Override

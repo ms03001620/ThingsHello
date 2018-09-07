@@ -20,11 +20,6 @@ public class Test {
     public static final String TAG = "Test";
     private ImageClassifierQuantizedMobileNet classifier;
 
-    public Activity getActivity() {
-        return null;
-    }
-
-
     public Test(Context context) {
 
         try {

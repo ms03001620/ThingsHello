@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.gcssloop.widget.RockerView;
 
+import org.mark.base.CommandConstant;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.mobile.connect.ConnectedManager;
 import org.mark.mobile.ctrl.CtrlPresent;
@@ -34,13 +35,6 @@ public class CtrlActivity extends AppCompatActivity {
     String KEY_LEFT = "$4,0,0,0,0,0,0,0,0#";
     String KEY_ROUND_LEFT = "$0,1,0,0,0,0,0,0,0#";
     String KEY_ROUND_RIGHT = "$0,2,0,0,0,0,0,0,0#";*/
-
-    String KEY_CLEAR = "0";
-    String KEY_GO = "1";
-    String KEY_BACK = "2";
-    String KEY_LEFT = "3";
-    String KEY_RIGHT = "4";
-
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -94,19 +88,19 @@ public class CtrlActivity extends AppCompatActivity {
 
                 switch (action) {
                     case UP:
-                        ConnectedManager.getInstance().sendMessage(KEY_GO);
+                        ConnectedManager.getInstance().sendMessage(CommandConstant.Wheel.FORWARD);
                         break;
                     case RIGHT:
-                        ConnectedManager.getInstance().sendMessage(KEY_RIGHT);
+                        ConnectedManager.getInstance().sendMessage(CommandConstant.Wheel.ROUND_RIGHT);
                         break;
                     case DOWN:
-                        ConnectedManager.getInstance().sendMessage(KEY_BACK);
+                        ConnectedManager.getInstance().sendMessage(CommandConstant.Wheel.BACK);
                         break;
                     case LEFT:
-                        ConnectedManager.getInstance().sendMessage(KEY_LEFT);
+                        ConnectedManager.getInstance().sendMessage(CommandConstant.Wheel.ROUND_LEFT);
                         break;
                     case STOP:
-                        ConnectedManager.getInstance().sendMessage(KEY_CLEAR);
+                        ConnectedManager.getInstance().sendMessage(CommandConstant.Wheel.STOP);
                         break;
 
                 }

@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import com.google.android.things.pio.Gpio;
 import com.google.android.things.pio.PeripheralManager;
 
+import org.mark.base.CommandConstant;
 import org.mark.thingshello.ctrl.BoardDefaults;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
 
@@ -89,10 +90,10 @@ public class BuzzerAction extends OnReceiverCommand {
         int data = decodeByteAsInteger(bytes);
 
         switch (data) {
-            case 8:
+            case CommandConstant.Buzzer.START:
                 di();
                 break;
-            case 9:
+            case CommandConstant.Buzzer.STOP:
                 stop();
                 break;
         }
