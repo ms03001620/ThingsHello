@@ -8,7 +8,7 @@ import android.util.Log;
 
 import org.mark.base.CameraUtils;
 import org.mark.base.executor.BlockProcess;
-import org.mark.base.executor.ImageProcess;
+import org.mark.thingshello.video.sender.ConnectSelector;
 
 import java.io.IOException;
 
@@ -41,11 +41,9 @@ public class Test {
         SpannableStringBuilder textToShow = new SpannableStringBuilder();
         //textureView.getBitmap(classifier.getImageSizeX(), classifier.getImageSizeY());
         classifier.classifyFrame(bitmap, textToShow);
-        bitmap.recycle();
-        showToast(textToShow);
     }
 
-    public void classifyFrame(final Bitmap bitmap) {
+    public void classifyFrame(final Bitmap bitmap, final ConnectSelector connectSelector) {
         BlockProcess.getInstance().run(new Runnable() {
             @Override
             public void run() {
@@ -53,7 +51,11 @@ public class Test {
                 //textureView.getBitmap(classifier.getImageSizeX(), classifier.getImageSizeY());
                 classifier.classifyFrame(bitmap, textToShow);
                 // bitmap.recycle();
-                showToast(textToShow);
+
+                String label = textToShow.toString();
+                connectSelector.sendText(label);
+
+                Log.d(TAG, "result \n"+label);
             }
         });
     }
@@ -63,9 +65,4 @@ public class Test {
         classifier.close();
     }
 
-
-    private void showToast(final SpannableStringBuilder builder) {
-        Log.d(TAG, "result;\n"+builder.toString());
-
-    }
 }

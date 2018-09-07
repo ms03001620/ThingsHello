@@ -44,14 +44,8 @@ public class CameraAction extends OnReceiverCommand{
         @Override
         public void handleMessage(Message msg) {
             Bundle bundle= msg.getData();
-            final byte[] bytes = bundle.getByteArray("image");
-            switch (msg.what) {
-                case 100:
-                    sendFromSocket(bytes);
-                    break;
-                default:
-                    break;
-            }
+            final byte[] bytes = bundle.getByteArray("text");
+            sendFromSocket(bytes);
         }
     });
 
@@ -60,8 +54,6 @@ public class CameraAction extends OnReceiverCommand{
 
         if (SocketManager.getInstance().isConnection()) {
             SocketManager.getInstance().send(bytes);
-        } else {
-            sendWhat(2);
         }
     }
 

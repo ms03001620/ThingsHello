@@ -31,6 +31,21 @@ public class ConnectSelector implements ISend {
     public void release() {
         mSender.release();
     }
+
+    public void sendText(String text) {
+        if (messenger != null) {
+            Message response = Message.obtain();
+            Bundle bundle = new Bundle();
+            bundle.putByteArray("text", text.getBytes());
+            response.setData(bundle);
+
+            try {
+                messenger.send(response);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
 
 

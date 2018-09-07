@@ -12,13 +12,15 @@ public class PreviewActivity extends AppCompatActivity {
     PreviewPresenter mPresent;
     private ImageView mPreview;
     private TextView mTextInfo;
+    private TextView mTextBytes;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_preview);
         mPresent = new PreviewPresenter(this);
         mPreview = findViewById(R.id.image);
-        mTextInfo = findViewById(R.id.text);
+        mTextInfo = findViewById(R.id.text_info);
+        mTextBytes = findViewById(R.id.text_bytes);
     }
 
 
@@ -27,7 +29,16 @@ public class PreviewActivity extends AppCompatActivity {
             @Override
             public void run() {
                 mPreview.setImageBitmap(bitmap);
-                mTextInfo.setText(sizeString);
+                mTextBytes.setText(sizeString);
+            }
+        });
+    }
+
+    public void updateInfo(final String info) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mTextInfo.setText(info);
             }
         });
     }

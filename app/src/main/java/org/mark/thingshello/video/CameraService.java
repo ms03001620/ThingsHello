@@ -130,7 +130,7 @@ public class CameraService extends Service {
                         CameraUtils.BitmapAndBytes data = CameraUtils.compressOriginImages(imageBytes);
                         mConnectSelector.send(data.getBitmapBytes());
 
-                        mTest.classifyFrame(data.getBitmap());
+                        mTest.classifyFrame(data.getBitmap(), mConnectSelector);
                     }
                 });
             }

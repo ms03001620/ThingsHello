@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 
 import org.mark.base.CameraUtils;
 import org.mark.lib_unit_socket.ClientMessageCallback;
+import org.mark.mobile.connect.ConnectedManager;
 import org.mark.mobile.connect.udp.UdpReceiver;
 
 /**
@@ -13,7 +14,6 @@ import org.mark.mobile.connect.udp.UdpReceiver;
  */
 public class PreviewPresenter {
     private static final String TAG = "PreviewPresenter";
-    @Nullable
     private PreviewActivity mView;
     private WorkThreadHandler mWorkThreadHandler;
 
@@ -23,10 +23,39 @@ public class PreviewPresenter {
         mView = previewActivity;
         mWorkThreadHandler = new WorkThreadHandler();
 
-        mIReceiver = new UdpReceiver(previewActivity, mClientMessageCallback);
+        mIReceiver = new UdpReceiver(previewActivity, mUdpCallback);
+        ConnectedManager.getInstance().addCallback(mTcpCallback);
     }
 
-    private ClientMessageCallback mClientMessageCallback = new ClientMessageCallback() {
+    private ClientMessageCallback mTcpCallback = new ClientMessageCallback() {
+
+        @Override
+        public void onReceiveMessage(final byte[] bytes, int type) {
+            if (type == 2) {
+                String info = new String(bytes);
+                mView.updateInfo(info);
+            }
+        }
+
+        @Override
+        public void onExceptionToReOpen(@NonNull Exception e) {
+
+        }
+
+        @Override
+        public void onLogMessage(String message, @Nullable Exception e) {
+
+        }
+
+        @Override
+        public void onStatusChange(@NonNull Status status) {
+            if(status == Status.NO_CONNECT){
+                mView.finish();
+            }
+        }
+    };
+
+    private ClientMessageCallback mUdpCallback = new ClientMessageCallback() {
 
         @Override
         public void onReceiveMessage(final byte[] bytes, int type) {
@@ -34,9 +63,7 @@ public class PreviewPresenter {
                 @Override
                 public void run() {
                     Bitmap bitmap = CameraUtils.createFromBytes(bytes);
-                    if (mView != null) {
-                        mView.updateImage(bitmap, bytes.length / 1024 + " KB");
-                    }
+                    mView.updateImage(bitmap, bytes.length / 1024 + " KB");
                 }
             });
         }
@@ -59,7 +86,7 @@ public class PreviewPresenter {
 
     public void release() {
         mWorkThreadHandler.release();
-        mView = null;
+        ConnectedManager.getInstance().removeCallback(mTcpCallback);
     }
 
     public void onStart() {
