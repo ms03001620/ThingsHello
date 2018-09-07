@@ -4,18 +4,16 @@ import android.app.Service;
 import android.content.Intent;
 import android.media.Image;
 import android.media.ImageReader;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
 import android.util.Log;
 
 import org.mark.base.CameraUtils;
 import org.mark.thingshello.tensorflow.Test;
 import org.mark.thingshello.video.sender.ConnectSelector;
-import org.mark.thingshello.video.sender.ImageProcess;
+import org.mark.base.executor.ImageProcess;
 
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
@@ -28,7 +26,7 @@ public class CameraService extends Service {
     private MyHandler sHandler = new MyHandler(this);
     private Messenger mMessenger = new Messenger(sHandler);
     private boolean isPreviewing;
-    private long time = System.currentTimeMillis() + 5 * 1000;
+    private long time;
     private ConnectSelector mConnectSelector;
     Test mTest;
 
@@ -62,6 +60,7 @@ public class CameraService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "onBind");
+        time = System.currentTimeMillis() + 5 * 1000;
         return mMessenger.getBinder();
     }
 
@@ -121,17 +120,17 @@ public class CameraService extends Service {
 
         long now = System.currentTimeMillis();
         // 处理图片的频率
-        if (now - time > 1000) {
+        if (now - time > 0) {
             time = now;
 
             if (imageBytes.length > 0) {
                 ImageProcess.getInstance().run(new Runnable() {
                     @Override
                     public void run() {
-                        byte[] smallBytes = CameraUtils.compressOriginImages(imageBytes);
-                        mConnectSelector.send(smallBytes);
+                        CameraUtils.BitmapAndBytes data = CameraUtils.compressOriginImages(imageBytes);
+                        mConnectSelector.send(data.getBitmapBytes());
 
-                        mTest.classifyFrame(smallBytes);
+                        mTest.classifyFrame(data.getBitmap());
                     }
                 });
             }

@@ -123,7 +123,7 @@ public class CameraUtils {
      * 1.图片分辨率过大的。可以再次修改其分辨率为小尺寸
      * 2.压缩图片数据
      */
-    public static byte[] compressOriginImages(@NonNull byte[] bytes) {
+    public static BitmapAndBytes compressOriginImages(@NonNull byte[] bytes) {
         long start = System.currentTimeMillis();
 
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -137,7 +137,6 @@ public class CameraUtils {
         options.inJustDecodeBounds = false;
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
 
-
         bitmap = zoomImage(bitmap, 224,224);
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -147,8 +146,6 @@ public class CameraUtils {
         int w = bitmap.getWidth();
         int h = bitmap.getHeight();
 
-        bitmap.recycle();
-
 
         Log.d(TAG, "compress remove:"
                 + (bytes.length - byteArray.length)
@@ -157,7 +154,26 @@ public class CameraUtils {
                 + ", w:" + w + ", h:" + h
                 + ", pass:" + (System.currentTimeMillis() - start));
 
-        return byteArray;
+
+        return new BitmapAndBytes(bitmap, byteArray);
+    }
+
+    public static class BitmapAndBytes {
+        private Bitmap bitmap;
+        private byte[] bitmapBytes;
+
+        public BitmapAndBytes(Bitmap bitmap, byte[] bytes) {
+            this.bitmap = bitmap;
+            this.bitmapBytes = bytes;
+        }
+
+        public Bitmap getBitmap() {
+            return bitmap;
+        }
+
+        public byte[] getBitmapBytes() {
+            return bitmapBytes;
+        }
     }
 
 

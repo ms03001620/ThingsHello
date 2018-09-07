@@ -3,12 +3,12 @@ package org.mark.thingshello.tensorflow;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
-import android.widget.TextView;
 
 import org.mark.base.CameraUtils;
+import org.mark.base.executor.BlockProcess;
+import org.mark.base.executor.ImageProcess;
 
 import java.io.IOException;
 
@@ -45,12 +45,17 @@ public class Test {
         showToast(textToShow);
     }
 
-    public void classifyFrame(Bitmap bitmap) {
-        SpannableStringBuilder textToShow = new SpannableStringBuilder();
-        //textureView.getBitmap(classifier.getImageSizeX(), classifier.getImageSizeY());
-        classifier.classifyFrame(bitmap, textToShow);
-        bitmap.recycle();
-        showToast(textToShow);
+    public void classifyFrame(final Bitmap bitmap) {
+        BlockProcess.getInstance().run(new Runnable() {
+            @Override
+            public void run() {
+                SpannableStringBuilder textToShow = new SpannableStringBuilder();
+                //textureView.getBitmap(classifier.getImageSizeX(), classifier.getImageSizeY());
+                classifier.classifyFrame(bitmap, textToShow);
+                // bitmap.recycle();
+                showToast(textToShow);
+            }
+        });
     }
 
 
@@ -60,7 +65,7 @@ public class Test {
 
 
     private void showToast(final SpannableStringBuilder builder) {
-        Log.d("______", "result;"+builder.toString());
+        Log.d(TAG, "result;\n"+builder.toString());
 
     }
 }
