@@ -45,14 +45,14 @@ public class PreviewActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        super.onStart();
         mPresent.onStart();
+        super.onStart();
     }
 
     @Override
     protected void onStop() {
-        super.onStop();
         mPresent.onStop();
+        super.onStop();
     }
 
     @Override

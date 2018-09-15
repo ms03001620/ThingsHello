@@ -9,22 +9,23 @@ import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.mobile.connect.ConnectedManager;
 import org.mark.mobile.connect.udp.UdpReceiver;
 
+import java.lang.ref.WeakReference;
+
 /**
  * Created by Mark on 2018/8/19
  */
 public class PreviewPresenter {
     private static final String TAG = "PreviewPresenter";
-    private PreviewActivity mView;
+    private WeakReference<PreviewActivity> mWeakView;
     private WorkThreadHandler mWorkThreadHandler;
 
     private UdpReceiver mIReceiver;
 
-    public PreviewPresenter(@Nullable PreviewActivity previewActivity) {
-        mView = previewActivity;
+    public PreviewPresenter(PreviewActivity previewActivity) {
+        mWeakView = new WeakReference<>(previewActivity);
         mWorkThreadHandler = new WorkThreadHandler();
 
-        mIReceiver = new UdpReceiver(previewActivity, mUdpCallback);
-        ConnectedManager.getInstance().addCallback(mTcpCallback);
+        mIReceiver = new UdpReceiver(previewActivity.getApplicationContext(), mUdpCallback);
     }
 
     private ClientMessageCallback mTcpCallback = new ClientMessageCallback() {
@@ -32,8 +33,11 @@ public class PreviewPresenter {
         @Override
         public void onReceiveMessage(final byte[] bytes, int type) {
             if (type == 2) {
-                String info = new String(bytes);
-                mView.updateInfo(info);
+                PreviewActivity activity = mWeakView.get();
+                if (activity != null) {
+                    String info = new String(bytes);
+                    activity.updateInfo(info);
+                }
             }
         }
 
@@ -49,9 +53,7 @@ public class PreviewPresenter {
 
         @Override
         public void onStatusChange(@NonNull Status status) {
-            if(status == Status.NO_CONNECT){
-                mView.finish();
-            }
+
         }
     };
 
@@ -63,7 +65,10 @@ public class PreviewPresenter {
                 @Override
                 public void run() {
                     Bitmap bitmap = CameraUtils.createFromBytes(bytes);
-                    mView.updateImage(bitmap, bytes.length / 1024 + " KB");
+                    PreviewActivity activity = mWeakView.get();
+                    if (activity != null) {
+                        activity.updateImage(bitmap, bytes.length / 1024 + " KB");
+                    }
                 }
             });
         }
@@ -86,15 +91,17 @@ public class PreviewPresenter {
 
     public void release() {
         mWorkThreadHandler.release();
-        ConnectedManager.getInstance().removeCallback(mTcpCallback);
+
     }
 
     public void onStart() {
+        ConnectedManager.getInstance().addCallback(mTcpCallback);
         mIReceiver.start();
     }
 
 
     public void onStop() {
+        ConnectedManager.getInstance().removeCallback(mTcpCallback);
         mIReceiver.stop();
     }
 }
