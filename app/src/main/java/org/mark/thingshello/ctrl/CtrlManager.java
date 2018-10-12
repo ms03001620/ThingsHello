@@ -18,9 +18,13 @@ public class CtrlManager {
 
     public CtrlManager(final MainActivity.OnCtrlResponse listener) throws Exception {
         mDeviceHelper = new DeviceHelper();
-        //mDeviceHelper.add(new WheelAction());
-        //mDeviceHelper.add(new BuzzerAction());
-        //mDeviceHelper.add(new ForwardLightAction());
+        String model= android.os.Build.MODEL;
+        // 该设备可以使用一下硬件
+        if ("iot_rpi3".equals(model)) {
+            mDeviceHelper.add(new WheelAction());
+            mDeviceHelper.add(new BuzzerAction());
+            mDeviceHelper.add(new ForwardLightAction());
+        }
         mDeviceHelper.add(new CameraAction(listener));
 
 
