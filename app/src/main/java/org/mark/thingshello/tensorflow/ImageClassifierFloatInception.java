@@ -42,7 +42,7 @@ public class ImageClassifierFloatInception extends ImageClassifier {
 
     @Override
     protected String getLabelPath() {
-        return "labels_imagenet_slim.txt";
+        return "imagenet_slim_labels.txt";
     }
 
     @Override

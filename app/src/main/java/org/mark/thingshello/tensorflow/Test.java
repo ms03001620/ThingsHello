@@ -18,46 +18,42 @@ import java.io.IOException;
 public class Test {
 
     public static final String TAG = "Test";
-    private ImageClassifierQuantizedMobileNet classifier;
+    private ImageClassifierFactory factory;
 
     public Test(Context context) {
 
         try {
-            // create either a new ImageClassifierQuantizedMobileNet or an ImageClassifierFloatInception
-            classifier = new ImageClassifierQuantizedMobileNet(context);
-        } catch (IOException e) {
+            factory = new ImageClassifierFactory();
+            factory.init(context);
+        } catch (Exception e) {
             Log.e(TAG, "Failed to initialize an image classifier.", e);
         }
     }
 
-    public void classifyFrame(byte[] bytes) {
-        Bitmap bitmap = CameraUtils.createFromBytes(bytes);
-
-        SpannableStringBuilder textToShow = new SpannableStringBuilder();
-        //textureView.getBitmap(classifier.getImageSizeX(), classifier.getImageSizeY());
-        classifier.classifyFrame(bitmap, textToShow);
-    }
-
     public void classifyFrame(final Bitmap bitmap, final ConnectSelector connectSelector) {
+        if (factory == null) {
+            return;
+        }
         BlockProcess.getInstance().run(new Runnable() {
             @Override
             public void run() {
-                SpannableStringBuilder textToShow = new SpannableStringBuilder();
-                //textureView.getBitmap(classifier.getImageSizeX(), classifier.getImageSizeY());
-                classifier.classifyFrame(bitmap, textToShow);
-                // bitmap.recycle();
-
-                String label = textToShow.toString();
+                String label;
+                try {
+                    label = factory.feed(bitmap);
+                } catch (Exception e) {
+                    label = e.toString();
+                }
                 connectSelector.sendText(label);
-
-                Log.d(TAG, "result \n"+label);
+                Log.d(TAG, "result \n" + label);
             }
         });
     }
 
-
     public void onDestroy() {
-        classifier.close();
+        if (factory == null) {
+            return;
+        }
+        factory.close();
     }
 
 }
