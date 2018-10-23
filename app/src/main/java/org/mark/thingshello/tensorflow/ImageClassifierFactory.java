@@ -18,9 +18,9 @@ public class ImageClassifierFactory {
 
     public void init(Context context) throws Exception {
 
-       // c1 = TensorFlowImageClassifier.create(context.getAssets(), "optimized_graph_arrow.lite","retrained_labels_arrow.txt", 224);
+        // c1 = TensorFlowImageClassifier.create(context.getAssets(), "optimized_graph_arrow.lite","retrained_labels_arrow.txt", 224);
 
-       // c2 = new ImageClassifierQuantizedMobileNet(context);
+        // c2 = new ImageClassifierQuantizedMobileNet(context);
 
         c3 = new ImageClassifierFloatInception(context);
 
@@ -64,4 +64,35 @@ public class ImageClassifierFactory {
     }
 
 
+    public int getWidth() {
+        if (c1 != null) {
+            return c1.getWidth();
+        }
+
+        if (c2 != null) {
+            return c2.getImageSizeX();
+        }
+
+        if (c3 != null) {
+            return c3.getImageSizeX();
+        }
+
+        return 0;
+    }
+
+    public int getHeight() {
+        if (c1 != null) {
+            return c1.getHeight();
+        }
+
+        if (c2 != null) {
+            return c2.getImageSizeY();
+        }
+
+        if (c3 != null) {
+            return c3.getImageSizeY();
+        }
+
+        return 0;
+    }
 }

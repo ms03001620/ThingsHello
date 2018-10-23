@@ -1,6 +1,5 @@
 package org.mark.thingshello.tensorflow;
 
-import android.app.Activity;
 import android.content.Context;
 
 import java.io.IOException;

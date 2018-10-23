@@ -77,6 +77,16 @@ public class TensorFlowImageClassifier implements Classifier {
         interpreter = null;
     }
 
+    @Override
+    public int getWidth() {
+        return inputSize;
+    }
+
+    @Override
+    public int getHeight() {
+        return inputSize;
+    }
+
     private MappedByteBuffer loadModelFile(AssetManager assetManager, String modelPath) throws IOException {
         AssetFileDescriptor fileDescriptor = assetManager.openFd(modelPath);
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());

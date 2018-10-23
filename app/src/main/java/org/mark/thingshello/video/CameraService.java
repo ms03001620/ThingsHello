@@ -134,7 +134,7 @@ public class CameraService extends Service {
                 ImageProcess.getInstance().run(new Runnable() {
                     @Override
                     public void run() {
-                        CameraUtils.BitmapAndBytes data = CameraUtils.compressOriginImages(imageBytes);
+                        CameraUtils.BitmapAndBytes data = CameraUtils.compressOriginImages(imageBytes, mTest.getWidth(), mTest.getHeight());
                         mConnectSelector.send(data.getBitmapBytes());
 
                         mTest.classifyFrame(data.getBitmap(), mConnectSelector);
@@ -143,8 +143,6 @@ public class CameraService extends Service {
             }
         }
     }
-
-
 
 
 }

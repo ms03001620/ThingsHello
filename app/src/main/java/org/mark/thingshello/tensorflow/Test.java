@@ -56,4 +56,12 @@ public class Test {
         factory.close();
     }
 
+    public int getWidth(){
+        return factory.getWidth();
+    }
+
+    public int getHeight(){
+        return factory.getHeight();
+    }
+
 }
