@@ -1,4 +1,4 @@
-package org.mark.thingshello.tensorflow;
+package org.mark.lib_tensorflow;
 
 import android.content.Context;
 
@@ -27,7 +27,7 @@ public class ImageClassifierFloatInception extends ImageClassifier {
      *
      * @param context
      */
-    ImageClassifierFloatInception(Context context) throws IOException {
+    public ImageClassifierFloatInception(Context context) throws IOException {
         super(context);
         labelProbArray = new float[1][getNumLabels()];
     }
@@ -45,12 +45,12 @@ public class ImageClassifierFloatInception extends ImageClassifier {
     }
 
     @Override
-    protected int getImageSizeX() {
+    public int getImageSizeX() {
         return 299;
     }
 
     @Override
-    protected int getImageSizeY() {
+    public int getImageSizeY() {
         return 299;
     }
 

@@ -4,8 +4,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import org.mark.base.CameraUtils;
-import org.mark.thingshello.tensorflow.Classifier;
-import org.mark.thingshello.tensorflow.TensorFlowImageClassifier;
+import org.mark.lib_tensorflow.Classifier;
+import org.mark.lib_tensorflow.TensorFlowImageClassifier;
+
 
 import java.io.File;
 import java.util.ArrayList;

@@ -1,16 +1,11 @@
 package org.mark.thingshello.tensorflow;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.text.SpannableStringBuilder;
 import android.util.Log;
 
-import org.mark.base.CameraUtils;
 import org.mark.base.executor.BlockProcess;
 import org.mark.thingshello.video.sender.ConnectSelector;
-
-import java.io.IOException;
 
 /**
  * Created by Mark on 2018/9/5

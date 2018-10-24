@@ -1,6 +1,5 @@
-package org.mark.thingshello.tensorflow;
+package org.mark.lib_tensorflow;
 
-import android.app.Activity;
 import android.content.Context;
 
 import java.io.IOException;
@@ -44,12 +43,12 @@ public class ImageClassifierQuantizedMobileNet extends ImageClassifier {
     }
 
     @Override
-    protected int getImageSizeX() {
+    public int getImageSizeX() {
         return 224;
     }
 
     @Override
-    protected int getImageSizeY() {
+    public int getImageSizeY() {
         return 224;
     }
 

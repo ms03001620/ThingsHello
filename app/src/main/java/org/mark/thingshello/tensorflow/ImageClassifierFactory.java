@@ -4,6 +4,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.text.SpannableStringBuilder;
 
+import org.mark.lib_tensorflow.Classifier;
+import org.mark.lib_tensorflow.ImageClassifierFloatInception;
+import org.mark.lib_tensorflow.ImageClassifierQuantizedMobileNet;
+
 /**
  * Created by Mark on 2018/10/22
  */

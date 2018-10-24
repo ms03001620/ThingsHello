@@ -1,4 +1,4 @@
-package org.mark.thingshello.tensorflow;
+package org.mark.lib_tensorflow;
 
 import android.app.Activity;
 import android.content.Context;
@@ -92,7 +92,7 @@ public abstract class ImageClassifier {
     }
 
     /** Classifies a frame from the preview stream. */
-    void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder) {
+    public void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder) {
         printTopKLabels(builder);
 
         if (tflite == null) {

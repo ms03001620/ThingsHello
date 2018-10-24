@@ -1,4 +1,4 @@
-package org.mark.thingshello.tensorflow;
+package org.mark.lib_tensorflow;
 
 import android.annotation.SuppressLint;
 import android.content.res.AssetFileDescriptor;
@@ -11,7 +11,6 @@ import org.tensorflow.lite.Interpreter;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
