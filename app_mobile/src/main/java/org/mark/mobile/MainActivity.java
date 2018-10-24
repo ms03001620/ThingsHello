@@ -95,7 +95,11 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onLogMessage(String message, @Nullable Exception e) {
-            Log.e("Log:", message, e);
+            if (e != null) {
+                Log.e("MainActivity", message, e);
+            } else {
+                Log.d("MainActivity", message);
+            }
         }
 
         @Override
