@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="org.mark.check.CheckActivity">
+
+
+    <Button
+        android:id="@+id/btn_choose_model"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="选择tensorflow模型文件夹" />
+
+    <Button
+        android:id="@+id/btn_choose_images"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="选择要检测的图片文件夹" />
+
+    <Button
+        android:id="@+id/btn_choose_files"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="选择文件夹，检查内部扩展名种类" />
+
+    <Button
+        android:id="@+id/btn_choose_test"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="随机预测一个文件的内容" />
+
+    <Button
+        android:id="@+id/btn_choose_test_all"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="预测所有文件" />
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/logs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="5sp" />
+
+    </ScrollView>
+
+</LinearLayout>

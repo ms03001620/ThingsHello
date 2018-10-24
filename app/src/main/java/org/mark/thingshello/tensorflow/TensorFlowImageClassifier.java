@@ -10,9 +10,12 @@ import android.util.Log;
 import org.tensorflow.lite.Interpreter;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
@@ -55,6 +58,17 @@ public class TensorFlowImageClassifier implements Classifier {
         return classifier;
     }
 
+    public static Classifier create(String modelPath, String labelPath, int inputSize) throws IOException {
+
+        TensorFlowImageClassifier classifier = new TensorFlowImageClassifier();
+        classifier.interpreter = new Interpreter(classifier.loadModelFile1(modelPath));
+        classifier.labelList = classifier.loadLabelList1(labelPath);
+        classifier.inputSize = inputSize;
+
+        return classifier;
+
+    }
+
     @Override
     public List<Recognition> recognizeImage(Bitmap bitmap) {
         ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
@@ -95,6 +109,28 @@ public class TensorFlowImageClassifier implements Classifier {
         long declaredLength = fileDescriptor.getDeclaredLength();
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
     }
+
+    private MappedByteBuffer loadModelFile1(String modelPath) throws IOException {
+        FileInputStream inputStream = new FileInputStream(modelPath);
+
+        FileChannel fileChannel = inputStream.getChannel();
+
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
+    }
+
+    private List<String> loadLabelList1(String labelPath) throws IOException {
+        List<String> labelList = new ArrayList<>();
+        Reader file = new InputStreamReader(new FileInputStream(new File(labelPath)));
+
+        BufferedReader reader = new BufferedReader(file);
+        String line;
+        while ((line = reader.readLine()) != null) {
+            labelList.add(line);
+        }
+        reader.close();
+        return labelList;
+    }
+
 
     private List<String> loadLabelList(AssetManager assetManager, String labelPath) throws IOException {
         List<String> labelList = new ArrayList<>();

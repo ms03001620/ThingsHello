@@ -7,26 +7,38 @@
     <uses-permission android:name="com.google.android.things.permission.MANAGE_INPUT_DRIVERS" />
     <uses-permission android:name="com.google.android.things.permission.USE_PERIPHERAL_IO" />
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"></uses-permission>
+
     <application>
-        <!--        <uses-library android:name="com.google.android.things" />-->
+
+        <!-- <uses-library android:name="com.google.android.things" /> -->
 
         <activity android:name=".MainActivity">
-            <intent-filter>
+ <!--           <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <!--    <category android:name="android.intent.category.HOME"/>-->
+                &lt;!&ndash; <category android:name="android.intent.category.HOME"/> &ndash;&gt;
                 <category android:name="android.intent.category.IOT_LAUNCHER" />
                 <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
+            </intent-filter>-->
         </activity>
 
         <service
             android:name=".video.CameraService"
             android:process=":camera" />
+
+        <activity android:name="org.mark.check.CheckActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
