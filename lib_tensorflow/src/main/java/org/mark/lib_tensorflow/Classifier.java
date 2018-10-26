@@ -57,14 +57,19 @@ public interface Classifier {
             }
 
             if (confidence != null) {
-                resultString += String.format("(%.1f%%)\n", confidence * 100.0f);
+                resultString += getConfidenceString();
             }
 
             resultString += "\n";
 
             return resultString.trim();
         }
+
+        public String getConfidenceString() {
+            return String.format("(%.1f%%)\n", confidence * 100.0f);
+        }
     }
+
 
     List<Recognition> recognizeImage(Bitmap bitmap);
 

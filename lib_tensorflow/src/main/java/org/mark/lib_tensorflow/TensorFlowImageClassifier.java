@@ -130,6 +130,10 @@ public class TensorFlowImageClassifier implements Classifier {
         return labelList;
     }
 
+    public String getLabelStrings(){
+        return labelList.toString();
+    }
+
 
     private List<String> loadLabelList(AssetManager assetManager, String labelPath) throws IOException {
         List<String> labelList = new ArrayList<>();

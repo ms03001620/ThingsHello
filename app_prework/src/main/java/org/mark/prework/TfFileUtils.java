@@ -1,5 +1,4 @@
-package org.mark.check;
-
+package org.mark.prework;
 
 
 import org.mark.lib_tensorflow.Classifier;
@@ -53,7 +52,7 @@ public class TfFileUtils {
         }
     }
 
-    static final class ImageAcc {
+    public static final class ImageAcc {
         public ImageAcc(String path, List<Classifier.Recognition> elements) {
             this.path = path;
             this.elements = elements;
@@ -62,12 +61,29 @@ public class TfFileUtils {
         String path;
         List<Classifier.Recognition> elements;
 
+        public String getInfo() {
+            String id = elements.get(0).getId();
+            String con = elements.get(0).getConfidenceString();
+
+            return id + con;
+        }
+
         @Override
         public String toString() {
-            return "ImageAcc{" +
-                    elements.toString() +
-                    ", path='" + path + '\'' +
-                    '}';
+            return elements.toString() +
+                    ", path='" + path + '\'';
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public boolean same(String index) {
+            String id = elements.get(0).getId();
+            if (id.equals(index)) {
+                return true;
+            }
+            return false;
         }
     }
 
@@ -130,7 +146,7 @@ public class TfFileUtils {
             String[] path = folder.list();
 
             for (String name : path) {
-                if (name.endsWith(".png") || name.endsWith(".jpg")) {
+                if (name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg")) {
                     list.add(head + name);
                 }
             }
@@ -156,6 +172,26 @@ public class TfFileUtils {
             }
         }
         return list;
+    }
+
+    public static String getParentFolderName(File folder) {
+        if (folder.isDirectory()) {
+            int index = folder.getAbsolutePath().lastIndexOf("/");
+            if (index != -1) {
+                return folder.getAbsolutePath().substring(index);
+            } else {
+                return folder.getAbsolutePath();
+            }
+        } else {
+            String folderUp = folder.getParent();
+
+            int index = folderUp.lastIndexOf("/");
+            if (index != -1) {
+                return folderUp.substring(index);
+            } else {
+                return folderUp;
+            }
+        }
     }
 
 }

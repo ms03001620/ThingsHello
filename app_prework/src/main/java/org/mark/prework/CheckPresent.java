@@ -1,11 +1,13 @@
-package org.mark.check;
+package org.mark.prework;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import org.mark.base.CameraUtils;
 import org.mark.lib_tensorflow.Classifier;
 import org.mark.lib_tensorflow.TensorFlowImageClassifier;
+import org.mark.prework.db.DbMock;
 
 
 import java.io.File;
@@ -28,12 +30,18 @@ public class CheckPresent {
 
     public void initModule(TfFileUtils.ModelFolderInfo info) throws Exception {
         classifier = TensorFlowImageClassifier.create(info.getModel(), info.getLabel(), 224);
+        String labelString = ((TensorFlowImageClassifier) classifier).getLabelStrings();
+
+        DbMock.getInstance().setLabelString(labelString);
+        checkActivity.addLogs(labelString);
     }
 
     public void initImages(File pathFile) {
-        List<String> images = TfFileUtils.getPhotoList(pathFile);
-        this.images = new ArrayList<>(images);
-        checkActivity.addLogs("size:" + images.size());
+        String folder = TfFileUtils.getParentFolderName(pathFile);
+        DbMock.getInstance().setFolderName(folder);
+
+        this.images = new ArrayList<>(TfFileUtils.getPhotoList(pathFile));
+        checkActivity.addLogs(folder + ", size:" + images.size());
     }
 
     public String doPredictRandom() {
@@ -57,13 +65,19 @@ public class CheckPresent {
     }
 
     public void doPredictAll() {
+        checkActivity.clearLogs();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 List<TfFileUtils.ImageAcc> accs = getImageAccs(images);
+                DbMock.getInstance().updateImages(accs);
 
                 for (TfFileUtils.ImageAcc acc : accs) {
                     checkActivity.addLogs(acc.toString());
+                }
+
+                if (accs.size() > 0) {
+                    checkActivity.enableToGridButton();
                 }
             }
         }).start();
@@ -72,20 +86,27 @@ public class CheckPresent {
     private List<TfFileUtils.ImageAcc> getImageAccs(List<String> images) {
         List<TfFileUtils.ImageAcc> result = new ArrayList<>();
 
+        //images = images.subList(0, 20);
+
         for (String path : images) {
             Bitmap bitmap = BitmapFactory.decodeFile(path);
 
-            bitmap = CameraUtils.zoomImage(bitmap, classifier.getWidth(), classifier.getHeight());
+            if (bitmap == null) {
+                File file = new File(path);
+                boolean deleted = file.delete();
+                Log.e("CheckPresent", "file error delete:" + path + ", " + deleted);
+                continue;
+            }
 
             try {
+                bitmap = CameraUtils.zoomImage(bitmap, classifier.getWidth(), classifier.getHeight());
+
                 List<Classifier.Recognition> o = classifier.recognizeImage(bitmap);
-
                 TfFileUtils.ImageAcc acc = new TfFileUtils.ImageAcc(path, o);
-
-                result.add(acc);
+                 result.add(acc);
 
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e("CheckPresent", "recognizeImage", e);
             }
         }
 

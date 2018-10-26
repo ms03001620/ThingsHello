@@ -36,8 +36,7 @@ dependencies {
     implementation 'io.reactivex:rxandroid:1.2.1'
     implementation project(path: ':lib_base')
 
-
-    implementation 'com.obsez.android.lib.filechooser:filechooser:1.1.11'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
 }
 
 

@@ -1,22 +1,22 @@
-package org.mark.check;
+package org.mark.prework;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import com.obsez.android.lib.filechooser.ChooserDialog;
 
-import org.mark.thingshello.R;
+import org.mark.prework.db.DbMock;
 
 import java.io.File;
-import java.util.List;
 
 public class CheckActivity extends Activity {
-    private String mPathCurrent;
     private TextView mTextView;
 
     private CheckPresent mPresent;
@@ -33,7 +33,7 @@ public class CheckActivity extends Activity {
             public void onClick(View view) {
                 new ChooserDialog().with(getActivity())
                         .withFilter(true, false)
-                        .withStartFile(mPathCurrent)
+                        .withStartFile(DbMock.getInstance().getRecentAccessPath())
                         .withDateFormat("HH:mm")
                         .withChosenListener(new ChooserDialog.Result() {
                             @Override
@@ -50,7 +50,8 @@ public class CheckActivity extends Activity {
                                     Toast.makeText(getApplicationContext(), info.getError(), Toast.LENGTH_SHORT).show();
                                 }
 
-                                mPathCurrent = pathFile.getParent();
+                                DbMock.getInstance().setRecentAccessPath(pathFile.getParent());
+
                             }
                         })
                         .enableOptions(true)
@@ -71,43 +72,17 @@ public class CheckActivity extends Activity {
             public void onClick(View view) {
                 new ChooserDialog().with(getActivity())
                         .withFilter(true, false)
-                        .withStartFile(mPathCurrent)
+                        .withStartFile(DbMock.getInstance().getRecentAccessPath())
                         .withDateFormat("HH:mm")
                         .withChosenListener(new ChooserDialog.Result() {
                             @Override
                             public void onChoosePath(String path, File pathFile) {
                                 mPresent.initImages(pathFile);
-                                mPathCurrent = pathFile.getParent();
-                            }
-                        })
-                        .enableOptions(true)
-                        .withOnBackPressedListener(new ChooserDialog.OnBackPressedListener() {
-                            @Override
-                            public void onBackPressed(AlertDialog dialog) {
-                                dialog.dismiss();
-                            }
-                        })
-                        .build()
-                        .show();
-            }
-        });
+                                DbMock.getInstance().setRecentAccessPath(pathFile.getParent());
 
-
-        findViewById(R.id.btn_choose_files).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                new ChooserDialog().with(getActivity())
-                        .withFilter(true, false)
-                        .withStartFile(mPathCurrent)
-                        .withDateFormat("HH:mm")
-                        .withChosenListener(new ChooserDialog.Result() {
-                            @Override
-                            public void onChoosePath(String path, File pathFile) {
                                 String reuslt = TfFileUtils.getPhotoListSuiffx(pathFile).toString();
 
                                 addLogs(reuslt);
-                                Log.d("CheckActivity", reuslt);
-                                mPathCurrent = pathFile.getParent();
                             }
                         })
                         .enableOptions(true)
@@ -121,7 +96,6 @@ public class CheckActivity extends Activity {
                         .show();
             }
         });
-
 
         findViewById(R.id.btn_choose_test).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -135,6 +109,24 @@ public class CheckActivity extends Activity {
             @Override
             public void onClick(View view) {
                 mPresent.doPredictAll();
+            }
+        });
+
+        findViewById(R.id.btn_to_grid).setEnabled(false);
+        findViewById(R.id.btn_to_grid).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(getActivity(), GridActivity.class));
+            }
+        });
+    }
+
+
+    public void enableToGridButton() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                findViewById(R.id.btn_to_grid).setEnabled(true);
             }
         });
     }
@@ -153,5 +145,9 @@ public class CheckActivity extends Activity {
                 mTextView.setText(message + "\n" + string);
             }
         });
+    }
+
+    public void clearLogs() {
+        mTextView.setText("clear");
     }
 }
