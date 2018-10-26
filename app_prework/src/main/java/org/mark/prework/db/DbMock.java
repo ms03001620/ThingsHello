@@ -39,12 +39,20 @@ public class DbMock {
         this.labelString = labelString;
     }
 
-    public String getRecentAccessPath() {
+    public String loadRecentAccessPath() {
         return PreferUtils.getInstance().get("recent_path", "");
     }
 
-    public void setRecentAccessPath(String recentAccessPath) {
+    public void saveRecentAccessPath(String recentAccessPath) {
         PreferUtils.getInstance().put("recent_path", recentAccessPath);
+    }
+
+    public void saveRecentModelPath(String modelPath) {
+        PreferUtils.getInstance().put("recent_model_path", modelPath);
+    }
+
+    public String loadRecentModelPath() {
+        return PreferUtils.getInstance().get("recent_model_path", "");
     }
 
     public List<TfFileUtils.ImageAcc> getImages() {

@@ -94,7 +94,7 @@ public class TfFileUtils {
     public static ModelFolderInfo checkModelFolder(File folder) {
         boolean isFolder = folder.isDirectory();
         if (!isFolder) {
-            return new ModelFolderInfo(null, null, false, "not folder");
+            return new ModelFolderInfo(null, null, false, "please select model folder");
         }
 
         File[] listOfFiles = folder.listFiles();

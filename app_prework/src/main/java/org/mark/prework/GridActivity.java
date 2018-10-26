@@ -98,7 +98,7 @@ public class GridActivity extends AppCompatActivity {
                 // mGridPresent.move();
                 new ChooserDialog().with(getActivity())
                         .withFilter(true, false)
-                        .withStartFile(DbMock.getInstance().getRecentAccessPath())
+                        .withStartFile(DbMock.getInstance().loadRecentAccessPath())
                         .withDateFormat("HH:mm")
                         .withChosenListener(new ChooserDialog.Result() {
                             @Override

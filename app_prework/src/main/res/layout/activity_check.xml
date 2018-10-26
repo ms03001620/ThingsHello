@@ -8,24 +8,23 @@
     tools:context="org.mark.prework.CheckActivity">
 
 
-    <Button
-        android:id="@+id/btn_choose_model"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="选择tensorflow模型文件夹" />
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/btn_choose_images"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="选择要检测的图片文件夹" />
+        <Button
+            android:id="@+id/btn_choose_model"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择tensorflow模型文件夹" />
 
+        <TextView
+            android:id="@+id/text_model"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
-    <Button
-        android:id="@+id/btn_choose_test"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="随机预测一个文件的内容" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -33,16 +32,36 @@
         android:orientation="horizontal">
 
         <Button
+            android:id="@+id/btn_choose_images"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择要识别的图片文件夹" />
+
+
+        <TextView
+            android:id="@+id/text_train"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+
+        <Button
             android:id="@+id/btn_choose_test_all"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="预测所有文件" />
+            android:text="识别所有文件" />
 
         <Button
             android:id="@+id/btn_to_grid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="预测文件GRID展示" />
+            android:text="查看识别结果" />
 
     </LinearLayout>
 

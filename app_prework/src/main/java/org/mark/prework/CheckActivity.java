@@ -1,10 +1,10 @@
 package org.mark.prework;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,6 +21,8 @@ public class CheckActivity extends Activity {
 
     private CheckPresent mPresent;
 
+    private ProgressDialog mProcessDialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,90 +30,64 @@ public class CheckActivity extends Activity {
         mPresent = new CheckPresent(this);
         mTextView = findViewById(R.id.logs);
 
+        // 选择识别模型文件夹
         findViewById(R.id.btn_choose_model).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 new ChooserDialog().with(getActivity())
                         .withFilter(true, false)
-                        .withStartFile(DbMock.getInstance().getRecentAccessPath())
+                        .withStartFile(DbMock.getInstance().loadRecentAccessPath())
                         .withDateFormat("HH:mm")
                         .withChosenListener(new ChooserDialog.Result() {
                             @Override
                             public void onChoosePath(String path, File pathFile) {
-                                TfFileUtils.ModelFolderInfo info = TfFileUtils.checkModelFolder(pathFile);
-
-                                if (info.isChecked()) {
-                                    try {
-                                        mPresent.initModule(info);
-                                    } catch (Exception e) {
-                                        Toast.makeText(getApplicationContext(), e.toString(), Toast.LENGTH_SHORT).show();
-                                    }
-                                } else {
-                                    Toast.makeText(getApplicationContext(), info.getError(), Toast.LENGTH_SHORT).show();
-                                }
-
-                                DbMock.getInstance().setRecentAccessPath(pathFile.getParent());
-
+                                showModelInfo(pathFile);
                             }
                         })
                         .enableOptions(true)
-                        .withOnBackPressedListener(new ChooserDialog.OnBackPressedListener() {
-                            @Override
-                            public void onBackPressed(AlertDialog dialog) {
-                                dialog.dismiss();
-                            }
-                        })
                         .build()
                         .show();
             }
         });
 
 
+        // 选择训练集文件夹
         findViewById(R.id.btn_choose_images).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 new ChooserDialog().with(getActivity())
                         .withFilter(true, false)
-                        .withStartFile(DbMock.getInstance().getRecentAccessPath())
+                        .withStartFile(DbMock.getInstance().loadRecentAccessPath())
                         .withDateFormat("HH:mm")
                         .withChosenListener(new ChooserDialog.Result() {
                             @Override
                             public void onChoosePath(String path, File pathFile) {
                                 mPresent.initImages(pathFile);
-                                DbMock.getInstance().setRecentAccessPath(pathFile.getParent());
-
-                                String reuslt = TfFileUtils.getPhotoListSuiffx(pathFile).toString();
-
-                                addLogs(reuslt);
+                                ((TextView) findViewById(R.id.text_train)).setText(pathFile.getName());
+                                DbMock.getInstance().saveRecentAccessPath(pathFile.getParent());
+                                String result = TfFileUtils.getPhotoListSuiffx(pathFile).toString();
+                                addLogs(result);
                             }
                         })
                         .enableOptions(true)
-                        .withOnBackPressedListener(new ChooserDialog.OnBackPressedListener() {
-                            @Override
-                            public void onBackPressed(AlertDialog dialog) {
-                                dialog.dismiss();
-                            }
-                        })
                         .build()
                         .show();
             }
         });
 
-        findViewById(R.id.btn_choose_test).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String result = mPresent.doPredictRandom();
-                addLogs(result);
-            }
-        });
-
+        // 开始识别
         findViewById(R.id.btn_choose_test_all).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (mPresent.isNoFileToPredict()) {
+                    Toast.makeText(view.getContext(), "No images file found", Toast.LENGTH_LONG).show();
+                    return;
+                }
                 mPresent.doPredictAll();
             }
         });
 
+        // 查看识别结果
         findViewById(R.id.btn_to_grid).setEnabled(false);
         findViewById(R.id.btn_to_grid).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -119,6 +95,60 @@ public class CheckActivity extends Activity {
                 startActivity(new Intent(getActivity(), GridActivity.class));
             }
         });
+
+        mPresent.loadRecentData();
+    }
+
+
+    public void showProcessDialog(final int maxStep) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mProcessDialog = new ProgressDialog(getActivity());
+                mProcessDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                mProcessDialog.setCancelable(false);
+                mProcessDialog.setTitle("Process images");
+                mProcessDialog.setCanceledOnTouchOutside(false);
+                mProcessDialog.setMax(maxStep);
+                mProcessDialog.show();
+            }
+        });
+    }
+
+    public void updateProcessDialog(int process) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mProcessDialog.incrementProgressBy(1);
+            }
+        });
+    }
+
+    public void hideProcessDialog() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mProcessDialog.dismiss();
+            }
+        });
+    }
+
+    public void showModelInfo(File file) {
+        TextView textView = findViewById(R.id.text_model);
+        TfFileUtils.ModelFolderInfo info = TfFileUtils.checkModelFolder(file);
+
+        if (info.isChecked()) {
+            try {
+                mPresent.initModule(info, file);
+                textView.setText(file.getName());
+            } catch (Exception e) {
+                textView.setText(e.toString());
+            }
+        } else {
+            textView.setText(info.getError());
+        }
+
+        DbMock.getInstance().saveRecentAccessPath(file.getParent());
     }
 
 
