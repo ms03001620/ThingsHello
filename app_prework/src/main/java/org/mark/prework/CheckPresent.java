@@ -21,7 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class CheckPresent {
     private CheckActivity checkActivity;
-    private Classifier classifier;
+    private List<Classifier> classifierList;
     private List<String> images;
 
     public CheckPresent(CheckActivity checkActivity) {
@@ -29,8 +29,14 @@ public class CheckPresent {
     }
 
     public void initModule(TfFileUtils.ModelFolderInfo info, File file) throws Exception {
-        classifier = TensorFlowImageClassifier.create(info.getModel(), info.getLabel(), 224);
-        String labelString = ((TensorFlowImageClassifier) classifier).getLabelStrings();
+        classifierList = new ArrayList<>();
+        classifierList.add(TensorFlowImageClassifier.create(info.getModel(), info.getLabel(), 224));
+        classifierList.add(TensorFlowImageClassifier.create(info.getModel(), info.getLabel(), 224));
+        classifierList.add(TensorFlowImageClassifier.create(info.getModel(), info.getLabel(), 224));
+        classifierList.add(TensorFlowImageClassifier.create(info.getModel(), info.getLabel(), 224));
+
+
+        String labelString = ((TensorFlowImageClassifier) classifierList.get(0)).getLabelStrings();
 
         DbMock.getInstance().setLabelString(labelString);
         DbMock.getInstance().saveRecentModelPath(file.getPath());
@@ -50,12 +56,16 @@ public class CheckPresent {
 
         final List<TfFileUtils.ImageAcc> accs = new CopyOnWriteArrayList<>();
 
-        MultiThread.multiThreadProcess(images, 1, new MultiThread.ICallback<List<String>>() {
+        MultiThread.multiThreadProcess(images, classifierList.size(), new MultiThread.ICallback<List<String>>() {
             @Override
-            public void onThreadProcess(List<String> data, String threadName) {
+            public void onThreadProcess(List<String> data, int threadIndex) {
                 for (String path : data) {
                     Bitmap bitmap = BitmapFactory.decodeFile(path);
-                    TfFileUtils.ImageAcc acc = calcImage(bitmap, path);
+                    TfFileUtils.ImageAcc acc;
+
+                    Classifier classifier = classifierList.get(threadIndex);
+                    acc = calcImage(bitmap, path, classifier);
+
                     if (acc != null) {
                         accs.add(acc);
                     }
@@ -83,7 +93,7 @@ public class CheckPresent {
         }
     }
 
-    private TfFileUtils.ImageAcc calcImage(Bitmap bitmap, String path) {
+    private TfFileUtils.ImageAcc calcImage(Bitmap bitmap, String path, Classifier classifier) {
         if (bitmap == null) {
             File file = new File(path);
             boolean deleted = file.delete();
@@ -98,7 +108,7 @@ public class CheckPresent {
 
             if (o.size() == 0) {
                 Log.e("CheckPresent", "classifier result error");
-                return calcImage(bitmap, path);
+                return calcImage(bitmap, path, classifier);
             }
 
             TfFileUtils.ImageAcc acc = new TfFileUtils.ImageAcc(path, o);

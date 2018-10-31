@@ -4,7 +4,6 @@ package org.mark.base.thread;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static java.lang.String.valueOf;
 
 public class MultiThread<T extends List> extends Thread {
     public interface ISubThread<T> {
@@ -13,20 +12,20 @@ public class MultiThread<T extends List> extends Thread {
 
 
     public interface ICallback<T> {
-        void onThreadProcess(T data, String threadName);
+        void onThreadProcess(T data, int threadIndex);
 
         void onAllThreadFinished(long spendMs);
     }
 
     private T data;
     private ICallback<T> callback;
-    private String threadName;
+    private int threadIndex;
     private ISubThread finishCallback;
 
 
-    public MultiThread(String name, T data, ICallback<T> callback, ISubThread finishCallback) {
-        setName(name);
-        threadName = name;
+    public MultiThread(int index, T data, ICallback<T> callback, ISubThread finishCallback) {
+        setName("index:"+index);
+        threadIndex = index;
         this.data = data;
         this.callback = callback;
         this.finishCallback = finishCallback;
@@ -34,7 +33,7 @@ public class MultiThread<T extends List> extends Thread {
 
     @Override
     public void run() {
-        callback.onThreadProcess(data, threadName);
+        callback.onThreadProcess(data, threadIndex);
         finishCallback.onThreadFinished(this);
     }
 
@@ -45,7 +44,7 @@ public class MultiThread<T extends List> extends Thread {
 
         for (int i = 0; i < listGroup.size(); i++) {
             List<T> subList = listGroup.get(i);
-            MultiThread<List<T>> thread = new MultiThread<>(valueOf(i), subList, callback, new ISubThread() {
+            MultiThread<List<T>> thread = new MultiThread<>(i, subList, callback, new ISubThread() {
                 @Override
                 public void onThreadFinished(Thread thread) {
                     temp.remove(thread);
