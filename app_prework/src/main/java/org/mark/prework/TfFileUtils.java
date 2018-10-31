@@ -55,17 +55,21 @@ public class TfFileUtils {
     public static final class ImageAcc {
         public ImageAcc(String path, List<Classifier.Recognition> elements) {
             this.path = path;
-            this.elements = elements;
+            this.elements = new ArrayList<>(elements);
         }
 
         String path;
         List<Classifier.Recognition> elements;
 
         public String getInfo() {
-            String id = elements.get(0).getId();
+            int id = elements.get(0).getId();
             String con = elements.get(0).getConfidenceString();
 
             return id + con;
+        }
+
+        public int getLabelIndex() {
+            return elements.get(0).getId();
         }
 
         @Override
@@ -79,7 +83,7 @@ public class TfFileUtils {
         }
 
         public boolean same(String index) {
-            String id = elements.get(0).getId();
+            String id = String.valueOf(elements.get(0).getId());
             if (id.equals(index)) {
                 return true;
             }

@@ -180,7 +180,7 @@ public class TensorFlowImageClassifier implements Classifier {
             float confidence = (labelProbArray[0][i] * 100) / 127.0f;
 
             if (confidence > THRESHOLD) {
-                pq.add(new Recognition("" + i,
+                pq.add(new Recognition(i,
                         labelList.size() > i ? labelList.get(i) : "unknown",
                         confidence));
             }

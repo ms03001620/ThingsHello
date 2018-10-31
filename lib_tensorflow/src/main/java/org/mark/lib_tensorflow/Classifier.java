@@ -14,7 +14,7 @@ public interface Classifier {
          * A unique identifier for what has been recognized. Specific to the class, not the instance of
          * the object.
          */
-        private final String id;
+        private final int id;
 
         /**
          * Display name for the recognition.
@@ -26,14 +26,13 @@ public interface Classifier {
          */
         private final Float confidence;
 
-        public Recognition(
-                final String id, final String title, final Float confidence) {
+        public Recognition(final int id, final String title, final Float confidence) {
             this.id = id;
             this.title = title;
             this.confidence = confidence;
         }
 
-        public String getId() {
+        public int getId() {
             return id;
         }
 

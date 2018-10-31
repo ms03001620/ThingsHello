@@ -1,20 +1,20 @@
 package org.mark.prework;
 
-import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 import android.util.Log;
 
 import org.mark.base.CameraUtils;
+import org.mark.base.thread.MultiThread;
 import org.mark.lib_tensorflow.Classifier;
 import org.mark.lib_tensorflow.TensorFlowImageClassifier;
 import org.mark.prework.db.DbMock;
 
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Created by Mark on 2018/10/24
@@ -46,21 +46,34 @@ public class CheckPresent {
     }
 
     public void doPredictAll() {
-        new Thread(new Runnable() {
+        checkActivity.showProcessDialog(images.size());
+
+        final List<TfFileUtils.ImageAcc> accs = new CopyOnWriteArrayList<>();
+
+        MultiThread.multiThreadProcess(images, 1, new MultiThread.ICallback<List<String>>() {
             @Override
-            public void run() {
-                long start = System.currentTimeMillis();
-                List<TfFileUtils.ImageAcc> accs = getImageAccs(images);
-                long end = System.currentTimeMillis();
+            public void onThreadProcess(List<String> data, String threadName) {
+                for (String path : data) {
+                    Bitmap bitmap = BitmapFactory.decodeFile(path);
+                    TfFileUtils.ImageAcc acc = calcImage(bitmap, path);
+                    if (acc != null) {
+                        accs.add(acc);
+                    }
+                    checkActivity.updateProcessDialog(1);
+                }
+            }
 
-                checkActivity.addLogs("task size:" + images.size() + ", finished size:" + accs.size() + " spend:" + (end - start) / 1000 + "s");
+            @Override
+            public void onAllThreadFinished(long spendMs) {
+                checkActivity.addLogs("task size:" + images.size() + ", finished size:" + accs.size() + " spend:" + spendMs / 1000 + "s");
+                checkActivity.hideProcessDialog();
+
                 DbMock.getInstance().updateImages(accs);
-
                 if (accs.size() > 0) {
                     checkActivity.enableToGridButton();
                 }
             }
-        }).start();
+        });
     }
 
     public void loadRecentData() {
@@ -70,37 +83,31 @@ public class CheckPresent {
         }
     }
 
-    private List<TfFileUtils.ImageAcc> getImageAccs(List<String> images) {
-        //images = images.subList(0, 100);
-        checkActivity.showProcessDialog(images.size());
-        List<TfFileUtils.ImageAcc> result = new ArrayList<>();
-        for (int i=0;i<images.size();i++) {
-            checkActivity.updateProcessDialog(i);
-            String path = images.get(i);
-            Bitmap bitmap = BitmapFactory.decodeFile(path);
-
-            if (bitmap == null) {
-                File file = new File(path);
-                boolean deleted = file.delete();
-                Log.e("CheckPresent", "file error delete:" + path + ", " + deleted);
-                continue;
-            }
-
-            try {
-                bitmap = CameraUtils.zoomImage(bitmap, classifier.getWidth(), classifier.getHeight());
-
-                List<Classifier.Recognition> o = classifier.recognizeImage(bitmap);
-                bitmap.recycle();
-                TfFileUtils.ImageAcc acc = new TfFileUtils.ImageAcc(path, o);
-                result.add(acc);
-
-                bitmap.recycle();
-            } catch (Exception e) {
-                Log.e("CheckPresent", "recognizeImage", e);
-            }
+    private TfFileUtils.ImageAcc calcImage(Bitmap bitmap, String path) {
+        if (bitmap == null) {
+            File file = new File(path);
+            boolean deleted = file.delete();
+            Log.e("CheckPresent", "file error delete:" + path + ", " + deleted);
+            return null;
         }
-        checkActivity.hideProcessDialog();
-        return result;
+
+        try {
+            Bitmap tmp = CameraUtils.zoomImage(bitmap, classifier.getWidth(), classifier.getHeight());
+
+            List<Classifier.Recognition> o = classifier.recognizeImage(tmp);
+
+            if (o.size() == 0) {
+                Log.e("CheckPresent", "classifier result error");
+                return calcImage(bitmap, path);
+            }
+
+            TfFileUtils.ImageAcc acc = new TfFileUtils.ImageAcc(path, o);
+            return acc;
+        } catch (Exception e) {
+            Log.e("CheckPresent", "recognizeImage", e);
+        }
+
+        return null;
     }
 
     public boolean isNoFileToPredict() {

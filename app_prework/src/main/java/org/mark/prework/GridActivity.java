@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.SparseIntArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,6 +21,8 @@ import org.mark.prework.grid.GridPresent;
 import org.mark.prework.grid.ImageGridAdapter;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.List;
 
 public class GridActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
@@ -52,10 +55,43 @@ public class GridActivity extends AppCompatActivity {
 
         mRecyclerView.setAdapter(mAdapter);
         mGridPresent.loadImages();
+
+        checkLabelCount();
     }
 
     public void updateAdapter() {
         mAdapter.setData(DbMock.getInstance().getImages());
+    }
+
+    public void checkLabelCount() {
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                SparseIntArray idsMap = new SparseIntArray();
+
+                List<TfFileUtils.ImageAcc> accs = DbMock.getInstance().getImages();
+
+                for (TfFileUtils.ImageAcc acc : accs) {
+                    int labelKey = acc.getLabelIndex();
+
+                    int value = idsMap.get(labelKey, -1);
+                    if (value != -1) {
+                        value++;
+                        idsMap.put(labelKey, value);
+                    } else {
+                        idsMap.put(labelKey, 1);
+                    }
+                }
+
+                for(int i = 0; i < idsMap.size(); i++) {
+                    int key = idsMap.keyAt(i);
+                    int value = idsMap.get(key);
+                    Log.d("GridActivity", "checkLabelCount key:" + key + ", value:" + value);
+                }
+            }
+        }).start();
+
     }
 
 
@@ -73,14 +109,14 @@ public class GridActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        switch (id){
+        switch (id) {
             case R.id.action_select_all:
                 mAdapter.selectAll();
                 break;
             case R.id.action_hide:
-                final View view = View.inflate(getActivity(),R.layout.dialog_aciton_hide, null);
+                final View view = View.inflate(getActivity(), R.layout.dialog_aciton_hide, null);
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                final  AlertDialog dialog = builder.setView(view).create();
+                final AlertDialog dialog = builder.setView(view).create();
 
                 view.findViewById(R.id.ok).setOnClickListener(new View.OnClickListener() {
                     @Override
