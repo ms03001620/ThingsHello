@@ -1,7 +1,6 @@
 package org.mark.thingshello.ctrl.wheel;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.google.android.things.pio.PeripheralManager;
 import com.leinardi.android.things.pio.SoftPwm;
@@ -55,6 +54,22 @@ public class WheelAction extends OnReceiverCommand implements IWheelAction {
     }
 
     @Override
+    public void forward(int speedLeft, int speedRight) {
+        if (speedLeft >= 0) {
+            wheelLeft.forward(speedLeft);
+        } else {
+            wheelLeft.back(Math.abs(speedLeft));
+        }
+
+        if (speedRight >= 0) {
+            wheelRight.forward(speedRight);
+        } else {
+            wheelRight.back(Math.abs(speedRight));
+        }
+    }
+
+
+    @Override
     public void stop() {
         wheelLeft.stop();
         wheelRight.stop();
@@ -62,24 +77,24 @@ public class WheelAction extends OnReceiverCommand implements IWheelAction {
 
     @Override
     public void left() {
+
+    }
+
+    @Override
+    public void right() {
+
+    }
+
+    @Override
+    public void rotateLeft() {
         wheelLeft.forwardBuff();
         wheelRight.forward();
     }
 
     @Override
-    public void right() {
+    public void rotateRight() {
         wheelLeft.forward();
         wheelRight.forwardBuff();
-    }
-
-    @Override
-    public void rotateLeft() {
-
-    }
-
-    @Override
-    public void rotateRight() {
-
     }
 
     @Override
