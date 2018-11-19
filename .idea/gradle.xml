@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/app_mobile" />
             <option value="$PROJECT_DIR$/app_prework" />
             <option value="$PROJECT_DIR$/lib_base" />
+            <option value="$PROJECT_DIR$/lib_camera" />
             <option value="$PROJECT_DIR$/lib_tensorflow" />
             <option value="$PROJECT_DIR$/lib_unit_socket" />
           </set>

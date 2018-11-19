@@ -11,6 +11,8 @@ import android.os.Messenger;
 import android.util.Log;
 
 import org.mark.base.CameraUtils;
+import org.mark.camera.Config;
+import org.mark.camera.DoorbellCamera;
 import org.mark.thingshello.tensorflow.Test;
 import org.mark.thingshello.video.sender.ConnectSelector;
 import org.mark.base.executor.ImageProcess;
@@ -20,7 +22,22 @@ import java.nio.ByteBuffer;
 
 /**
  * Created by Mark on 2018/8/16
+  0 = {Size@5230} "176x144"
+ 1 = {Size@5231} "320x240"
+ 2 = {Size@5232} "640x480"
+ 3 = {Size@5233} "1024x768"
+ 4 = {Size@5234} "1280x720"
+ 5 = {Size@5235} "1640x1232"
+ 6 = {Size@5236} "1920x1080"
+ 7 = {Size@5237} "2560x1440"
+
+ 0 = {Size@5321} "160x120"
+ 1 = {Size@5322} "176x144"
+ 2 = {Size@5323} "320x240"
+ 3 = {Size@5324} "352x288"
+ 4 = {Size@5325} "640x480"
  */
+
 public class CameraService extends Service {
 
     public static class CameraServiceAction {
@@ -93,7 +110,8 @@ public class CameraService extends Service {
     }
 
     void startPreview() {
-        DoorbellCamera.getInstance().initializeCamera(this, mImageAvailableListener);
+        Config config = new Config(247, 320, mImageAvailableListener);
+        DoorbellCamera.getInstance().initializeCamera(this, config);
         isPreviewing = true;
     }
 
