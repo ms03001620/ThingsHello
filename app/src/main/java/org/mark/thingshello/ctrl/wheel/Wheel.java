@@ -52,6 +52,26 @@ public class Wheel {
         }
     }
 
+    public void forward(int speed) {
+        try {
+            in1.setDirection(Gpio.ACTIVE_HIGH);
+            in2.setDirection(Gpio.ACTIVE_LOW);
+            pwmSpeed.setPwmDutyCycle(speed);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void back(int speed) {
+        try {
+            in1.setDirection(Gpio.ACTIVE_LOW);
+            in2.setDirection(Gpio.ACTIVE_HIGH);
+            pwmSpeed.setPwmDutyCycle(speed);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void stop() {
         try {
             in2.setDirection(Gpio.ACTIVE_LOW);
@@ -60,10 +80,6 @@ public class Wheel {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public int getSpeed() {
-        return speed;
     }
 
     public void addSpeed(int buff) {

@@ -6,6 +6,8 @@ public interface IWheelAction {
 
     void back();
 
+    void forward(int speedLeft, int speedRight);
+
     void stop();
 
     void left();
