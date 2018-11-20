@@ -57,7 +57,7 @@ public class UdpSender implements ISend {
     @Override
     public void send(final byte[] bytes) {
         if (!mUdpServerThread.hasClientLinked()) {
-            // udp没有客户端链接过，不知道发送目标是谁
+            // udp没有客户端链接过
             return;
         }
 

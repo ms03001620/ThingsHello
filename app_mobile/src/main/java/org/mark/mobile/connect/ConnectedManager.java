@@ -3,13 +3,10 @@ package org.mark.mobile.connect;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,7 +14,7 @@ import java.util.concurrent.Executors;
 /**
  * Created by Mark on 2018/8/10
  */
-public class ConnectedManager {
+public class ConnectedManager extends CmdConstant {
     private static ConnectedManager instance;
     @Nullable
     private IConnect mDefaultConnect;
@@ -96,32 +93,6 @@ public class ConnectedManager {
         });
     }
 
-    public void sendMessage(final int message) {
-        sendMessage(String.valueOf(message));
-    }
-
-    public void sendMessage(final String message) {
-        mExecutorForWrite.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (mDefaultConnect != null) {
-                    mDefaultConnect.sendMessage(message);
-                }
-            }
-        });
-    }
-
-    public void sendMessage(final String message, final int type) {
-        mExecutorForWrite.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (mDefaultConnect != null) {
-                    mDefaultConnect.sendMessage(message, type);
-                }
-            }
-        });
-    }
-
     public void addCallback(ClientMessageCallback callback) {
         if (!mCallbackList.contains(callback)) {
             mCallbackList.add(callback);
@@ -133,4 +104,16 @@ public class ConnectedManager {
             mCallbackList.remove(callback);
         }
     }
+
+    public void sendMessage(final String message, @CmdConstant.TYPE final int type) {
+        mExecutorForWrite.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (mDefaultConnect != null) {
+                    mDefaultConnect.sendMessage(message, type);
+                }
+            }
+        });
+    }
+
 }

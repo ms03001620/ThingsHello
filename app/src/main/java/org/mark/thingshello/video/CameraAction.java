@@ -7,8 +7,9 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 
-import org.mark.base.CommandConstant;
+import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.SocketManager;
+import org.mark.lib_unit_socket.bean.CameraCmd;
 import org.mark.thingshello.MainActivity;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
 
@@ -46,24 +47,26 @@ public class CameraAction extends OnReceiverCommand {
         }
     });
 
+    /**
+     * 发送相机消息
+     * @param bytes 消息
+     */
     private void sendFromSocket(byte[] bytes) {
-        //Log.d(CameraService.TAG, "发送数据" + bytes.length / 1024 + "KB");
-
         if (SocketManager.getInstance().isConnection()) {
             SocketManager.getInstance().send(bytes);
         }
     }
 
     @Override
-    public void onCommand(@NonNull byte[] bytes, int type) {
-        int data = decodeByteAsInteger(bytes);
-        switch (data) {
-            case CommandConstant.CAMERA.START:
+    public void onCommand(@NonNull String json, @CmdConstant.TYPE int type) {
+        if (type == CmdConstant.CAMERA) {
+            CameraCmd cameraCmd = gson.fromJson(json, CameraCmd.class);
+
+            if (cameraCmd.isOpenAction()) {
                 sendWhat(CameraService.CameraServiceAction.CAMERA_OPEN);
-                break;
-            case CommandConstant.CAMERA.STOP:
+            } else {
                 sendWhat(CameraService.CameraServiceAction.CAMERA_CLOSE);
-                break;
+            }
         }
     }
 

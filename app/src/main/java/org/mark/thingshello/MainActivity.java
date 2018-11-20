@@ -47,7 +47,7 @@ public class MainActivity extends Activity {
     private Messenger mService = null;
 
     public interface OnCtrlResponse{
-        void onReceiveMessage(final byte[] message, int type);
+        void onReceiveMessage(final String message, int type);
 
         @Nullable
         Messenger getMessenger();
@@ -62,11 +62,11 @@ public class MainActivity extends Activity {
         try {
             mCtrlManager = new CtrlManager(new OnCtrlResponse() {
                 @Override
-                public void onReceiveMessage(final byte[] message, int type) {
+                public void onReceiveMessage(final String message, int type) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            mTextLog.setText(message.length + ", " + System.currentTimeMillis());
+                            mTextLog.setText(message + ", " + System.currentTimeMillis());
                         }
                     });
                 }
@@ -91,8 +91,6 @@ public class MainActivity extends Activity {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             mService = new Messenger(iBinder);
-
-            // mCtrlManager.autoStartCamera();
         }
 
         @Override

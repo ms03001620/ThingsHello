@@ -21,33 +21,6 @@
             android:scrollbars="vertical"
             android:textSize="10sp" />
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <EditText
-                android:id="@+id/edit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_toLeftOf="@+id/btn_send"
-                android:text="12" />
-
-            <Button
-                android:id="@+id/btn_send"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_toLeftOf="@+id/btn_preview"
-                android:text="send" />
-
-            <Button
-                android:id="@+id/btn_preview"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:text="preview" />
-
-        </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -56,17 +29,17 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/btn_clear1"
+                android:id="@+id/btn_preview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="clear" />
-
+                android:layout_alignParentRight="true"
+                android:text="preview" />
 
             <SeekBar
                 android:id="@+id/seek_speed"
-                android:layout_marginLeft="10dp"
                 android:layout_width="250dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp" />
 
 
         </LinearLayout>

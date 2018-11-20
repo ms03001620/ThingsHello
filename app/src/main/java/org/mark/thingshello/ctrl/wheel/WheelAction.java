@@ -5,11 +5,10 @@ import android.support.annotation.NonNull;
 import com.google.android.things.pio.PeripheralManager;
 import com.leinardi.android.things.pio.SoftPwm;
 
-import org.mark.base.CommandConstant;
+import org.mark.lib_unit_socket.bean.CmdConstant;
+import org.mark.lib_unit_socket.bean.WheelCmd;
 import org.mark.thingshello.ctrl.BoardDefaults;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
-
-import java.io.IOException;
 
 /**
  * AIN1-----40----29(wiringPi编码)--21
@@ -21,11 +20,13 @@ import java.io.IOException;
  * PWMA-----36----27(wiringPi编码)--16
  * PWMB-----33----23(wiringPi编码)--13
  */
-public class WheelAction extends OnReceiverCommand implements IWheelAction {
+public class WheelAction extends OnReceiverCommand {
     private Wheel wheelLeft;
     private Wheel wheelRight;
 
+
     public WheelAction() throws Exception {
+        super();
         PeripheralManager pioService = PeripheralManager.getInstance();
 
         wheelLeft = new Wheel(
@@ -41,20 +42,15 @@ public class WheelAction extends OnReceiverCommand implements IWheelAction {
         );
     }
 
-    @Override
-    public void forward() {
-        wheelLeft.forward();
-        wheelRight.forward();
-    }
+    /**
+     * 开始行走，提供做右轮速度，负值为向后行驶速度
+     */
+    public void run(int speedLeft, int speedRight) {
+        if (speedLeft == 0 && speedRight == 0) {
+            stop();
+            return;
+        }
 
-    @Override
-    public void back() {
-        wheelLeft.back();
-        wheelRight.back();
-    }
-
-    @Override
-    public void forward(int speedLeft, int speedRight) {
         if (speedLeft >= 0) {
             wheelLeft.forward(speedLeft);
         } else {
@@ -68,33 +64,28 @@ public class WheelAction extends OnReceiverCommand implements IWheelAction {
         }
     }
 
-
-    @Override
+    /**
+     * 停车
+     */
     public void stop() {
         wheelLeft.stop();
         wheelRight.stop();
     }
 
-    @Override
-    public void left() {
-
+    /**
+     * 原地左转
+     */
+    public void rotateLeft(int speed) {
+        wheelLeft.forwardBuff(speed);
+        wheelRight.forward(speed);
     }
 
-    @Override
-    public void right() {
-
-    }
-
-    @Override
-    public void rotateLeft() {
-        wheelLeft.forwardBuff();
-        wheelRight.forward();
-    }
-
-    @Override
-    public void rotateRight() {
-        wheelLeft.forward();
-        wheelRight.forwardBuff();
+    /**
+     * 原地右转
+     */
+    public void rotateRight(int speed) {
+        wheelLeft.forward(speed);
+        wheelRight.forwardBuff(speed);
     }
 
     @Override
@@ -103,35 +94,12 @@ public class WheelAction extends OnReceiverCommand implements IWheelAction {
         wheelRight.release();
     }
 
-    public void setSpeed(int speed) {
-        wheelLeft.setSpeed(speed);
-        wheelRight.setSpeed(speed);
-    }
-
     @Override
-    public void onCommand(@NonNull byte[] bytes, int type) {
-        int data = decodeByteAsInteger(bytes);
-        if (type == 1) {
-            setSpeed(data);
-            return;
+    public void onCommand(@NonNull String json, @CmdConstant.TYPE int type) {
+        if (type == CmdConstant.WHEEL) {
+            WheelCmd direction = gson.fromJson(json, WheelCmd.class);
+            run(direction.getLeft(), direction.getRight());
         }
 
-        switch (data) {
-            case CommandConstant.Wheel.STOP:
-                stop();
-                break;
-            case CommandConstant.Wheel.FORWARD:
-                forward();
-                break;
-            case CommandConstant.Wheel.BACK:
-                back();
-                break;
-            case CommandConstant.Wheel.ROUND_LEFT:
-                left();
-                break;
-            case CommandConstant.Wheel.ROUND_RIGHT:
-                right();
-                break;
-        }
     }
 }

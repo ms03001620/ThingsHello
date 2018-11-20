@@ -7,6 +7,7 @@ import android.text.SpannableStringBuilder;
 import org.mark.lib_tensorflow.Classifier;
 import org.mark.lib_tensorflow.ImageClassifierFloatInception;
 import org.mark.lib_tensorflow.ImageClassifierQuantizedMobileNet;
+import org.mark.lib_tensorflow.TensorFlowImageClassifier;
 
 /**
  * Created by Mark on 2018/10/22
@@ -22,11 +23,11 @@ public class ImageClassifierFactory {
 
     public void init(Context context) throws Exception {
 
-        // c1 = TensorFlowImageClassifier.create(context.getAssets(), "optimized_graph_arrow.lite","retrained_labels_arrow.txt", 224);
+        c1 = TensorFlowImageClassifier.create(context.getAssets(), "optimized_graph_arrow.lite","retrained_labels_arrow.txt", 224);
 
         // c2 = new ImageClassifierQuantizedMobileNet(context);
 
-        c3 = new ImageClassifierFloatInception(context);
+        //c3 = new ImageClassifierFloatInception(context);
 
     }
 

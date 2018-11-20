@@ -1,46 +1,43 @@
 package org.mark.mobile.ctrl;
 
-import android.support.annotation.NonNull;
-import android.util.Log;
-
 import com.gcssloop.widget.RockerView;
 
-/**
- * Created by mark on 2018/7/28
- */
-public class RockerListener implements RockerView.RockerListener {
-    private static final String TAG = "SimpleRockerListener";
 
-    public enum Action {
-        STOP,
-        UP,
-        RIGHT,
-        DOWN,
-        LEFT
-    }
-
-    public RockerListener() {
-    }
+public abstract class RockerListener implements RockerView.RockerListener {
+    private final static int MAX_DIST = 400;
 
     @Override
     public void callback(int eventType, int currentAngle, float currentDistance) {
         if (eventType == RockerView.EVENT_CLOCK) {
             return;
         }
-
-
-        Log.d("callback", "angle:" + currentAngle + ", distance:" + currentDistance);
-
-        //90  A100 B100
-        //0   A100 B0
-        //180 A0   B100
-
+        currentDistance = currentDistance > MAX_DIST ? MAX_DIST : currentDistance;
+        onEvent(currentAngle, currentDistance * (1.0f / MAX_DIST));
     }
 
+    /**
+     * 控制杆事件
+     * @param currentAngle 角度（1-360）
+     * @param power 能量(0-1.0);
+     */
+    public abstract void onEvent(int currentAngle, float power);
 
+
+    /**
+     *
+     * 根据目标角度算出左右两轮的速度差异，例如在右转角度下右轮速度要小于左轮
+     *
+     * 上90   L100, R 100
+     * 下270  L-100, R-100
+     * 左180  L0, R100
+     * 右1    L100, 0
+     *
+     * @param angle 角度
+     * @param max 最大速度
+     */
     public static int[] roundSpeed(int angle, int max) {
         int[] result = new int[2];
-        if (angle < 0) {
+        if (angle < 0 || max <= 0) {
             return result;
         }
         float p = max / 90.0f;

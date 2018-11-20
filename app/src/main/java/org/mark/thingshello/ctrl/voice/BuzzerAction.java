@@ -8,7 +8,8 @@ import android.support.annotation.NonNull;
 import com.google.android.things.pio.Gpio;
 import com.google.android.things.pio.PeripheralManager;
 
-import org.mark.base.CommandConstant;
+import org.mark.lib_unit_socket.bean.CmdConstant;
+import org.mark.lib_unit_socket.bean.BuzzerCmd;
 import org.mark.thingshello.ctrl.BoardDefaults;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
 
@@ -20,7 +21,7 @@ import java.io.IOException;
  */
 public class BuzzerAction extends OnReceiverCommand {
     private Gpio in;
-    Handler handler;
+    private Handler handler;
 
     public BuzzerAction() throws IOException {
         PeripheralManager pioService = PeripheralManager.getInstance();
@@ -39,8 +40,6 @@ public class BuzzerAction extends OnReceiverCommand {
                         stop();
                         break;
                 }
-
-
                 return false;
             }
         });
@@ -86,16 +85,12 @@ public class BuzzerAction extends OnReceiverCommand {
 
 
     @Override
-    public void onCommand(@NonNull byte[] bytes, int type) {
-        int data = decodeByteAsInteger(bytes);
-
-        switch (data) {
-            case CommandConstant.Buzzer.START:
+    public void onCommand(@NonNull String json, @CmdConstant.TYPE int type) {
+        if (type == CmdConstant.BUZZER) {
+            BuzzerCmd buzzerCmd = gson.fromJson(json, BuzzerCmd.class);
+            if (buzzerCmd.isDi()) {
                 di();
-                break;
-            case CommandConstant.Buzzer.STOP:
-                stop();
-                break;
+            }
         }
     }
 }

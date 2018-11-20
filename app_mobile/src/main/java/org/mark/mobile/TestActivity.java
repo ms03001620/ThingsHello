@@ -7,14 +7,13 @@ import android.widget.TextView;
 
 import com.gcssloop.widget.RockerView;
 
-import org.mark.base.CommandConstant;
-import org.mark.mobile.connect.ConnectedManager;
+import org.mark.lib_unit_socket.bean.WheelCmd;
 import org.mark.mobile.ctrl.RockerListener;
-import org.mark.mobile.ctrl.SimpleRockerListener;
 
 public class TestActivity extends AppCompatActivity {
-
     TextView mTextView;
+
+    private int mSpeedCurrent = 20;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,48 +27,16 @@ public class TestActivity extends AppCompatActivity {
 
     }
 
-    RockerListener m = new RockerListener(){
+    RockerListener m = new RockerListener() {
         @Override
-        public void callback(int eventType, int currentAngle, float currentDistance) {
-            if (eventType == RockerView.EVENT_CLOCK) {
-                return;
-            }
+        public void onEvent(int angle, float power) {
 
+            WheelCmd direction = new WheelCmd(roundSpeed(angle, Math.round(mSpeedCurrent * power)));
+            Log.d("Wheel", "angle:" + angle + ", power:" + power + ", " + direction.toString());
 
-            Log.d("callback","angle:"+currentAngle+", distance:"+currentDistance);
-
-            int[] value = roundSpeed(currentAngle, 100);
-
-            mTextView.setText(value[0]+", "+value[1]);
-
+            mTextView.setText(direction.getLeft() + ", " + direction.getRight());
         }
     };
 
-
-
-    public int[] roundSpeed(int angle, int max) {
-        int[] result = new int[2];
-        float p = max / 90.0f;
-
-        if (angle <= 90) {
-            result[0] = max;
-            result[1] = value(p, angle);
-        } else if (angle <= 180) {
-            result[0] = max - value(p, angle - 90);
-            result[1] = max;
-        } else if (angle <= 270) {
-            result[0] = max - value(p, angle - 90);
-            result[1] = -max;
-        } else if (angle <= 360) {
-            result[1] = -(max - value(p, angle - 270));
-            result[0] = -max;
-        }
-
-        return result;
-    }
-
-    private int value(float p, int angle) {
-        return (int) (angle * p);
-    }
 
 }

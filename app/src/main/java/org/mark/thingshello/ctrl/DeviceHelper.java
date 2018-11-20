@@ -1,5 +1,6 @@
 package org.mark.thingshello.ctrl;
 
+import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.thingshello.ctrl.voice.BuzzerAction;
 import org.mark.thingshello.video.CameraAction;
 
@@ -20,10 +21,10 @@ public class DeviceHelper {
         deviceMap.put(device.getClass().getSimpleName(), device);
     }
 
-    public void onCommand(byte[] bytes, int type) {
+    public void onCommand(String json, @CmdConstant.TYPE int type) {
         for (Map.Entry<String, OnReceiverCommand> device : deviceMap.entrySet()) {
             try {
-                device.getValue().onCommand(bytes, type);
+                device.getValue().onCommand(json, type);
             } catch (NumberFormatException e) {
                 e.printStackTrace();
             }

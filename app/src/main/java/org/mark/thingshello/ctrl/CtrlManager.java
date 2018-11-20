@@ -2,6 +2,8 @@ package org.mark.thingshello.ctrl;
 
 import android.util.Log;
 
+import org.mark.lib_unit_socket.bean.CmdConstant;
+import org.mark.lib_unit_socket.bean.JsonReceiver;
 import org.mark.lib_unit_socket.SocketManager;
 import org.mark.thingshello.MainActivity;
 import org.mark.thingshello.ctrl.light.ForwardLightAction;
@@ -18,7 +20,7 @@ public class CtrlManager {
 
     public CtrlManager(final MainActivity.OnCtrlResponse listener) throws Exception {
         mDeviceHelper = new DeviceHelper();
-        String model= android.os.Build.MODEL;
+        String model = android.os.Build.MODEL;
         // 该设备可以使用一下硬件
         if ("iot_rpi3".equals(model)) {
             mDeviceHelper.add(new WheelAction());
@@ -28,13 +30,14 @@ public class CtrlManager {
         mDeviceHelper.add(new CameraAction(listener));
 
 
-        SocketManager.getInstance().init(new SocketManager.OnReceiveMessage() {
+        SocketManager.getInstance().init(new JsonReceiver() {
+
             @Override
-            public void onReceiveMessage(final byte[] bytes, int type) {
-                listener.onReceiveMessage(bytes, type);
+            public void onReceiverJson(String json, @CmdConstant.TYPE int type) {
+                listener.onReceiveMessage(json, type);
                 //SocketManager.getInstance().send(bytes);
-                Log.d("CtrlManager", "onReceiveMessage:" + bytes.length + ", type:" + type);
-                mDeviceHelper.onCommand(bytes, type);
+                Log.d("CtrlManager", "onReceiveMessage:" + json.length() + ", type:" + type);
+                mDeviceHelper.onCommand(json, type);
             }
         });
 
@@ -48,7 +51,7 @@ public class CtrlManager {
         mDeviceHelper.release();
     }
 
-    public void autoStartCamera(){
+    public void autoStartCamera() {
         mDeviceHelper.startCamera();
     }
 }

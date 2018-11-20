@@ -38,6 +38,7 @@ public class Test {
                 } catch (Exception e) {
                     label = e.toString();
                 }
+                // 发送识别结果到客户端
                 connectSelector.sendText(label);
                 Log.d(TAG, "result \n" + label);
             }

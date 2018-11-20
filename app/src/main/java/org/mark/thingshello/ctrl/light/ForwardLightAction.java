@@ -2,17 +2,17 @@ package org.mark.thingshello.ctrl.light;
 
 import android.support.annotation.NonNull;
 
-import com.google.android.things.pio.PeripheralManager;
 import com.leinardi.android.things.pio.SoftPwm;
 
-import org.mark.base.CommandConstant;
+import org.mark.lib_unit_socket.bean.CmdConstant;
+import org.mark.lib_unit_socket.bean.LightCmd;
 import org.mark.thingshello.ctrl.BoardDefaults;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
 
 import java.io.IOException;
 
 /**
- * Created by Mark on 2018/8/12
+ * 彩色前灯
  */
 public class ForwardLightAction extends OnReceiverCommand {
     // LED_R = 22
@@ -23,7 +23,6 @@ public class ForwardLightAction extends OnReceiverCommand {
     private SoftPwm pwmBlue;
 
     public ForwardLightAction() throws IOException {
-        PeripheralManager pioService = PeripheralManager.getInstance();
 
         pwmRed = SoftPwm.openSoftPwm(BoardDefaults.getRpi3GPIO(22));
         pwmRed.setPwmFrequencyHz(300);
@@ -35,7 +34,7 @@ public class ForwardLightAction extends OnReceiverCommand {
         pwmBlue.setPwmFrequencyHz(300);
     }
 
-    public void test() {
+    public void enable(int r, int g, int b) {
         try {
             pwmRed.setEnabled(true);
             pwmRed.setPwmDutyCycle(100);
@@ -52,7 +51,7 @@ public class ForwardLightAction extends OnReceiverCommand {
 
     }
 
-    public void testStop() {
+    public void disable() {
         pwmRed.setPwmDutyCycle(0);
         pwmGreen.setPwmDutyCycle(0);
         pwmBlue.setPwmDutyCycle(0);
@@ -69,15 +68,15 @@ public class ForwardLightAction extends OnReceiverCommand {
     }
 
     @Override
-    public void onCommand(@NonNull byte[] bytes, int type) {
-        int data = decodeByteAsInteger(bytes);
-        switch (data){
-            case CommandConstant.LIGHT.START:
-                test();
-                break;
-            case CommandConstant.LIGHT.STOP:
-                testStop();
-                break;
+    public void onCommand(@NonNull String json, @CmdConstant.TYPE int type) {
+        if (type == CmdConstant.LIGHT) {
+            LightCmd lightCmd = gson.fromJson(json, LightCmd.class);
+
+            if (lightCmd.isEnable()) {
+                enable(lightCmd.getRed(), lightCmd.getGreen(), lightCmd.getBlue());
+            } else {
+                disable();
+            }
         }
     }
 }

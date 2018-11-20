@@ -110,7 +110,7 @@ public class CameraService extends Service {
     }
 
     void startPreview() {
-        Config config = new Config(247, 320, mImageAvailableListener);
+        Config config = new Config(240, 320, mImageAvailableListener);
         DoorbellCamera.getInstance().initializeCamera(this, config);
         isPreviewing = true;
     }

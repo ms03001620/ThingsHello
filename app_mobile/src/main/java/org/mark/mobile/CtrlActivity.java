@@ -14,48 +14,29 @@ import android.widget.Toast;
 
 import com.gcssloop.widget.RockerView;
 
-import org.mark.base.CommandConstant;
 import org.mark.lib_unit_socket.ClientMessageCallback;
+import org.mark.lib_unit_socket.bean.CmdConstant;
+import org.mark.lib_unit_socket.bean.WheelCmd;
 import org.mark.mobile.connect.ConnectedManager;
-import org.mark.mobile.ctrl.CtrlPresent;
-import org.mark.mobile.ctrl.SimpleRockerListener;
+import org.mark.mobile.ctrl.RockerListener;
 import org.mark.mobile.preview.PreviewActivity;
 
 public class CtrlActivity extends AppCompatActivity {
     private static final String TAG = "CtrlActivity";
-    RockerView mRockerView;
-    EditText mEditMessage;
 
-    CtrlPresent mPresent;
-
-/*    String KEY_CLEAR = "$0,0,0,0,0,0,0,0,0#";
-    String KEY_GO = "$1,0,0,0,0,0,0,0,0#";
-    String KEY_BACK = "$2,0,0,0,0,0,0,0,0#";
-    String KEY_RIGHT = "$3,0,0,0,0,0,0,0,0#";
-    String KEY_LEFT = "$4,0,0,0,0,0,0,0,0#";
-    String KEY_ROUND_LEFT = "$0,1,0,0,0,0,0,0,0#";
-    String KEY_ROUND_RIGHT = "$0,2,0,0,0,0,0,0,0#";*/
+    private int mSpeedCurrent = WheelCmd.DEFAULT_SPEED;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ctrl);
-        mPresent = new CtrlPresent(this);
-        mEditMessage = findViewById(R.id.edit_message);
+        EditText mEditMessage = findViewById(R.id.edit_message);
         mEditMessage.setMovementMethod(ScrollingMovementMethod.getInstance());
-
-        final EditText edit = findViewById(R.id.edit);
-        findViewById(R.id.btn_send).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String message = edit.getText().toString();
-                ConnectedManager.getInstance().sendMessage(message);
-            }
-        });
 
         findViewById(R.id.btn_preview).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // 进入视频
                 Intent intent = new Intent(CtrlActivity.this, PreviewActivity.class);
                 startActivity(intent);
             }
@@ -63,49 +44,31 @@ public class CtrlActivity extends AppCompatActivity {
 
         SeekBar seekBar = findViewById(R.id.seek_speed);
         seekBar.setMax(100);
-        seekBar.setProgress(10);
+        seekBar.setProgress(WheelCmd.DEFAULT_SPEED);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                ConnectedManager.getInstance().sendMessage(String.valueOf(i), 1);
+                mSpeedCurrent = i;
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
             }
         });
 
-        mRockerView = findViewById(R.id.rocker);
-        mRockerView.setListener(new SimpleRockerListener(new SimpleRockerListener.OnActionChange() {
+        RockerView mRockerView = findViewById(R.id.rocker);
+        mRockerView.setListener(new RockerListener() {
             @Override
-            public void onAction(SimpleRockerListener.Action action) {
-
-                switch (action) {
-                    case UP:
-                        ConnectedManager.getInstance().sendMessage(CommandConstant.Wheel.FORWARD);
-                        break;
-                    case RIGHT:
-                        ConnectedManager.getInstance().sendMessage(CommandConstant.Wheel.ROUND_RIGHT);
-                        break;
-                    case DOWN:
-                        ConnectedManager.getInstance().sendMessage(CommandConstant.Wheel.BACK);
-                        break;
-                    case LEFT:
-                        ConnectedManager.getInstance().sendMessage(CommandConstant.Wheel.ROUND_LEFT);
-                        break;
-                    case STOP:
-                        ConnectedManager.getInstance().sendMessage(CommandConstant.Wheel.STOP);
-                        break;
-
-                }
+            public void onEvent(int angle, float power) {
+                WheelCmd direction = new WheelCmd(roundSpeed(angle, Math.round(mSpeedCurrent * power)));
+                Log.d("Wheel", "angle:" + angle + ", power:" + power + ", " + direction.toString());
+                ConnectedManager.getInstance().sendObject(direction,  CmdConstant.WHEEL);
             }
-        }));
+        });
 
         ConnectedManager.getInstance().addCallback(mClientMessageCallback);
     }
