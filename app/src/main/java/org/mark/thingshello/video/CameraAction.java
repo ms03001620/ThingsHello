@@ -6,6 +6,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.SocketManager;
@@ -21,21 +22,6 @@ public class CameraAction extends OnReceiverCommand {
 
     public CameraAction(MainActivity.OnCtrlResponse listener) {
         this.listener = listener;
-    }
-
-
-    public void sendWhat(int what) {
-        Messenger messenger = listener.getMessenger();
-        if (messenger != null) {
-            Message message = Message.obtain();
-            message.what = what;
-            message.replyTo = mMessengerFromCameraService;
-            try {
-                messenger.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     private Messenger mMessengerFromCameraService = new Messenger(new Handler() {
@@ -60,12 +46,26 @@ public class CameraAction extends OnReceiverCommand {
     @Override
     public void onCommand(@NonNull String json, @CmdConstant.TYPE int type) {
         if (type == CmdConstant.CAMERA) {
-            CameraCmd cameraCmd = gson.fromJson(json, CameraCmd.class);
+            sendWhat(json);
+        }
+    }
 
-            if (cameraCmd.isOpenAction()) {
-                sendWhat(CameraService.CameraServiceAction.CAMERA_OPEN);
-            } else {
-                sendWhat(CameraService.CameraServiceAction.CAMERA_CLOSE);
+
+    public void sendWhat(String json) {
+        Log.d(CameraService.TAG, "sendWhat:" + json);
+        Messenger messenger = listener.getMessenger();
+        if (messenger != null) {
+            Bundle bundle = new Bundle();
+            bundle.putString("json", json);
+
+            Message message = Message.obtain();
+            message.what = 0;
+            message.setData(bundle);
+            message.replyTo = mMessengerFromCameraService;
+            try {
+                messenger.send(message);
+            } catch (RemoteException e) {
+                e.printStackTrace();
             }
         }
     }

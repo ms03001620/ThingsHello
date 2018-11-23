@@ -4,7 +4,7 @@ package org.mark.lib_unit_socket.bean;
  * Created by Mark on 2018/11/20
  */
 public class WheelCmd {
-    public final static int DEFAULT_SPEED = 10;
+    public final static int DEFAULT_SPEED = 40;
 
     public WheelCmd(int left, int right) {
         this.left = left;

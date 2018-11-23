@@ -1,6 +1,7 @@
 package org.mark.lib_unit_socket.udp;
 
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import org.mark.lib_unit_socket.ClientMessageCallback;
 
@@ -26,6 +27,7 @@ public class UdpConnection extends Thread {
         mPacketReceive = new DatagramPacket(new byte[MAX_LENGTH], MAX_LENGTH);
         mClientMessageCallback = callback;
         mStatus = ClientMessageCallback.Status.NO_CONNECT;
+        Log.d("udp", "init ");
     }
 
     @Override
@@ -37,6 +39,7 @@ public class UdpConnection extends Thread {
                 if (mHostReceiver == null) {
                     try {
                         mHostReceiver = new Host(mPacketReceive.getAddress(), mPacketReceive.getPort());
+                        Log.d("udp", "receiver init " + mPacketReceive.getAddress());
                     } catch (Exception e) {
                         mClientMessageCallback.onLogMessage("从对方发送的packet包的地址创建host失败", e);
                     }
@@ -58,9 +61,10 @@ public class UdpConnection extends Thread {
 
     public void write(byte[] bytes, int type) {
         if (mHostReceiver == null) {
-            mClientMessageCallback.onLogMessage("write失败，找不到接受者 host null", null);
+            mClientMessageCallback.onLogMessage("udp write失败，找不到接受者 host null", null);
             return;
         }
+        Log.d("udp", "write:" + bytes.length);
 
         byte[] result = new byte[bytes.length + 1];
 
@@ -88,11 +92,13 @@ public class UdpConnection extends Thread {
         mStatus = ClientMessageCallback.Status.NO_CONNECT;
         mClientMessageCallback.onStatusChange(ClientMessageCallback.Status.NO_CONNECT);
         mSocket.close();
+        Log.d("udp", "stop");
     }
 
     /**
      * 是否有客户端链接过此服务器
      * udp无链接。所以只有在启动后并且收到对方的packet证明有客户端可用
+     *
      * @return
      */
     public boolean hasClientLinked() {

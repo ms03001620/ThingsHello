@@ -1,5 +1,7 @@
 package org.mark.thingshello.ctrl;
 
+import android.util.Log;
+
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.thingshello.ctrl.voice.BuzzerAction;
 import org.mark.thingshello.video.CameraAction;
@@ -25,8 +27,8 @@ public class DeviceHelper {
         for (Map.Entry<String, OnReceiverCommand> device : deviceMap.entrySet()) {
             try {
                 device.getValue().onCommand(json, type);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                Log.e("DeviceHelper", "Error " + device.getKey(), e);
             }
         }
     }
@@ -44,14 +46,6 @@ public class DeviceHelper {
         if (o instanceof BuzzerAction) {
             BuzzerAction buzzerAction = (BuzzerAction) o;
             buzzerAction.di();
-        }
-    }
-
-    public void startCamera() {
-        Object o = deviceMap.get(CameraAction.class.getSimpleName());
-        if (o instanceof CameraAction) {
-            CameraAction action = (CameraAction) o;
-            action.sendWhat(1);
         }
     }
 }

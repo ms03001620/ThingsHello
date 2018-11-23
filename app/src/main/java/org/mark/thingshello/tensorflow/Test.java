@@ -25,6 +25,20 @@ public class Test {
         }
     }
 
+    public String classifyFrame(final Bitmap bitmap) {
+        if (factory == null) {
+            return "";
+        }
+
+        String label;
+        try {
+            label = factory.feed(bitmap);
+        } catch (Exception e) {
+            label = e.toString();
+        }
+        return label;
+    }
+
     public void classifyFrame(final Bitmap bitmap, final ConnectSelector connectSelector) {
         if (factory == null) {
             return;

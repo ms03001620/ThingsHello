@@ -99,11 +99,17 @@ public class ConnectedThread extends Thread {
                 byte[] bodyBytes = new byte[length];
                 int readTotalLen = readStillFinish(mInputStream, bodyBytes);
 
-                mReceiveMessageCallback.onReceiveMessage(bodyBytes, (int) headBytes[4]);
-                mReceiveMessageCallback.onLogMessage("读取消息长度" + readTotalLen
-                        + ", pass:" + (System.currentTimeMillis() - startTime), null);
+                try {
+                    mReceiveMessageCallback.onReceiveMessage(bodyBytes, (int) headBytes[4]);
+                    mReceiveMessageCallback.onLogMessage("读取消息长度" + readTotalLen
+                            + ", pass:" + (System.currentTimeMillis() - startTime), null);
+                } catch (Exception e) {
+                    // 业务层数据异
+                    e.printStackTrace();
+                }
 
             } catch (Exception e) {
+                // 连接层异常
                 exception = e;
                 break;
             }

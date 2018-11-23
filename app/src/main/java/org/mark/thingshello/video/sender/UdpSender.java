@@ -1,6 +1,7 @@
 package org.mark.thingshello.video.sender;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.lib_unit_socket.udp.UdpServerThread;
@@ -57,7 +58,7 @@ public class UdpSender implements ISend {
     @Override
     public void send(final byte[] bytes) {
         if (!mUdpServerThread.hasClientLinked()) {
-            // udp没有客户端链接过
+            Log.w("UdpSender", "hasClientLinked false");
             return;
         }
 

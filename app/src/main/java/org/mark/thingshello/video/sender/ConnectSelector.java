@@ -9,18 +9,12 @@ import android.os.RemoteException;
  * Created by Mark on 2018/8/25
  */
 public class ConnectSelector implements ISend {
-    private ISend mSender;
+    private UdpSender mSender;
     private Messenger messenger;
 
     public ConnectSelector(String target, Messenger messenger) {
         this.messenger = messenger;
-        if ("tcp".equals(target)) {
-            mSender = new TcpSender();
-        } else if ("udp".equals(target)) {
-            mSender = new UdpSender();
-        } else {
-            throw new IllegalArgumentException("not support target:" + target);
-        }
+        mSender = new UdpSender();
     }
 
     @Override
@@ -32,6 +26,9 @@ public class ConnectSelector implements ISend {
         mSender.release();
     }
 
+    /**
+     * tcp 发送
+     */
     public void sendText(String text) {
         if (messenger != null) {
             Message response = Message.obtain();

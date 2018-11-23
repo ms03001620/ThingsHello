@@ -51,7 +51,4 @@ public class CtrlManager {
         mDeviceHelper.release();
     }
 
-    public void autoStartCamera() {
-        mDeviceHelper.startCamera();
-    }
 }

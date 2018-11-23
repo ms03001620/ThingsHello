@@ -3,6 +3,7 @@ package org.mark.mobile.preview;
 import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import org.mark.base.CameraUtils;
 import org.mark.lib_unit_socket.ClientMessageCallback;
@@ -61,6 +62,7 @@ public class PreviewPresenter {
 
         @Override
         public void onReceiveMessage(final byte[] bytes, int type) {
+            Log.d(TAG, "udp receive:" + bytes.length);
             mWorkThreadHandler.runWorkThread(new Runnable() {
                 @Override
                 public void run() {

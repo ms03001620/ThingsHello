@@ -30,7 +30,9 @@ public class UdpReceiver {
 
 
     public void start() {
-        ConnectedManager.getInstance().sendObject(new CameraCmd(1), CmdConstant.CAMERA);
+        CameraCmd cameraCmd = new CameraCmd(1, 640, 480);
+        cameraCmd.setTransferVideo(true);
+        ConnectedManager.getInstance().sendObject(cameraCmd, CmdConstant.CAMERA);
 
         mUdpClientThread.start();
         new Thread(new Runnable() {
@@ -50,6 +52,6 @@ public class UdpReceiver {
 
     public void stop() {
         mUdpClientThread.stop(false);
-        ConnectedManager.getInstance().sendObject(new CameraCmd(0), CmdConstant.CAMERA);
+        ConnectedManager.getInstance().sendObject(new CameraCmd(0, 0, 0), CmdConstant.CAMERA);
     }
 }
