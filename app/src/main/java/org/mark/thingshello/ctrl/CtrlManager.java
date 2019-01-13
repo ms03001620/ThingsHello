@@ -7,6 +7,7 @@ import org.mark.lib_unit_socket.bean.JsonReceiver;
 import org.mark.lib_unit_socket.SocketManager;
 import org.mark.thingshello.MainActivity;
 import org.mark.thingshello.ctrl.light.ForwardLightAction;
+import org.mark.thingshello.ctrl.servo.CameraServo;
 import org.mark.thingshello.ctrl.voice.BuzzerAction;
 import org.mark.thingshello.ctrl.wheel.WheelAction;
 import org.mark.thingshello.video.CameraAction;
@@ -26,6 +27,7 @@ public class CtrlManager {
             mDeviceHelper.add(new WheelAction());
             mDeviceHelper.add(new BuzzerAction());
             mDeviceHelper.add(new ForwardLightAction());
+            mDeviceHelper.add(new CameraServo());
         }
         mDeviceHelper.add(new CameraAction(listener));
 

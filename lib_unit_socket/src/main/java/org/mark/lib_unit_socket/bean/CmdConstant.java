@@ -18,9 +18,10 @@ public abstract class CmdConstant {
     public static final int BUZZER = 2;
     public static final int LIGHT = 1;
     public static final int CAMERA = 3;
+    public static final int CAMERA_SERVO = 4;
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({UNDEFINED, WHEEL, BUZZER, LIGHT, CAMERA})
+    @IntDef({UNDEFINED, WHEEL, BUZZER, LIGHT, CAMERA, CAMERA_SERVO})
     public @interface TYPE {
     }
 
