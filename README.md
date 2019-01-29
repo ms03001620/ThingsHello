@@ -1,7 +1,8 @@
 # Android things & Raspberry Pi & Car
 
-![Demo](https://raw.githubusercontent.com/ms03001620/ThingsHello/doc/art1.png)
-![Demo](https://raw.githubusercontent.com/ms03001620/ThingsHello/doc/art2.png)
+![Demo](https://github.com/ms03001620/ThingsHello/blob/master/doc/art1.png)
+![Demo](https://github.com/ms03001620/ThingsHello/blob/master/doc/art2.png)
+
 
 ## License
 
