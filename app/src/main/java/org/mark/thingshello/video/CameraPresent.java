@@ -105,6 +105,9 @@ public class CameraPresent {
         mConnectSelector = new ConnectSelector("udp", tcpMessenger);
     }
 
+    /**
+     * 识别图片信息
+     */
     private String classify(Bitmap bitmap) {
         if (mTest == null) {
             throw new IllegalArgumentException("Classify not init");
@@ -146,7 +149,7 @@ public class CameraPresent {
 
                 CameraUtils.BitmapAndBytes bitmapAndBytes = compressImage(imageBytes, cameraCmd.getWidth(), cameraCmd.getHeight());
 
-                Log.d(CameraService.TAG, "udp sendImageToClient: " + imageBytes.length + ", compress:" + bitmapAndBytes.getBitmapBytes().length);
+                Log.d(CameraService.TAG, "udp sendImageToClient before:" + imageBytes.length + ", after:" + bitmapAndBytes.getBitmapBytes().length);
                 sendImageToClient(bitmapAndBytes.getBitmapBytes());
             }
         }

@@ -30,7 +30,7 @@ public class UdpReceiver {
 
 
     public void start() {
-        CameraCmd cameraCmd = new CameraCmd(1, 640, 480);
+        CameraCmd cameraCmd = new CameraCmd(1, 320, 240);
         cameraCmd.setTransferVideo(true);
         ConnectedManager.getInstance().sendObject(cameraCmd, CmdConstant.CAMERA);
 
