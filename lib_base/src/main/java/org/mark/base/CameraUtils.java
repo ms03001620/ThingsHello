@@ -140,7 +140,7 @@ public class CameraUtils {
         bitmap = zoomImage(bitmap, resizeWidth, resizeHeight);
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.WEBP, 80, stream);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
         byte[] byteArray = stream.toByteArray();
 
         int w = bitmap.getWidth();
