@@ -17,6 +17,7 @@ public class PreviewActivity extends AppCompatActivity {
     private ImageView mPreview;
     private TextView mTextInfo;
     private TextView mTextBytes;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,10 +67,6 @@ public class PreviewActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-
-    int h;
-    int v;
-
     private void initServo() {
         findViewById(R.id.btn_up).setOnClickListener(servoListener);
         findViewById(R.id.btn_down).setOnClickListener(servoListener);
@@ -82,30 +79,22 @@ public class PreviewActivity extends AppCompatActivity {
         public void onClick(View view) {
             switch (view.getId()) {
                 case R.id.btn_up:
-                    v++;
+                    mPresent.servoAction(ModelServo.Action.UP);
                     break;
                 case R.id.btn_down:
-                    v--;
+                    mPresent.servoAction(ModelServo.Action.DOWN);
                     break;
                 case R.id.btn_left:
-                    h--;
+                    mPresent.servoAction(ModelServo.Action.LEFT);
                     break;
                 case R.id.btn_right:
-                    h++;
+                    mPresent.servoAction(ModelServo.Action.RIGHT);
                     break;
+                default:
                 case R.id.btn_stop:
-                    CameraServoCmd cameraCmd = new CameraServoCmd(0, 0);
-                    ConnectedManager.getInstance().sendObject(cameraCmd, CmdConstant.CAMERA_SERVO);
-                    return;
+                    mPresent.servoAction(ModelServo.Action.STOP);
             }
 
-            float vv = 2.5f + 10 * v/180.0f;
-            float hh = 2.5f + 10 * h/180.0f;
-
-            CameraServoCmd cameraCmd = new CameraServoCmd(Math.round(hh), Math.round(vv));
-            ConnectedManager.getInstance().sendObject(cameraCmd, CmdConstant.CAMERA_SERVO);
-
-           // https://github.com/androidthings/sample-simplepio/blob/master/java/pwm/src/main/java/com/example/androidthings/simplepio/PwmActivity.java
         }
     };
 }
