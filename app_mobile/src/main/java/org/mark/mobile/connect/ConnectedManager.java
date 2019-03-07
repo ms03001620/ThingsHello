@@ -100,9 +100,7 @@ public class ConnectedManager extends CmdConstant {
     }
 
     public void removeCallback(ClientMessageCallback callback) {
-        if (mCallbackList.contains(callback)) {
-            mCallbackList.remove(callback);
-        }
+        mCallbackList.remove(callback);
     }
 
     public void sendMessage(final String message, @CmdConstant.TYPE final int type) {
