@@ -53,7 +53,7 @@ public class Test {
                     label = e.toString();
                 }
                 // 发送识别结果到客户端
-                connectSelector.sendText(label);
+                connectSelector.sendTextTcp(label);
                 Log.d(TAG, "result \n" + label);
             }
         });

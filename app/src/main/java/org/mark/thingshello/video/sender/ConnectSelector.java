@@ -27,11 +27,14 @@ public class ConnectSelector implements ISend {
     }
 
     /**
-     * tcp 发送
+     * TCP 发送
+     * @param text message body
+     * @param what 0 text; 1 json
      */
-    public void sendText(String text) {
+    public void sendTextTcp(String text, int what) {
         if (messenger != null) {
             Message response = Message.obtain();
+            response.what = what;
             Bundle bundle = new Bundle();
             bundle.putByteArray("text", text.getBytes());
             response.setData(bundle);
@@ -42,6 +45,10 @@ public class ConnectSelector implements ISend {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void sendTextTcp(String text) {
+        sendTextTcp(text, 0);
     }
 }
 

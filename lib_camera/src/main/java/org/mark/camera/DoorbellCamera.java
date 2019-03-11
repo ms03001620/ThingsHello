@@ -36,6 +36,8 @@ public class DoorbellCamera {
     private ImageReader.OnImageAvailableListener mImageAvailableListener;
     private ImageReader mImageReader;
 
+    public final static int CAMERA_ID = CameraCharacteristics.LENS_FACING_FRONT;
+
     // Lazy-loaded singleton, so only one instance of the camera is created.
     private DoorbellCamera() {
     }
@@ -68,16 +70,13 @@ public class DoorbellCamera {
                 Log.e(TAG, "No cameras found");
                 return;
             }
-            String id = camIds[CameraCharacteristics.LENS_FACING_FRONT];
+            String id = camIds[CAMERA_ID];
             Log.d(TAG, "Using camera id " + id);
 
-            CameraCharacteristics cameraCharacteristics = manager.getCameraCharacteristics(id);
-            CameraUtils.checkCameraCharacteristics(cameraCharacteristics);
             // Open the camera resource
             manager.openCamera(id, mStateCallback, mCameraHandler);
-
         } catch (Exception e) {
-            Log.e(TAG, "Cam access exception getting IDs", e);
+            Log.e(TAG, "initializeCamera", e);
         }
     }
 

@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.mark.lib_unit_socket.ClientMessageCallback;
+import org.mark.lib_unit_socket.bean.JsonReceiver;
 import org.mark.mobile.connect.ConnectedManager;
 import org.mark.mobile.utils.PreferUtils;
 
@@ -75,10 +76,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public ClientMessageCallback mClientMessageCallback = new ClientMessageCallback() {
+    public JsonReceiver mClientMessageCallback = new JsonReceiver() {
         @Override
-        public void onReceiveMessage(byte[] bytes, int type) {
+        public void onReceiverJson(String json, int type) {
+            Log.d("MainActivity", "onReceiverJson type:" + type + ", json:" + json);
         }
+
 
         @Override
         public void onExceptionToReOpen(@NonNull final Exception e) {

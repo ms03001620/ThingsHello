@@ -1,13 +1,12 @@
 package org.mark.lib_unit_socket.bean;
 
-import org.mark.lib_unit_socket.SocketManager;
-import org.mark.lib_unit_socket.bean.CmdConstant;
+import org.mark.lib_unit_socket.ClientMessageCallback;
 
 /**
  * Created by Mark on 2018/11/20
  */
-public abstract class JsonReceiver implements SocketManager.OnReceiveMessage {
-    @Override
+public abstract class JsonReceiver implements ClientMessageCallback {
+
     public void onReceiveMessage(byte[] message, @CmdConstant.TYPE int type) {
         onReceiverJson(new String(message), type);
     }

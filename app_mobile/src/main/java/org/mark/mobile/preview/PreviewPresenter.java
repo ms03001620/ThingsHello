@@ -7,6 +7,8 @@ import android.util.Log;
 
 import org.mark.base.CameraUtils;
 import org.mark.lib_unit_socket.ClientMessageCallback;
+import org.mark.lib_unit_socket.bean.CmdConstant;
+import org.mark.lib_unit_socket.bean.JsonReceiver;
 import org.mark.mobile.connect.ConnectedManager;
 import org.mark.mobile.connect.udp.UdpReceiver;
 
@@ -32,15 +34,13 @@ public class PreviewPresenter {
         mIReceiver = new UdpReceiver(previewActivity.getApplicationContext(), mUdpCallback);
     }
 
-    private ClientMessageCallback mTcpCallback = new ClientMessageCallback() {
-
+    private JsonReceiver mTcpCallback = new JsonReceiver() {
         @Override
-        public void onReceiveMessage(final byte[] bytes, int type) {
-            if (type == 2) {
+        public void onReceiverJson(String json, @CmdConstant.TYPE int type) {
+            if(type == CmdConstant.UNDEFINED){
                 PreviewActivity activity = mWeakView.get();
                 if (activity != null) {
-                    String info = new String(bytes);
-                    activity.updateInfo(info);
+                    activity.updateInfo(json);
                 }
             }
         }

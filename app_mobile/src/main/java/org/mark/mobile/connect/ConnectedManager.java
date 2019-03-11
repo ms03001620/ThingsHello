@@ -3,6 +3,7 @@ package org.mark.mobile.connect;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.mark.lib_unit_socket.SocketManager;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 
@@ -28,7 +29,11 @@ public class ConnectedManager extends CmdConstant {
 
     public static ConnectedManager getInstance() {
         if (instance == null) {
-            instance = new ConnectedManager();
+            synchronized (ConnectedManager.class) {
+                if (instance == null) {
+                    instance = new ConnectedManager();
+                }
+            }
         }
         return instance;
     }

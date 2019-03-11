@@ -1,8 +1,10 @@
 package org.mark.camera;
 
+import android.content.Context;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.util.Log;
@@ -12,6 +14,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+import static android.content.Context.CAMERA_SERVICE;
 
 /**
  * Created by Mark on 2018/8/15
@@ -43,5 +47,40 @@ public class CameraUtils {
         }
     }
 
+
+    public static CameraInfo makeCameraInfo(Context context) throws Exception {
+        CameraManager manager = (CameraManager) context.getSystemService(CAMERA_SERVICE);
+
+        String[] camIds = manager.getCameraIdList();
+
+        if (camIds.length < 1) {
+            throw new Exception("No cameras found");
+        }
+        String id = camIds[DoorbellCamera.CAMERA_ID];
+        CameraCharacteristics characteristics = manager.getCameraCharacteristics(id);
+        return new CameraInfo(characteristics);
+    }
+
+
+    public static class CameraInfo {
+        private Size[] sizes;
+        private Object hardwareLevel;
+
+        CameraInfo(CameraCharacteristics camera) {
+            hardwareLevel = camera.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
+            StreamConfigurationMap map = camera.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            if (map != null) {
+                sizes = map.getOutputSizes(ImageFormat.JPEG);
+            }
+        }
+
+        public Size[] getSizes() {
+            return sizes;
+        }
+
+        public Object getHardwareLevel() {
+            return hardwareLevel;
+        }
+    }
 
 }

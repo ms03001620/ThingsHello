@@ -1,10 +1,16 @@
 package org.mark.thingshello.ctrl;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.gson.Gson;
+
+import org.mark.camera.CameraUtils;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.bean.JsonReceiver;
 import org.mark.lib_unit_socket.SocketManager;
+import org.mark.thingshello.App;
 import org.mark.thingshello.MainActivity;
 import org.mark.thingshello.ctrl.light.ForwardLightAction;
 import org.mark.thingshello.ctrl.servo.CameraServo;
@@ -35,8 +41,28 @@ public class CtrlManager {
         SocketManager.getInstance().init(new JsonReceiver() {
 
             @Override
+            public void onExceptionToReOpen(@NonNull Exception e) {
+            }
+
+            @Override
+            public void onLogMessage(String message, @Nullable Exception e) {
+            }
+
+            @Override
+            public void onStatusChange(@NonNull Status status) {
+
+            }
+
+            @Override
             public void onReceiverJson(String json, @CmdConstant.TYPE int type) {
                 listener.onReceiveMessage(json, type);
+
+                if(type == CmdConstant.CAMERA){
+                    sendDeviceInfo();
+                }
+
+
+
                 //SocketManager.getInstance().send(bytes);
                 Log.d("CtrlManager", "onReceiveMessage:" + json.length() + ", type:" + type);
                 mDeviceHelper.onCommand(json, type);
@@ -47,6 +73,22 @@ public class CtrlManager {
         // 告知系统已就绪
         mDeviceHelper.didi();
     }
+
+    private void sendDeviceInfo() {
+        Log.d("CtrlManager", "sendDeviceInfo");
+        try {
+            CameraUtils.CameraInfo info = CameraUtils.makeCameraInfo(App.getContext());
+
+            Gson gson = new Gson();
+            String jsonString = gson.toJson(info);
+
+            SocketManager.getInstance().sendMessage(jsonString, CmdConstant.CAMERA_DEVICE_INFO);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public void release() {
         SocketManager.getInstance().stop();

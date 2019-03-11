@@ -4,13 +4,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import org.mark.lib_unit_socket.bean.CmdConstant;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class SocketManager {
-    public interface OnReceiveMessage{
-        void onReceiveMessage(byte[] message, int type);
-    }
+public class SocketManager extends CmdConstant {
     private static final String TAG = "SocketManager";
     private static volatile SocketManager instance;
 
@@ -18,6 +17,7 @@ public class SocketManager {
     private ExecutorService mExecutorForWrite;
 
     private SocketManager() {
+        mExecutorForWrite = Executors.newCachedThreadPool();
     }
 
     public static SocketManager getInstance() {
@@ -31,7 +31,7 @@ public class SocketManager {
         return instance;
     }
 
-    public void init(final OnReceiveMessage listener) {
+    public void init(final ClientMessageCallback listener) {
         mTextService = new SocketService(8010, new ClientMessageCallback() {
             @Override
             public void onReceiveMessage(byte[] bytes, int type) {
@@ -43,23 +43,24 @@ public class SocketManager {
                 Log.d(TAG, "重新启动", e);
                 mTextService.stop();
                 mTextService.start();
+                listener.onExceptionToReOpen(e);
             }
 
             @Override
             public void onLogMessage(String message, @Nullable Exception e) {
+                listener.onLogMessage(message, e);
                 Log.d(TAG, message, e);
             }
 
             @Override
             public void onStatusChange(@NonNull Status status) {
-
+                listener.onStatusChange(status);
             }
         });
     }
 
     public void start() {
         mTextService.start();
-        mExecutorForWrite = Executors.newCachedThreadPool();
     }
 
 
@@ -70,29 +71,24 @@ public class SocketManager {
     }
 
 
-    public void send(@NonNull final String message) {
-        mExecutorForWrite.execute(new Runnable() {
-            @Override
-            public void run() {
-                mTextService.writeText(message,(byte)2);
-            }
-        });
-    }
-
-    public void send(@NonNull final byte[] bytes) {
-        mExecutorForWrite.execute(new Runnable() {
-            @Override
-            public void run() {
-                mTextService.writeBytes(bytes,(byte)2);
-            }
-        });
-    }
-
     public boolean isConnection() {
         if (mTextService != null) {
             return mTextService.isConnected();
         }
         return false;
+    }
+
+    public void sendMessage(final String message, @CmdConstant.TYPE final int type) {
+        sendMessage(message.getBytes(), type);
+    }
+
+    public void sendMessage(final byte[] bytes, @CmdConstant.TYPE final int type) {
+        mExecutorForWrite.execute(new Runnable() {
+            @Override
+            public void run() {
+                mTextService.writeBytes(bytes, (byte) type);
+            }
+        });
     }
 
 

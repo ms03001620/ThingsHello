@@ -29,19 +29,17 @@ public class CameraAction extends OnReceiverCommand {
         public void handleMessage(Message msg) {
             Bundle bundle = msg.getData();
             final byte[] bytes = bundle.getByteArray("text");
-            sendFromSocket(bytes);
+
+            switch (msg.what) {
+                case 0:
+                    if (SocketManager.getInstance().isConnection()) {
+                        SocketManager.getInstance().sendMessage(bytes, CmdConstant.UNDEFINED);
+                    }
+                    break;
+            }
         }
     });
 
-    /**
-     * 发送相机消息
-     * @param bytes 消息
-     */
-    private void sendFromSocket(byte[] bytes) {
-        if (SocketManager.getInstance().isConnection()) {
-            SocketManager.getInstance().send(bytes);
-        }
-    }
 
     @Override
     public void onCommand(@NonNull String json, @CmdConstant.TYPE int type) {

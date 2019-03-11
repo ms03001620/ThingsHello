@@ -3,6 +3,7 @@ package org.mark.thingshello.video;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.hardware.camera2.CameraManager;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
@@ -25,6 +26,8 @@ import org.mark.thingshello.video.sender.ConnectSelector;
 
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
+
+import static android.content.Context.CAMERA_SERVICE;
 
 public class CameraPresent {
 
@@ -119,7 +122,7 @@ public class CameraPresent {
         if (mConnectSelector == null) {
             throw new IllegalArgumentException("ConnectSelector not init");
         }
-        mConnectSelector.sendText(info);
+        mConnectSelector.sendTextTcp(info);
     }
 
     private CameraUtils.BitmapAndBytes compressImage(byte[] imageBytes, int newWidth, int newHeight) {
