@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.mark.base.CameraUtils;
+import org.mark.base.StringUtils;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.bean.JsonReceiver;
@@ -62,17 +63,21 @@ public class PreviewPresenter {
     };
 
     private ClientMessageCallback mUdpCallback = new ClientMessageCallback() {
+        long totalBytes;
 
         @Override
         public void onReceiveMessage(final byte[] bytes, int type) {
-            Log.d(TAG, "udp receive:" + bytes.length);
+            totalBytes += bytes.length;
+            Log.d(TAG, "udp receive:" + bytes.length + ", total:" + totalBytes);
+
             mWorkThreadHandler.runWorkThread(new Runnable() {
                 @Override
                 public void run() {
                     Bitmap bitmap = CameraUtils.createFromBytes(bytes);
                     PreviewActivity activity = mWeakView.get();
                     if (activity != null) {
-                        activity.updateImage(bitmap, bytes.length / 1024 + " KB");
+                        activity.updateImage(bitmap, bytes.length / 1024 + " KB"
+                                + ", Total:" + StringUtils.getByteSize(totalBytes));
                     }
                 }
             });
