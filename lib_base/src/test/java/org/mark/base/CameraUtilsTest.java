@@ -2,16 +2,11 @@ package org.mark.base;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-/**
- * Created by Mark on 2018/9/6
- */
-@RunWith(AndroidJUnit4.class)
+
 public class CameraUtilsTest {
 
     @Test
