@@ -6,19 +6,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
-import android.support.annotation.IntRange;
 import android.support.annotation.Nullable;
-import android.util.Log;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.mark.lib_unit_socket.SocketManager;
-import org.mark.thingshello.ctrl.CtrlManager;
+import org.mark.thingshello.ctrl.DeviceManager;
 import org.mark.thingshello.video.CameraService;
 
 /**
@@ -42,7 +35,7 @@ import org.mark.thingshello.video.CameraService;
  */
 public class MainActivity extends Activity {
     @Nullable
-    private CtrlManager mCtrlManager;
+    private DeviceManager mCtrlManager;
     private TextView mTextLog;
     private Messenger mService = null;
 
@@ -60,7 +53,7 @@ public class MainActivity extends Activity {
         mTextLog = findViewById(R.id.text);
 
         try {
-            mCtrlManager = new CtrlManager(new OnCtrlResponse() {
+            mCtrlManager = new DeviceManager(new OnCtrlResponse() {
                 @Override
                 public void onReceiveMessage(final String message, int type) {
                     runOnUiThread(new Runnable() {

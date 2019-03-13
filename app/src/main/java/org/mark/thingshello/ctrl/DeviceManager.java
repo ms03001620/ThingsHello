@@ -22,10 +22,10 @@ import org.mark.thingshello.video.CameraAction;
  * Created by Mark on 2018/7/25
  * adb shell am startservice -n com.google.wifisetup/.WifiSetupService -a WifiSetupService.Connect -e ssid "Xiaomi_5377" -e passphrase "nono12345"
  */
-public class CtrlManager {
+public class DeviceManager {
     private DeviceHelper mDeviceHelper;
 
-    public CtrlManager(final MainActivity.OnCtrlResponse listener) throws Exception {
+    public DeviceManager(final MainActivity.OnCtrlResponse listener) throws Exception {
         mDeviceHelper = new DeviceHelper();
         String model = android.os.Build.MODEL;
         // 该设备可以使用一下硬件
@@ -64,7 +64,7 @@ public class CtrlManager {
 
 
                 //SocketManager.getInstance().send(bytes);
-                Log.d("CtrlManager", "onReceiveMessage:" + json.length() + ", type:" + type);
+                Log.d("DeviceManager", "onReceiveMessage:" + json.length() + ", type:" + type);
                 mDeviceHelper.onCommand(json, type);
             }
         });
@@ -75,7 +75,7 @@ public class CtrlManager {
     }
 
     private void sendDeviceInfo() {
-        Log.d("CtrlManager", "sendDeviceInfo");
+        Log.d("DeviceManager", "sendDeviceInfo");
         try {
             CameraUtils.CameraInfo info = CameraUtils.makeCameraInfo(App.getContext());
 
