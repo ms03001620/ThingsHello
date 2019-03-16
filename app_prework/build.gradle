@@ -5,7 +5,7 @@ android {
 
     defaultConfig {
         applicationId "org.mark.prework"
-        minSdkVersion 23
+        minSdkVersion 26
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -18,6 +18,11 @@ android {
         }
     }
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
 }
 
 dependencies {
@@ -27,7 +32,7 @@ dependencies {
     implementation project(':lib_camera')
 
     testImplementation 'junit:junit:4.12'
-    implementation 'com.obsez.android.lib.filechooser:filechooser:1.1.11'
+    implementation 'com.obsez.android.lib.filechooser:filechooser:1.1.16'
 
     implementation 'com.android.support:recyclerview-v7:28.0.0'
 

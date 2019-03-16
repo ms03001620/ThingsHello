@@ -4,11 +4,13 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.obsez.android.lib.filechooser.ChooserDialog;
 
 import org.mark.prework.R;
+import org.mark.prework.TfFileUtils;
 import org.mark.prework.cam.preview.TfPreviewActivity;
 import org.mark.prework.db.DbMock;
 
@@ -51,19 +53,25 @@ public class TfliteConfigActivity extends AppCompatActivity {
     };
 
     public void onFileFolderOpen() {
-        new ChooserDialog().with(this)
+        ChooserDialog chooserDialog = new ChooserDialog(this)
                 .withFilter(true, false)
+                .withResources(R.string.title_choose,
+                        R.string.title_choose, R.string.dialog_cancel)
+                .withOptionResources(R.string.option_create_folder, R.string.options_delete,
+                        R.string.new_folder_cancel, R.string.new_folder_ok)
                 .withStartFile(DbMock.getInstance().loadRecentAccessPath())
-                .withDateFormat("HH:mm")
+                .disableTitle(false)
+                .enableOptions(true)
+                .titleFollowsDir(true)
+                .displayPath(true)
                 .withChosenListener(new ChooserDialog.Result() {
                     @Override
                     public void onChoosePath(String path, File pathFile) {
                         mPresent.saveModelPath(path);
                     }
-                })
-                .enableOptions(true)
-                .build()
-                .show();
+                });
+
+        chooserDialog.build().show();
     }
 
     public void onPixelChooseDialogOpen() {

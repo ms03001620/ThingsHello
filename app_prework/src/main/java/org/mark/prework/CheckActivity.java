@@ -35,19 +35,25 @@ public class CheckActivity extends Activity {
         findViewById(R.id.btn_choose_model).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                new ChooserDialog().with(getActivity())
+                ChooserDialog chooserDialog = new ChooserDialog(getActivity())
                         .withFilter(true, false)
+                        .withResources(R.string.title_choose,
+                                R.string.title_choose, R.string.dialog_cancel)
+                        .withOptionResources(R.string.option_create_folder, R.string.options_delete,
+                                R.string.new_folder_cancel, R.string.new_folder_ok)
                         .withStartFile(DbMock.getInstance().loadRecentAccessPath())
-                        .withDateFormat("HH:mm")
+                        .disableTitle(false)
+                        .enableOptions(true)
+                        .titleFollowsDir(true)
+                        .displayPath(true)
                         .withChosenListener(new ChooserDialog.Result() {
                             @Override
                             public void onChoosePath(String path, File pathFile) {
                                 showModelInfo(pathFile);
                             }
-                        })
-                        .enableOptions(true)
-                        .build()
-                        .show();
+                        });
+
+                chooserDialog.build().show();
             }
         });
 
@@ -56,10 +62,18 @@ public class CheckActivity extends Activity {
         findViewById(R.id.btn_choose_images).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                new ChooserDialog().with(getActivity())
+
+                ChooserDialog chooserDialog = new ChooserDialog(getActivity())
                         .withFilter(true, false)
+                        .withResources(R.string.title_choose,
+                                R.string.title_choose, R.string.dialog_cancel)
+                        .withOptionResources(R.string.option_create_folder, R.string.options_delete,
+                                R.string.new_folder_cancel, R.string.new_folder_ok)
                         .withStartFile(DbMock.getInstance().loadRecentAccessPath())
-                        .withDateFormat("HH:mm")
+                        .disableTitle(false)
+                        .enableOptions(true)
+                        .titleFollowsDir(true)
+                        .displayPath(true)
                         .withChosenListener(new ChooserDialog.Result() {
                             @Override
                             public void onChoosePath(String path, File pathFile) {
@@ -69,10 +83,9 @@ public class CheckActivity extends Activity {
                                 String result = TfFileUtils.getPhotoListSuiffx(pathFile).toString();
                                 addLogs(result);
                             }
-                        })
-                        .enableOptions(true)
-                        .build()
-                        .show();
+                        });
+
+                chooserDialog.build().show();
             }
         });
 
