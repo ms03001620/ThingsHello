@@ -1,4 +1,4 @@
-package org.mark.prework;
+package org.mark.prework.grid;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -16,6 +16,8 @@ import android.widget.TextView;
 
 import com.obsez.android.lib.filechooser.ChooserDialog;
 
+import org.mark.prework.R;
+import org.mark.prework.TfFileUtils;
 import org.mark.prework.db.DbMock;
 import org.mark.prework.grid.GridPresent;
 import org.mark.prework.grid.ImageGridAdapter;

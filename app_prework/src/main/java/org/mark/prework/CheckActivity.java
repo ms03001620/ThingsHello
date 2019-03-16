@@ -2,7 +2,6 @@ package org.mark.prework;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -13,6 +12,7 @@ import android.widget.Toast;
 import com.obsez.android.lib.filechooser.ChooserDialog;
 
 import org.mark.prework.db.DbMock;
+import org.mark.prework.grid.GridActivity;
 
 import java.io.File;
 
