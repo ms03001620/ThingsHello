@@ -7,6 +7,7 @@ import android.util.Log;
 
 import org.mark.base.CameraUtils;
 import org.mark.base.StringUtils;
+import org.mark.base.thread.WorkThreadHandler;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.bean.JsonReceiver;

@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import com.obsez.android.lib.filechooser.ChooserDialog;
 
+import org.mark.prework.cam.TfliteConfigActivity;
 import org.mark.prework.db.DbMock;
 import org.mark.prework.grid.GridActivity;
 
@@ -93,6 +94,14 @@ public class CheckActivity extends Activity {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(getActivity(), GridActivity.class));
+            }
+        });
+
+        // 摄像头中识别
+        findViewById(R.id.btn_to_camera).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(getActivity(), TfliteConfigActivity.class));
             }
         });
 

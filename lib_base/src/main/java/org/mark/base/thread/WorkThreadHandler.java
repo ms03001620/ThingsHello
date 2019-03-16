@@ -1,4 +1,4 @@
-package org.mark.mobile.preview;
+package org.mark.base.thread;
 
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -49,14 +49,29 @@ public class WorkThreadHandler {
     public void runWorkThread(Runnable runnable) {
         Message message = Message.obtain();
         message.obj = runnable;
-        mHandlerWork.sendMessage(message);
+        if (mHandlerWork != null) {
+            mHandlerWork.sendMessage(message);
+        }
     }
 
     @WorkerThread
     public void runUiThread(Runnable runnable) {
         Message message = Message.obtain();
         message.obj = runnable;
-        mHandlerUi.sendMessage(message);
+        if (mHandlerUi != null) {
+            mHandlerUi.sendMessage(message);
+        }
+    }
+
+    public void runWorkThreadLoop(final Runnable runnable) {
+        final Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                runnable.run();
+                runWorkThread(this);
+            }
+        };
+        runWorkThread(r);
     }
 
     public void release() {

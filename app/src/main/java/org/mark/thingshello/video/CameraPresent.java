@@ -3,7 +3,6 @@ package org.mark.thingshello.video;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.hardware.camera2.CameraManager;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
@@ -18,7 +17,7 @@ import com.google.gson.Gson;
 
 import org.mark.base.CameraUtils;
 import org.mark.base.StringUtils;
-import org.mark.camera.Config;
+import org.mark.camera.ConfigFactory;
 import org.mark.camera.DoorbellCamera;
 import org.mark.lib_unit_socket.bean.CameraCmd;
 import org.mark.thingshello.tensorflow.Test;
@@ -26,8 +25,6 @@ import org.mark.thingshello.video.sender.ConnectSelector;
 
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
-
-import static android.content.Context.CAMERA_SERVICE;
 
 public class CameraPresent {
 
@@ -160,7 +157,7 @@ public class CameraPresent {
 
 
     private void startPreview() {
-        Config config = new Config(cameraCmd.getWidth(), cameraCmd.getHeight(), mImageAvailableListener);
+        ConfigFactory config = new ConfigFactory(cameraCmd.getWidth(), cameraCmd.getHeight(), mImageAvailableListener);
         DoorbellCamera.getInstance().initializeCamera(context, config);
     }
 

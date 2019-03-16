@@ -2,7 +2,6 @@ package org.mark.camera;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -11,7 +10,6 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureFailure;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
-import android.media.ImageReader;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
@@ -33,8 +31,8 @@ public class DoorbellCamera {
 
     private HandlerThread mCameraThread;
     private Handler mCameraHandler;
-    private ImageReader.OnImageAvailableListener mImageAvailableListener;
-    private ImageReader mImageReader;
+
+    private ConfigFactory mConfig;
 
     public final static int CAMERA_ID = CameraCharacteristics.LENS_FACING_FRONT;
 
@@ -54,12 +52,12 @@ public class DoorbellCamera {
      * 获取相机并自动开启预览模式
      */
     @SuppressLint("MissingPermission")
-    public void initializeCamera(Context context, Config config) {
+    public void initializeCamera(Context context, ConfigFactory config) {
         mCameraThread = new HandlerThread("CameraBackground");
         mCameraThread.start();
         mCameraHandler = new Handler(mCameraThread.getLooper());
-        mImageReader = ImageReader.newInstance(config.getWidth(), config.getHeight(), ImageFormat.JPEG, 1);
-        mImageAvailableListener = config.getListenerImageAvailable();
+        mConfig = config;
+
         // Discover the camera instance
         CameraManager manager = (CameraManager) context.getSystemService(CAMERA_SERVICE);
         try {
@@ -113,14 +111,12 @@ public class DoorbellCamera {
 
     private void preview() {
         try {
-            mImageReader.setOnImageAvailableListener(mImageAvailableListener, mCameraHandler);
-
             final CaptureRequest.Builder builder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
-            builder.addTarget(mImageReader.getSurface());
+            builder.addTarget(mConfig.getSurface());
             // builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
             final CaptureRequest request = builder.build();
 
-            mCameraDevice.createCaptureSession(Collections.singletonList(/*surface*/mImageReader.getSurface()),
+            mCameraDevice.createCaptureSession(Collections.singletonList(/*surface*/mConfig.getSurface()),
                     new CameraCaptureSession.StateCallback() {
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
@@ -161,10 +157,8 @@ public class DoorbellCamera {
     };
 
     public void shutDown() {
-        if (mImageReader != null) {
-            mImageReader.close();
-            mImageReader = null;
-        }
+        mConfig.release();
+
         if (mCameraDevice != null) {
             mCameraDevice.close();
             mCameraDevice = null;

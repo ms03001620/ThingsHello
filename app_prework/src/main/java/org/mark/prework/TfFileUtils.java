@@ -11,7 +11,7 @@ import java.util.List;
  * Created by Mark on 2018/10/24
  */
 public class TfFileUtils {
-    static final class ModelFolderInfo {
+    public static final class ModelFolderInfo {
         public ModelFolderInfo(String model, String label, boolean checked, String error) {
             this.model = model;
             this.label = label;

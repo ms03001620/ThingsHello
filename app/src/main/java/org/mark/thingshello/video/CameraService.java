@@ -6,7 +6,6 @@ import android.os.IBinder;
 import android.os.Messenger;
 import android.util.Log;
 
-import org.mark.camera.Config;
 import org.mark.camera.DoorbellCamera;
 
 /**
