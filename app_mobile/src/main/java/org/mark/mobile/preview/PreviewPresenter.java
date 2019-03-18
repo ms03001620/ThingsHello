@@ -76,7 +76,7 @@ public class PreviewPresenter {
                 public void run() {
                     Bitmap bitmap = CameraUtils.createFromBytes(bytes);
                     PreviewActivity activity = mWeakView.get();
-                    if (activity != null) {
+                    if (activity != null && !activity.isFinishing()) {
                         activity.updateImage(bitmap, bytes.length / 1024 + " KB"
                                 + ", Total:" + StringUtils.getByteSize(totalBytes));
                     }

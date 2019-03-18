@@ -2,10 +2,9 @@ package org.mark.base.thread;
 
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
-import android.support.annotation.WorkerThread;
 
 /**
  * Created by Mark on 2018/8/21
@@ -14,11 +13,9 @@ public class WorkThreadHandler {
 
     private HandlerThread mWorkThread;
     private Handler mHandlerWork;
-    private Handler mHandlerUi;
 
     public WorkThreadHandler() {
         initWorkHandler();
-        initUiHandler();
     }
 
     private void initWorkHandler() {
@@ -27,18 +24,7 @@ public class WorkThreadHandler {
         mHandlerWork = new Handler(mWorkThread.getLooper(), new Handler.Callback() {
             @Override
             public boolean handleMessage(Message message) {
-                Runnable runnable = (Runnable) message.obj;
-                runnable.run();
-                return true;
-            }
-        });
-    }
-
-    private void initUiHandler() {
-        mHandlerUi = new Handler(Looper.getMainLooper(), new Handler.Callback() {
-            @Override
-            public boolean handleMessage(Message message) {
-                Runnable runnable = (Runnable) message.obj;
+                Runnable runnable = message.getCallback();
                 runnable.run();
                 return true;
             }
@@ -46,41 +32,44 @@ public class WorkThreadHandler {
     }
 
     @UiThread
-    public void runWorkThread(Runnable runnable) {
-        Message message = Message.obtain();
-        message.obj = runnable;
+    public void runWorkThread(@NonNull Runnable runnable) {
+        runWorkThreadDelay(runnable, 0);
+    }
+
+    @UiThread
+    public void runWorkThreadDelay(@NonNull Runnable runnable, long ms) {
         if (mHandlerWork != null) {
-            mHandlerWork.sendMessage(message);
+            mHandlerWork.postDelayed(runnable, ms);
         }
     }
 
-    @WorkerThread
-    public void runUiThread(Runnable runnable) {
-        Message message = Message.obtain();
-        message.obj = runnable;
-        if (mHandlerUi != null) {
-            mHandlerUi.sendMessage(message);
-        }
+    public void runWorkThreadLoop(@NonNull final Runnable runnable) {
+        runWorkThreadTimer(runnable, 0);
     }
 
-    public void runWorkThreadLoop(final Runnable runnable) {
+    /**
+     * 指定时间循环执行
+     * @param runnable task
+     * @param ms interval
+     */
+    public void runWorkThreadTimer(@NonNull final Runnable runnable, final long ms) {
         final Runnable r = new Runnable() {
             @Override
             public void run() {
                 runnable.run();
-                runWorkThread(this);
+                runWorkThreadDelay(this, ms);
             }
         };
-        runWorkThread(r);
+        runWorkThreadDelay(r, ms);
     }
 
+
     public void release() {
+        mHandlerWork = null;
         if (mWorkThread != null) {
             mWorkThread.quitSafely();
             mWorkThread = null;
         }
-        mHandlerWork = null;
-        mHandlerUi = null;
     }
 
 }
