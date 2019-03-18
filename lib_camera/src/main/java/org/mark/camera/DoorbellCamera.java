@@ -13,6 +13,7 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 
@@ -31,7 +32,6 @@ public class DoorbellCamera {
 
     private HandlerThread mCameraThread;
     private Handler mCameraHandler;
-
     private ConfigFactory mConfig;
 
     public final static int CAMERA_ID = CameraCharacteristics.LENS_FACING_FRONT;
@@ -157,7 +157,9 @@ public class DoorbellCamera {
     };
 
     public void shutDown() {
-        mConfig.release();
+        if (mConfig != null) {
+            mConfig.release();
+        }
 
         if (mCameraDevice != null) {
             mCameraDevice.close();
