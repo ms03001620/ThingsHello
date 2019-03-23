@@ -8,7 +8,6 @@ import shutil
 
 source_file = "./flower_photos/daisy/"
 target_file = "./flower_photos/daisy_da/"
-num = 1
 
 if os.path.exists(target_file):
     shutil.rmtree(target_file)
@@ -18,14 +17,16 @@ os.makedirs(target_file)
 file_list = os.listdir(source_file)
 
 with tf.Session() as sess:
-    for i in range(num):
+    file_count = len(file_list)
+    print("file total: ", file_count)
+    for i in range(file_count):
         print("process: ", i, file_list[i])
         image_raw_data = tf.gfile.FastGFile(source_file + file_list[i], "rb").read()
 
         image_data = tf.image.decode_jpeg(image_raw_data)
 
         # 左右翻转
-        #image_data = tf.image.flip_left_right(image_data)
+        image_data = tf.image.flip_left_right(image_data)
 
         # 上下翻转
         #image_data = tf.image.flip_up_down(image_data)
@@ -54,7 +55,8 @@ with tf.Session() as sess:
         # 正则化标准差为1
         #image_data = tf.image.per_image_standardization(image_data)
 
-        image_data = tf.image.resize_images(image_data, (200, 160), method=1)
+
+        #image_data = tf.image.resize_images(image_data, (200, 200), method=1)
 
 
 
