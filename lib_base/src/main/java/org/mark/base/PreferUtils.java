@@ -25,6 +25,14 @@ public class PreferUtils {
         mSharedPreferences.edit().putString(key, value).apply();
     }
 
+    public void put(String key, int value){
+        mSharedPreferences.edit().putInt(key, value).apply();
+    }
+
+    public int get(String key) {
+        return mSharedPreferences.getInt(key, Integer.MIN_VALUE);
+    }
+
     public String get(String key, String value){
         return mSharedPreferences.getString(key, value);
     }
@@ -35,7 +43,7 @@ public class PreferUtils {
 
     }
 
-    public <T extends Object> T get(String key) {
+    public <T extends Object> T getObject(String key) {
         mSharedPreferences.getString(key, "");
 
 

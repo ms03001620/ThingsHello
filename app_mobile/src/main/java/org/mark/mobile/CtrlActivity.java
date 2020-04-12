@@ -14,11 +14,14 @@ import android.widget.Toast;
 
 import com.gcssloop.widget.RockerView;
 
+import org.mark.base.PreferUtils;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.bean.WheelCmd;
 import org.mark.mobile.connect.ConnectedManager;
+import org.mark.mobile.ctrl.KeyIndex;
 import org.mark.mobile.ctrl.RockerListener;
+import org.mark.mobile.preview.EyesFragment;
 import org.mark.mobile.preview.PreviewActivity;
 
 public class CtrlActivity extends AppCompatActivity {
@@ -30,15 +33,10 @@ public class CtrlActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ctrl);
-        EditText mEditMessage = findViewById(R.id.edit_message);
-        mEditMessage.setMovementMethod(ScrollingMovementMethod.getInstance());
-
         findViewById(R.id.btn_preview).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // 进入视频
-                Intent intent = new Intent(CtrlActivity.this, PreviewActivity.class);
-                startActivity(intent);
+                getSupportFragmentManager().beginTransaction().replace(R.id.container, new EyesFragment()).commit();
             }
         });
 
@@ -49,6 +47,7 @@ public class CtrlActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 mSpeedCurrent = i;
+                PreferUtils.getInstance().put(KeyIndex.SPEED, mSpeedCurrent);
             }
 
             @Override
@@ -66,7 +65,7 @@ public class CtrlActivity extends AppCompatActivity {
             public void onEvent(int angle, float power) {
                 WheelCmd direction = new WheelCmd(roundSpeed(angle, Math.round(mSpeedCurrent * power)));
                 Log.d("Wheel", "angle:" + angle + ", power:" + power + ", " + direction.toString());
-                ConnectedManager.getInstance().sendObject(direction,  CmdConstant.WHEEL);
+                ConnectedManager.getInstance().sendObject(direction, CmdConstant.WHEEL);
             }
         });
 

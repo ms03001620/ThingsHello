@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
         setTitle("Version: " + BuildConfig.VERSION_NAME);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        org.mark.base.PreferUtils.getInstance().init(this);
         editTextHost = findViewById(R.id.edit_host);
         editTextPost = findViewById(R.id.edit_port);
         mTextLogs = findViewById(R.id.text_log);

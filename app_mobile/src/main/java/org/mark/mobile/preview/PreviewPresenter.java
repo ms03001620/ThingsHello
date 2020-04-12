@@ -21,26 +21,26 @@ import java.lang.ref.WeakReference;
  */
 public class PreviewPresenter {
     private static final String TAG = "PreviewPresenter";
-    private WeakReference<PreviewActivity> mWeakView;
+    private WeakReference<EyesFragment> mWeakView;
     private WorkThreadHandler mWorkThreadHandler;
 
     private UdpReceiver mIReceiver;
 
     private ModelServo mModelServo;
 
-    public PreviewPresenter(PreviewActivity previewActivity) {
+    public PreviewPresenter(EyesFragment previewActivity) {
         mModelServo = new ModelServo();
         mWeakView = new WeakReference<>(previewActivity);
         mWorkThreadHandler = new WorkThreadHandler();
 
-        mIReceiver = new UdpReceiver(previewActivity.getApplicationContext(), mUdpCallback);
+        mIReceiver = new UdpReceiver(previewActivity.getActivity().getApplicationContext(), mUdpCallback);
     }
 
     private JsonReceiver mTcpCallback = new JsonReceiver() {
         @Override
         public void onReceiverJson(String json, @CmdConstant.TYPE int type) {
             if(type == CmdConstant.UNDEFINED){
-                PreviewActivity activity = mWeakView.get();
+                EyesFragment activity = mWeakView.get();
                 if (activity != null) {
                     activity.updateInfo(json);
                 }
@@ -70,13 +70,12 @@ public class PreviewPresenter {
         public void onReceiveMessage(final byte[] bytes, int type) {
             totalBytes += bytes.length;
             Log.d(TAG, "udp receive:" + bytes.length + ", total:" + totalBytes);
-
             mWorkThreadHandler.runWorkThread(new Runnable() {
                 @Override
                 public void run() {
                     Bitmap bitmap = CameraUtils.createFromBytes(bytes);
-                    PreviewActivity activity = mWeakView.get();
-                    if (activity != null && !activity.isFinishing()) {
+                    EyesFragment activity = mWeakView.get();
+                    if (activity != null && activity.isAdded()) {
                         activity.updateImage(bitmap, bytes.length / 1024 + " KB"
                                 + ", Total:" + StringUtils.getByteSize(totalBytes));
                     }
