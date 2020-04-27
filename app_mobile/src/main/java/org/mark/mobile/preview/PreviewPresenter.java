@@ -26,10 +26,8 @@ public class PreviewPresenter {
 
     private UdpReceiver mIReceiver;
 
-    private ModelServo mModelServo;
 
     public PreviewPresenter(EyesFragment previewActivity) {
-        mModelServo = new ModelServo();
         mWeakView = new WeakReference<>(previewActivity);
         mWorkThreadHandler = new WorkThreadHandler();
 
@@ -112,9 +110,5 @@ public class PreviewPresenter {
     public void onStop() {
         ConnectedManager.getInstance().removeCallback(mTcpCallback);
         mIReceiver.stop();
-    }
-
-    public void servoAction(ModelServo.Action action) {
-        mModelServo.action(action);
     }
 }

@@ -1,14 +1,11 @@
 package org.mark.mobile;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
@@ -16,13 +13,13 @@ import com.gcssloop.widget.RockerView;
 
 import org.mark.base.PreferUtils;
 import org.mark.lib_unit_socket.ClientMessageCallback;
+import org.mark.lib_unit_socket.bean.CameraServoCmd;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.bean.WheelCmd;
 import org.mark.mobile.connect.ConnectedManager;
 import org.mark.mobile.ctrl.KeyIndex;
 import org.mark.mobile.ctrl.RockerListener;
 import org.mark.mobile.preview.EyesFragment;
-import org.mark.mobile.preview.PreviewActivity;
 
 public class CtrlActivity extends AppCompatActivity {
     private static final String TAG = "CtrlActivity";
@@ -56,6 +53,27 @@ public class CtrlActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+
+        SeekBar cameraSeek = findViewById(R.id.seek);
+        cameraSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Log.d(TAG, "progress:"+progress);
+
+                CameraServoCmd cameraCmd = new CameraServoCmd(progress);
+                ConnectedManager.getInstance().sendObject(cameraCmd, CmdConstant.CAMERA_SERVO);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
             }
         });
 
