@@ -9,9 +9,10 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Messenger;
 import android.support.annotation.Nullable;
-import android.widget.TextView;
+import android.util.Log;
 
 import org.mark.thingshello.ctrl.DeviceManager;
+import org.mark.thingshello.video.CameraAction;
 import org.mark.thingshello.video.CameraService;
 
 /**
@@ -35,71 +36,56 @@ import org.mark.thingshello.video.CameraService;
  */
 public class MainActivity extends Activity {
     @Nullable
-    private DeviceManager mCtrlManager;
-    private TextView mTextLog;
-    private Messenger mService = null;
-
-    public interface OnCtrlResponse{
-        void onReceiveMessage(final String message, int type);
-
-        @Nullable
-        Messenger getMessenger();
-    }
+    private DeviceManager mDeviceManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mTextLog = findViewById(R.id.text);
 
+        bindDevice();
+    }
+
+    private void bindDevice() {
         try {
-            mCtrlManager = new DeviceManager(new OnCtrlResponse() {
-                @Override
-                public void onReceiveMessage(final String message, int type) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mTextLog.setText(message + ", " + System.currentTimeMillis());
-                        }
-                    });
-                }
-
-                @Override
-                public Messenger getMessenger() {
-                    return mService;
-                }
-
-            });
+            mDeviceManager = new DeviceManager();
+            bindService();
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e("MainActivity", "init DeviceManager", e);
             finish();
         }
+    }
 
+    private void bindService() {
         Intent intent = new Intent(this, CameraService.class);
         bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
-
     }
 
     ServiceConnection mServiceConnection = new ServiceConnection() {
+        CameraAction cameraAction;
+
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            mService = new Messenger(iBinder);
+            Log.d("MainActivity", "onServiceConnected");
+            Messenger messenger = new Messenger(iBinder);
+            cameraAction = new CameraAction(messenger);
+            mDeviceManager.add(cameraAction);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
-            mService = null;
+            Log.d("MainActivity", "onServiceDisconnected");
+            mDeviceManager.remove(cameraAction);
         }
     };
 
     @Override
     protected void onDestroy() {
-        if (mCtrlManager != null) {
-            mCtrlManager.release();
+        Log.d("MainActivity", "onDestroy");
+        if (mDeviceManager != null) {
+            mDeviceManager.release();
         }
-        if (mService != null) {
-            unbindService(mServiceConnection);
-        }
+        unbindService(mServiceConnection);
         super.onDestroy();
     }
 

@@ -8,20 +8,22 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import org.mark.lib_unit_socket.bean.CmdConstant;
+import com.google.gson.Gson;
+
+import org.mark.camera.CameraUtils;
 import org.mark.lib_unit_socket.SocketManager;
-import org.mark.lib_unit_socket.bean.CameraCmd;
-import org.mark.thingshello.MainActivity;
+import org.mark.lib_unit_socket.bean.CmdConstant;
+import org.mark.thingshello.App;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
 
 /**
  * Created by Mark on 2018/8/19
  */
 public class CameraAction extends OnReceiverCommand {
-    MainActivity.OnCtrlResponse listener;
 
-    public CameraAction(MainActivity.OnCtrlResponse listener) {
-        this.listener = listener;
+    private Messenger mMessenger;
+    public CameraAction(Messenger messenger) {
+        this.mMessenger = messenger;
     }
 
     private Messenger mMessengerFromCameraService = new Messenger(new Handler() {
@@ -32,9 +34,7 @@ public class CameraAction extends OnReceiverCommand {
 
             switch (msg.what) {
                 case 0:
-                    if (SocketManager.getInstance().isConnection()) {
-                        SocketManager.getInstance().sendMessage(bytes, CmdConstant.UNDEFINED);
-                    }
+                    SocketManager.getInstance().sendMessage(bytes, CmdConstant.UNDEFINED);
                     break;
             }
         }
@@ -44,27 +44,44 @@ public class CameraAction extends OnReceiverCommand {
     @Override
     public void onCommand(@NonNull String json, @CmdConstant.TYPE int type) {
         if (type == CmdConstant.CAMERA) {
-            sendWhat(json);
+            sendConfigToCameraService(json);
+            sendCameraInfoToClient();
         }
     }
 
 
-    public void sendWhat(String json) {
-        Log.d(CameraService.TAG, "sendWhat:" + json);
-        Messenger messenger = listener.getMessenger();
-        if (messenger != null) {
-            Bundle bundle = new Bundle();
-            bundle.putString("json", json);
+    public void sendConfigToCameraService(String json) {
+        Log.d(CameraService.TAG, "sendConfigToCameraService:" + json + ", msg:" + mMessenger);
+        if (mMessenger == null) {
+            return;
+        }
+        Messenger messenger = mMessenger;
+        Bundle bundle = new Bundle();
+        bundle.putString("json", json);
 
-            Message message = Message.obtain();
-            message.what = 0;
-            message.setData(bundle);
-            message.replyTo = mMessengerFromCameraService;
-            try {
-                messenger.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+        Message message = Message.obtain();
+        message.what = 0;
+        message.setData(bundle);
+        message.replyTo = mMessengerFromCameraService;
+        try {
+            messenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendCameraInfoToClient() {
+        Log.d("DeviceManager", "sendCameraInfoToClient");
+        try {
+            CameraUtils.CameraInfo info = CameraUtils.makeCameraInfo(App.getContext());
+
+            Gson gson = new Gson();
+            String jsonString = gson.toJson(info);
+
+            SocketManager.getInstance().sendMessage(jsonString, CmdConstant.CAMERA_DEVICE_INFO);
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

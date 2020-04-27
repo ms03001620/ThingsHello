@@ -23,6 +23,14 @@ public class DeviceHelper {
         deviceMap.put(device.getClass().getSimpleName(), device);
     }
 
+    public void remove(OnReceiverCommand device) {
+        OnReceiverCommand dev = deviceMap.get(device.getClass().getSimpleName());
+        if (dev != null) {
+            dev.release();
+            deviceMap.remove(device.getClass().getSimpleName());
+        }
+    }
+
     public void onCommand(String json, @CmdConstant.TYPE int type) {
         for (Map.Entry<String, OnReceiverCommand> device : deviceMap.entrySet()) {
             try {
@@ -38,7 +46,6 @@ public class DeviceHelper {
             device.getValue().release();
         }
         deviceMap.clear();
-        deviceMap = null;
     }
 
     public void didi() {

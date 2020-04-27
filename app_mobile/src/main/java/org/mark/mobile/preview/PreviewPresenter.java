@@ -39,7 +39,7 @@ public class PreviewPresenter {
     private JsonReceiver mTcpCallback = new JsonReceiver() {
         @Override
         public void onReceiverJson(String json, @CmdConstant.TYPE int type) {
-            if(type == CmdConstant.UNDEFINED){
+            if(type == CmdConstant.UNDEFINED || type ==CmdConstant.CAMERA_DEVICE_INFO){
                 PreviewActivity activity = mWeakView.get();
                 if (activity != null) {
                     activity.updateInfo(json);
