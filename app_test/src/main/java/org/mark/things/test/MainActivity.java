@@ -1,13 +1,13 @@
 package org.mark.things.test;
 
+import android.app.Activity;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
     public static final int WHAT_EXIT = 1000;
     public static final int ROUND = 2000;
     public static final int DI = 3000;
