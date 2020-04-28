@@ -35,12 +35,19 @@ public class MainActivity extends AppCompatActivity {
         setTitle("Version: " + BuildConfig.VERSION_NAME);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        org.mark.base.PreferUtils.getInstance().init(this);
         editTextHost = findViewById(R.id.edit_host);
         editTextPost = findViewById(R.id.edit_port);
         mTextLogs = findViewById(R.id.text_log);
 
         mSwitch = findViewById(R.id.fab);
         mSwitch.setOnCheckedChangeListener(mSwitchListener);
+        findViewById(R.id.btnCtrl).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, CtrlActivity.class));
+            }
+        });
         setupAutoFillIp();
         ConnectedManager.getInstance().addCallback(mClientMessageCallback);
     }
@@ -106,20 +113,20 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onStatusChange(@NonNull Status status) {
-            runUiText("Status:" + status.name());
-            if (status == Status.CONNECTED) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
+        public void onStatusChange(@NonNull final Status status) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    runUiText("Status:" + status.name());
+                    findViewById(R.id.btnCtrl).setEnabled(status == Status.CONNECTED);
+                    if (status == Status.CONNECTED) {
                         final String textHost = editTextHost.getText().toString();
                         final String text = editTextPost.getText().toString();
                         final int port = Integer.valueOf(text);
                         mPreferUtils.add(textHost, port);
-                        startActivity(new Intent(MainActivity.this, CtrlActivity.class));
                     }
-                });
-            }
+                }
+            });
         }
     };
 
@@ -156,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         ConnectedManager.getInstance().removeCallback(mClientMessageCallback);
+        ConnectedManager.getInstance().stop();
         super.onDestroy();
     }
 }
