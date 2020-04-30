@@ -8,6 +8,7 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -65,8 +66,19 @@ public class MainActivity extends Activity {
         CameraAction cameraAction;
 
         @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+        public void onServiceConnected(ComponentName componentName, final IBinder iBinder) {
             Log.d("MainActivity", "onServiceConnected");
+            try {
+                iBinder.linkToDeath(new IBinder.DeathRecipient() {
+                    @Override
+                    public void binderDied() {
+                        iBinder.unlinkToDeath(this, 0);
+                        Log.w("MainActivity", "DeathRecipient");
+                    }
+                }, 0);
+            } catch (RemoteException e) {
+                Log.e("MainActivity", "DeathRecipient", e);
+            }
             Messenger messenger = new Messenger(iBinder);
             cameraAction = new CameraAction(messenger);
             mDeviceManager.add(cameraAction);

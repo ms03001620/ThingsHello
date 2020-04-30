@@ -63,7 +63,6 @@ public class WorkThreadHandler {
         runWorkThreadDelay(r, ms);
     }
 
-
     public void release() {
         mHandlerWork = null;
         if (mWorkThread != null) {
@@ -72,4 +71,9 @@ public class WorkThreadHandler {
         }
     }
 
+    public void removeRunnable(Runnable runnable) {
+        if (mHandlerWork != null) {
+            mHandlerWork.removeCallbacks(runnable);
+        }
+    }
 }
