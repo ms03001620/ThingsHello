@@ -2,12 +2,8 @@ package org.mark.thingshello.ctrl.wheel;
 
 import android.support.annotation.NonNull;
 
-import com.google.android.things.pio.PeripheralManager;
-import com.leinardi.android.things.pio.SoftPwm;
-
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.bean.WheelCmd;
-import org.mark.thingshello.ctrl.BoardDefaults;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
 
 /**
@@ -27,19 +23,8 @@ public class WheelAction extends OnReceiverCommand {
 
     public WheelAction() throws Exception {
         super();
-        PeripheralManager pioService = PeripheralManager.getInstance();
-
-        wheelLeft = new Wheel(
-                pioService.openGpio(BoardDefaults.getRpi3GPIO(21)),
-                pioService.openGpio(BoardDefaults.getRpi3GPIO(20)),
-                SoftPwm.openSoftPwm(BoardDefaults.getRpi3GPIO(16))
-        );
-
-        wheelRight = new Wheel(
-                pioService.openGpio(BoardDefaults.getRpi3GPIO(26)),
-                pioService.openGpio(BoardDefaults.getRpi3GPIO(19)),
-                SoftPwm.openSoftPwm(BoardDefaults.getRpi3GPIO(13))
-        );
+        wheelLeft = new Wheel(21,20,16);
+        wheelRight = new Wheel(26,19,13);
     }
 
     /**

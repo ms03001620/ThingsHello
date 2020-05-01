@@ -6,6 +6,7 @@ import android.util.Log;
 import com.google.android.things.pio.PeripheralManager;
 import com.google.android.things.pio.Pwm;
 
+import org.mark.base.thread.WorkThreadHandler;
 import org.mark.lib_unit_socket.bean.CameraServoCmd;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
@@ -16,39 +17,19 @@ import java.io.IOException;
  * 摄像头舵机
  */
 public class CameraServo extends OnReceiverCommand {
-    private double mActivePulseDuration;
-
-    private static final double MIN_ACTIVE_PULSE_DURATION_MS = 0;
-    private static final double MAX_ACTIVE_PULSE_DURATION_MS = 1.8;
     private static final double PULSE_PERIOD_MS = 20;  // Frequency of 50Hz (1000/20)
+    private Pwm mPwm;
 
-    // Parameters for the servo movement over time
-    private static final double PULSE_CHANGE_PER_STEP_MS = 0.2;
-    private static final int INTERVAL_BETWEEN_STEPS_MS = 100;
+    WorkThreadHandler mWorkThread;
 
-    Pwm mPwm;
+    public CameraServo() {
+        mWorkThread = new WorkThreadHandler();
+    }
 
-    public CameraServo() throws IOException {
+    private void bindPin() {
         try {
-            mActivePulseDuration = MIN_ACTIVE_PULSE_DURATION_MS;
-
-
-           // SoftPwm softPwm = SoftPwm.openSoftPwm("BCM13");
-
-           // PeripheralManager.getInstance().openGpio("BCM13");
-
-          //  List<String> list = PeripheralManager.getInstance().getGpioList();
-
-
-          //  Log.d("CameraServo", "list" + list.toString());
-
-          mPwm = PeripheralManager.getInstance().openPwm("PWM0");
-
-          //  mPwm = PeripheralManager.getInstance().openPwm("PWM1");
-
-            Log.d("CameraServo", "pwm name:" + mPwm.getName());
-
-            // Always set frequency and initial duty cycle before enabling PWM
+            Log.d("CameraServo", "init");
+            mPwm = PeripheralManager.getInstance().openPwm("PWM0");
             mPwm.setPwmFrequencyHz(1000 / PULSE_PERIOD_MS);
             mPwm.setEnabled(true);
         } catch (Exception e) {
@@ -56,39 +37,62 @@ public class CameraServo extends OnReceiverCommand {
         }
     }
 
-
     @Override
     public void onCommand(@NonNull String json, int type) {
         if (type == CmdConstant.CAMERA_SERVO) {
             CameraServoCmd cameraServoCmd = gson.fromJson(json, CameraServoCmd.class);
             if (cameraServoCmd != null) {
+                if (mPwm == null) {
+                    bindPin();
+                }
+
                 try {
                     float d = convert(0, 2, cameraServoCmd.getProgress());
-                    Log.d("CameraServo", "progress:" + cameraServoCmd.getProgress() + ", d:" + d);
-
+                    Log.d("CameraServo", "progress:" + cameraServoCmd.getProgress() + ", dp:" + d);
                     mPwm.setPwmDutyCycle(100 * d / PULSE_PERIOD_MS);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    mWorkThread.removeRunnable(autoStop);
+                    mWorkThread.runWorkThreadDelay(autoStop, 500);
+                } catch (Exception e) {
+                    Log.e("CameraServo", "onCommand", e);
                 }
             }
         }
     }
 
-    @Override
-    public void release() {
+    private Runnable autoStop = new Runnable() {
+        @Override
+        public void run() {
+            Log.d("CameraServo", "autoStop");
+            unBindPin();
+        }
+    };
+
+
+    private void unBindPin() {
+        if (mPwm == null) {
+            return;
+        }
         try {
+            mPwm.setEnabled(false);
             mPwm.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e("CameraServo", "unBindPin", e);
         } finally {
             mPwm = null;
         }
     }
 
 
-    public static float convert(int min, int max, int current){
+    @Override
+    public void release() {
+        unBindPin();
+        mWorkThread.release();
+    }
+
+
+    public static float convert(int min, int max, int current) {
         int t = max - min;
-        float dt = t/100.0f;
+        float dt = t / 100.0f;
         return min + dt * current;
     }
 }
