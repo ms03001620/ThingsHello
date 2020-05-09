@@ -8,13 +8,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
+import org.mark.lib_unit_socket.bean.CameraServoCmd;
+import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.mobile.R;
+import org.mark.mobile.connect.ConnectedManager;
 
 
 public class EyesFragment extends Fragment {
-
+    private static final String TAG = "EyesFragment";
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
@@ -56,6 +60,28 @@ public class EyesFragment extends Fragment {
         mPreview = root.findViewById(R.id.image);
         mTextInfo = root.findViewById(R.id.text_info);
         mTextBytes = root.findViewById(R.id.text_bytes);
+
+        SeekBar cameraSeek = root.findViewById(R.id.seek);
+        cameraSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Log.d(TAG, "progress:"+progress);
+
+                CameraServoCmd cameraCmd = new CameraServoCmd(progress);
+                ConnectedManager.getInstance().sendObject(cameraCmd, CmdConstant.CAMERA_SERVO);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
 
         return root;
     }
