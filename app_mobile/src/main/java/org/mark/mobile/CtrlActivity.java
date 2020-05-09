@@ -56,26 +56,6 @@ public class CtrlActivity extends AppCompatActivity {
             }
         });
 
-        SeekBar cameraSeek = findViewById(R.id.seek);
-        cameraSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                Log.d(TAG, "progress:"+progress);
-
-                CameraServoCmd cameraCmd = new CameraServoCmd(progress);
-                ConnectedManager.getInstance().sendObject(cameraCmd, CmdConstant.CAMERA_SERVO);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
 
         RockerView mRockerView = findViewById(R.id.rocker);
         mRockerView.setListener(new RockerListener() {
