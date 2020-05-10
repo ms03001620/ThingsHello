@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.Toast;
@@ -16,6 +17,7 @@ import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.lib_unit_socket.bean.CameraServoCmd;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.bean.WheelCmd;
+import org.mark.lib_unit_socket.bean.WheelRotateCmd;
 import org.mark.mobile.connect.ConnectedManager;
 import org.mark.mobile.ctrl.KeyIndex;
 import org.mark.mobile.ctrl.RockerListener;
@@ -67,8 +69,44 @@ public class CtrlActivity extends AppCompatActivity {
             }
         });
 
+        // 原地左转
+        findViewById(R.id.btnLeft).setOnTouchListener(rotateTouchListener);
+        // 原地右转
+        findViewById(R.id.btnRight).setOnTouchListener(rotateTouchListener);
+
         ConnectedManager.getInstance().addCallback(mClientMessageCallback);
     }
+
+    View.OnTouchListener rotateTouchListener = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            WheelRotateCmd rotateCmd = new WheelRotateCmd();
+            switch (v.getId()) {
+                case R.id.btnLeft:
+                    rotateCmd.setRotate(WheelRotateCmd.Rotate.LEFT);
+                    break;
+                case R.id.btnRight:
+                    rotateCmd.setRotate(WheelRotateCmd.Rotate.RIGHT);
+                    break;
+            }
+
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_MOVE:
+                case MotionEvent.ACTION_DOWN:
+                    rotateCmd.setSpeed(mSpeedCurrent);
+                    break;
+                case MotionEvent.ACTION_CANCEL:
+                case MotionEvent.ACTION_UP:
+                default:
+                    rotateCmd.setSpeed(0); //stop
+                    break;
+            }
+
+            Log.d("WheelRotateCmd", "cmd:" + rotateCmd.toString() + ",a:" + event.getAction());
+            ConnectedManager.getInstance().sendObject(rotateCmd, CmdConstant.WHEEL_ROTATE);
+            return false;
+        }
+    };
 
 
     ClientMessageCallback mClientMessageCallback = new ClientMessageCallback() {

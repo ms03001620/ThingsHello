@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.bean.WheelCmd;
+import org.mark.lib_unit_socket.bean.WheelRotateCmd;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
 
 /**
@@ -84,6 +85,23 @@ public class WheelAction extends OnReceiverCommand {
         if (type == CmdConstant.WHEEL) {
             WheelCmd direction = gson.fromJson(json, WheelCmd.class);
             run(direction.getLeft(), direction.getRight());
+            return;
+        }
+
+        if (type == CmdConstant.WHEEL_ROTATE) {
+            WheelRotateCmd rotate = gson.fromJson(json, WheelRotateCmd.class);
+            if (rotate.getSpeed() == 0) {
+                stop();
+                return;
+            }
+
+            if (rotate.getRotate() == WheelRotateCmd.Rotate.LEFT) {
+                rotateLeft(rotate.getSpeed());
+                return;
+            }
+            if (rotate.getRotate() == WheelRotateCmd.Rotate.RIGHT) {
+                rotateRight(rotate.getSpeed());
+            }
         }
 
     }
