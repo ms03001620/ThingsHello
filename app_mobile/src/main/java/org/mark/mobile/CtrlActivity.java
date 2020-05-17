@@ -7,6 +7,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
@@ -16,6 +18,7 @@ import org.mark.base.PreferUtils;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.lib_unit_socket.bean.CameraServoCmd;
 import org.mark.lib_unit_socket.bean.CmdConstant;
+import org.mark.lib_unit_socket.bean.LightCmd;
 import org.mark.lib_unit_socket.bean.WheelCmd;
 import org.mark.lib_unit_socket.bean.WheelRotateCmd;
 import org.mark.mobile.connect.ConnectedManager;
@@ -66,6 +69,16 @@ public class CtrlActivity extends AppCompatActivity {
                 WheelCmd direction = new WheelCmd(roundSpeed(angle, Math.round(mSpeedCurrent * power)));
                 Log.d("Wheel", "angle:" + angle + ", power:" + power + ", " + direction.toString());
                 ConnectedManager.getInstance().sendObject(direction, CmdConstant.WHEEL);
+            }
+        });
+
+        CheckBox checkLight = findViewById(R.id.checkLight);
+        checkLight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                LightCmd lightCmd = new LightCmd();
+                lightCmd.setEnable(isChecked);
+                ConnectedManager.getInstance().sendObject(lightCmd, CmdConstant.LIGHT);
             }
         });
 

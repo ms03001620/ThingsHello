@@ -8,6 +8,10 @@ public class LightCmd {
     private int green;
     private int blue;
 
+    public LightCmd() {
+
+    }
+
     public LightCmd(int red, int green, int blue) {
         this.red = red;
         this.green = green;
@@ -40,5 +44,11 @@ public class LightCmd {
 
     public boolean isEnable() {
         return red > 0 || green > 0 || blue > 0;
+    }
+
+    public void setEnable(boolean isChecked) {
+        red = isChecked ? 1 : 0;
+        green = isChecked ? 1 : 0;
+        blue = isChecked ? 1 : 0;
     }
 }
