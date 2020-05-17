@@ -40,9 +40,6 @@ public class SocketManager extends CmdConstant {
 
             @Override
             public void onExceptionToReOpen(@NonNull Exception e) {
-                Log.d(TAG, "重新启动", e);
-                mTextService.stop();
-                mTextService.start();
                 listener.onExceptionToReOpen(e);
             }
 

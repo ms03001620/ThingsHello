@@ -1,7 +1,5 @@
 package org.mark.lib_unit_socket;
 
-import android.util.Log;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,6 +17,7 @@ public class ConnectedThread extends Thread {
     private ClientMessageCallback.Status mStatus;
 
     public ConnectedThread(Socket socket, ClientMessageCallback callback) {
+        setName("t-" + CalendarUtils.getTimeNowHHMMSS());
         mSocket = socket;
         mReceiveMessageCallback = callback;
         updateStatus(ClientMessageCallback.Status.CONNECTING);
@@ -55,11 +54,10 @@ public class ConnectedThread extends Thread {
             tmpIn = socket.getInputStream();
             tmpOut = socket.getOutputStream();
             updateStatus(ClientMessageCallback.Status.CONNECTED);
-            mReceiveMessageCallback.onLogMessage("已连接Socket:" + socket.toString(), null);
+            mReceiveMessageCallback.onLogMessage(getName() + ", 已连接Socket:" + socket.toString(), null);
         } catch (Exception e) {
             updateStatus(ClientMessageCallback.Status.NO_CONNECT);
-            mReceiveMessageCallback.onLogMessage("开始连接Socket", e);
-            mReceiveMessageCallback.onExceptionToReOpen(e);
+            mReceiveMessageCallback.onLogMessage(getName() + "开始连接Socket", e);
         }
 
         mSocket = socket;
@@ -73,12 +71,12 @@ public class ConnectedThread extends Thread {
         while (isConnected()) {
             try {
                 if (!mSocket.isConnected() || mSocket.isInputShutdown()) {
-                    throw new Exception("Socket没有连接或关闭");
+                    throw new Exception(getName() + "Socket没有连接或关闭");
                 }
 
                 int headLen = readStillFinish(mInputStream, headBytes);
                 if (headLen == -1) {
-                    throw new Exception("读取head错误（-1）");
+                    throw new Exception(getName() + getName() + "读取head错误（-1）");
                 }
 
                 startTime = System.currentTimeMillis();
@@ -105,7 +103,7 @@ public class ConnectedThread extends Thread {
                             + ", pass:" + (System.currentTimeMillis() - startTime), null);
                 } catch (Exception e) {
                     // 业务层数据异
-                    e.printStackTrace();
+                    mReceiveMessageCallback.onLogMessage("业务层数据异", e);
                 }
 
             } catch (Exception e) {
@@ -117,7 +115,6 @@ public class ConnectedThread extends Thread {
 
         if (exception != null) {
             mReceiveMessageCallback.onLogMessage("Socket read错误", exception);
-            mReceiveMessageCallback.onExceptionToReOpen(exception);
             stop(false);
         }
     }
@@ -148,8 +145,9 @@ public class ConnectedThread extends Thread {
             if (mSocket != null) {
                 mSocket.close();
             }
+            mReceiveMessageCallback.onLogMessage(getName() + "停止连接Socket", null);
         } catch (IOException e) {
-            mReceiveMessageCallback.onLogMessage("ConnectedThread stop", e);
+            mReceiveMessageCallback.onLogMessage(getName() + "停止连接Socket", e);
         }
         updateStatus(ClientMessageCallback.Status.NO_CONNECT);
     }
@@ -172,7 +170,6 @@ public class ConnectedThread extends Thread {
             mReceiveMessageCallback.onLogMessage("写入数据长度" + data.length, null);
         } catch (Exception e) {
             mReceiveMessageCallback.onLogMessage("写入异常", e);
-            mReceiveMessageCallback.onExceptionToReOpen(e);
             updateStatus(ClientMessageCallback.Status.NO_CONNECT);
         }
     }

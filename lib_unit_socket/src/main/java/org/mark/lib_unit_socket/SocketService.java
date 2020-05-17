@@ -1,7 +1,5 @@
 package org.mark.lib_unit_socket;
 
-import android.os.Parcelable;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -37,13 +35,9 @@ public class SocketService {
                         mConnectedThread = null;
                     }
 
-                    if (mAcceptThread != null) {
-                        mAcceptThread.cancel();
-                        mAcceptThread = null;
-                    }
-
                     mConnectedThread = new ConnectedThread(socket, mReceiveMessageCallback);
                     mConnectedThread.start();
+                    mReceiveMessageCallback.onLogMessage("连接到" + socket.toString()+", "+mConnectedThread.getName(), null);
                 }
             });
             mAcceptThread.start();
@@ -84,9 +78,7 @@ public class SocketService {
                     try {
                         mReceiveMessageCallback.onLogMessage("等待接入..", null);
                         Socket socket = mServerSocket.accept();
-                        mReceiveMessageCallback.onLogMessage("连接到" + socket.toString(), null);
                         mAccepted.accept(socket);
-                        break;
                     } catch (IOException e) {
                         mReceiveMessageCallback.onLogMessage("AcceptThread accept", e);
                     }
@@ -101,10 +93,6 @@ public class SocketService {
                 mReceiveMessageCallback.onLogMessage("AcceptThread cancel", e);
             }
         }
-    }
-
-    public void writeText(String message, byte type) {
-        writeBytes(message.getBytes(), type);
     }
 
     public boolean isConnected() {
