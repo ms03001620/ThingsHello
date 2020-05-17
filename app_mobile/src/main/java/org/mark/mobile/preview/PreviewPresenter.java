@@ -63,6 +63,7 @@ public class PreviewPresenter {
 
     private ClientMessageCallback mUdpCallback = new ClientMessageCallback() {
         long totalBytes;
+        long start = System.currentTimeMillis();
 
         @Override
         public void onReceiveMessage(final byte[] bytes, int type) {
@@ -72,10 +73,9 @@ public class PreviewPresenter {
                 @Override
                 public void run() {
                     Bitmap bitmap = CameraUtils.createFromBytes(bytes);
-                    EyesFragment activity = mWeakView.get();
-                    if (activity != null && activity.isAdded()) {
-                        activity.updateImage(bitmap, bytes.length / 1024 + " KB"
-                                + ", Total:" + StringUtils.getByteSize(totalBytes));
+                    EyesFragment fragment = mWeakView.get();
+                    if (fragment != null && fragment.isAdded()) {
+                        fragment.updateImage(bitmap, "Total:" + StringUtils.getByteSize(totalBytes) + ", " + calcDataSeconds(start, totalBytes) + " KB");
                     }
                 }
             });
@@ -110,5 +110,15 @@ public class PreviewPresenter {
     public void onStop() {
         ConnectedManager.getInstance().removeCallback(mTcpCallback);
         mIReceiver.stop();
+    }
+
+    private long calcDataSeconds(long start,long bytes) {
+        long end = System.currentTimeMillis();
+
+        long second = (end - start) / 1000;
+        if ((second > 1) && bytes > 1024) {
+            return bytes / 1024 / second;
+        }
+        return -1;
     }
 }
