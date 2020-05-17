@@ -47,7 +47,7 @@ public class CameraServo extends OnReceiverCommand {
                 }
 
                 try {
-                    float d = convert(0, 2, cameraServoCmd.getProgress());
+                    float d = convert(0.8f, 1.5f, cameraServoCmd.getProgress());
                     Log.d("CameraServo", "progress:" + cameraServoCmd.getProgress() + ", dp:" + d);
                     mPwm.setPwmDutyCycle(100 * d / PULSE_PERIOD_MS);
                     mWorkThread.removeRunnable(autoStop);
@@ -90,8 +90,8 @@ public class CameraServo extends OnReceiverCommand {
     }
 
 
-    public static float convert(int min, int max, int current) {
-        int t = max - min;
+    public static float convert(float min, float max, int current) {
+        float t = max - min;
         float dt = t / 100.0f;
         return min + dt * current;
     }
