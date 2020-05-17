@@ -16,41 +16,12 @@ import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.mobile.R;
 import org.mark.mobile.connect.ConnectedManager;
 
-
 public class EyesFragment extends Fragment {
     private static final String TAG = "EyesFragment";
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    private String mParam1;
-    private String mParam2;
-
-
     PreviewPresenter mPresent;
     private ImageView mPreview;
     private TextView mTextInfo;
     private TextView mTextBytes;
-
-
-    public static EyesFragment newInstance(String param1, String param2) {
-        EyesFragment fragment = new EyesFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -96,17 +67,6 @@ public class EyesFragment extends Fragment {
         });
     }
 
-    Runnable mVideoRunnable = new Runnable() {
-        Bitmap bitmap;
-        String sizeString;
-
-        @Override
-        public void run() {
-            mPreview.setImageBitmap(bitmap);
-            mTextBytes.setText(sizeString);
-        }
-    };
-
     public void updateInfo(final String info) {
         mTextInfo.post(new Runnable() {
             @Override
@@ -134,6 +94,5 @@ public class EyesFragment extends Fragment {
         super.onDetach();
         mPresent.release();
         Log.d("RockerFragment", "onDetach");
-       // ConnectedManager.getInstance().removeCallback(mClientMessageCallback);
     }
 }
