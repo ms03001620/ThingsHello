@@ -3,6 +3,7 @@ package org.mark.lib_unit_socket;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 /**
@@ -47,10 +48,8 @@ public class ConnectedThread extends Thread {
         Socket socket = null;
 
         try {
-            socket = new Socket(host, port);
-            // 移除超时设定
-            // socket.setSoTimeout(50000);
-
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(host,port), 5000);
             tmpIn = socket.getInputStream();
             tmpOut = socket.getOutputStream();
             updateStatus(ClientMessageCallback.Status.CONNECTED);
