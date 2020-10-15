@@ -6,27 +6,27 @@ import android.util.Log;
 import com.google.android.things.pio.PeripheralManager;
 import com.google.android.things.pio.Pwm;
 
-import org.mark.base.thread.WorkThreadHandler;
 import org.mark.lib_unit_socket.bean.CameraServoCmd;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
+import org.mark.thingshello.ctrl.comp.bind.Bindable;
+import org.mark.thingshello.ctrl.comp.bind.ExclusiveBind;
 
 import java.io.IOException;
 
 /**
  * 摄像头舵机
  */
-public class CameraServo extends OnReceiverCommand {
+public class CameraServo extends OnReceiverCommand implements Bindable {
     private static final double PULSE_PERIOD_MS = 20;  // Frequency of 50Hz (1000/20)
     private Pwm mPwm;
+    ExclusiveBind exclusiveBind;
 
-    WorkThreadHandler mWorkThread;
-
-    public CameraServo() {
-        mWorkThread = new WorkThreadHandler();
+    public CameraServo(ExclusiveBind exclusiveBind) {
+        this.exclusiveBind = exclusiveBind;
     }
 
-    private void bindPin() {
+    private void init() {
         try {
             Log.d("CameraServo", "init");
             mPwm = PeripheralManager.getInstance().openPwm("PWM0");
@@ -42,16 +42,16 @@ public class CameraServo extends OnReceiverCommand {
         if (type == CmdConstant.CAMERA_SERVO) {
             CameraServoCmd cameraServoCmd = gson.fromJson(json, CameraServoCmd.class);
             if (cameraServoCmd != null) {
+                exclusiveBind.activeBindable(this);
                 if (mPwm == null) {
-                    bindPin();
+                    Log.w("CameraServo", "bind error pwm null");
+                    return;
                 }
 
                 try {
                     float d = convert(0.8f, 1.5f, cameraServoCmd.getProgress());
                     Log.d("CameraServo", "progress:" + cameraServoCmd.getProgress() + ", dp:" + d);
                     mPwm.setPwmDutyCycle(100 * d / PULSE_PERIOD_MS);
-                    mWorkThread.removeRunnable(autoStop);
-                    mWorkThread.runWorkThreadDelay(autoStop, 500);
                 } catch (Exception e) {
                     Log.e("CameraServo", "onCommand", e);
                 }
@@ -59,16 +59,8 @@ public class CameraServo extends OnReceiverCommand {
         }
     }
 
-    private Runnable autoStop = new Runnable() {
-        @Override
-        public void run() {
-            Log.d("CameraServo", "autoStop");
-            unBindPin();
-        }
-    };
-
-
-    private void unBindPin() {
+    @Override
+    public void release() {
         if (mPwm == null) {
             return;
         }
@@ -83,16 +75,19 @@ public class CameraServo extends OnReceiverCommand {
     }
 
 
-    @Override
-    public void release() {
-        unBindPin();
-        mWorkThread.release();
-    }
-
-
     public static float convert(float min, float max, int current) {
         float t = max - min;
         float dt = t / 100.0f;
         return min + dt * current;
+    }
+
+    @Override
+    public void onBind() {
+        init();
+    }
+
+    @Override
+    public void onUnBind() {
+        release();
     }
 }

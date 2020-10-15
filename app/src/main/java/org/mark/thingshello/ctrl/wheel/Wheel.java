@@ -30,7 +30,7 @@ public class Wheel {
         this.softPwmSpeedPin = softPwmSpeedPin;
     }
 
-    private void bindPin() {
+    public void bindPin() {
         if (hasBind) {
             return;
         }
@@ -52,15 +52,13 @@ public class Wheel {
         }
     }
 
-    private void unBindPin() {
-        if (!hasBind) {
-            return;
+    public void unBindPin() {
+        if (hasBind) {
+            release();
         }
-        release();
     }
 
     public void forward(int speed) {
-        bindPin();
         try {
             Log.d("Wheel", "forward");
             in1.setDirection(Gpio.ACTIVE_HIGH);
@@ -72,7 +70,6 @@ public class Wheel {
     }
 
     public void back(int speed) {
-        bindPin();
         try {
             Log.d("Wheel", "back");
             in1.setDirection(Gpio.ACTIVE_LOW);
@@ -91,7 +88,6 @@ public class Wheel {
             Log.d("Wheel", "stop");
             in2.setDirection(Gpio.ACTIVE_LOW);
             in1.setDirection(Gpio.ACTIVE_LOW);
-            unBindPin();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -99,7 +95,6 @@ public class Wheel {
 
 
     public void forwardBuff(int speed) {
-        bindPin();
         try {
             Log.d("Wheel", "forwardBuff");
             in2.setDirection(Gpio.ACTIVE_HIGH);
@@ -122,6 +117,10 @@ public class Wheel {
         } catch (IOException e) {
             Log.e("Wheel", "release", e);
         }
+    }
+
+    public boolean isHasBind(){
+        return hasBind;
     }
 
 

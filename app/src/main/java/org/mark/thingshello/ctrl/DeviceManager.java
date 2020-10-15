@@ -4,6 +4,7 @@ import android.util.Log;
 
 import org.mark.lib_unit_socket.SocketManager;
 import org.mark.lib_unit_socket.bean.CmdConstant;
+import org.mark.thingshello.ctrl.comp.bind.ExclusiveBind;
 import org.mark.thingshello.ctrl.light.ForwardLightAction;
 import org.mark.thingshello.ctrl.servo.CameraServo;
 import org.mark.thingshello.ctrl.voice.BuzzerAction;
@@ -15,15 +16,17 @@ import org.mark.thingshello.ctrl.wheel.WheelAction;
  */
 public class DeviceManager {
     private DeviceHelper mDeviceHelper;
+    ExclusiveBind exclusiveBind;
 
     public DeviceManager() throws Exception {
         mDeviceHelper = new DeviceHelper();
         // 该设备可以使用一下硬件
         if ("iot_rpi3".equals(android.os.Build.MODEL)) {
-            mDeviceHelper.add(new WheelAction());
+            exclusiveBind = new ExclusiveBind();
+            mDeviceHelper.add(new WheelAction(exclusiveBind));
             mDeviceHelper.add(new BuzzerAction());
             mDeviceHelper.add(new ForwardLightAction());
-            mDeviceHelper.add(new CameraServo());
+            mDeviceHelper.add(new CameraServo(exclusiveBind));
         }
 
         SocketManager.getInstance().init(new SimpleJsonReceiver() {
