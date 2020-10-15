@@ -1,43 +1,30 @@
 package org.mark.thingshello;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.Messenger;
-import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import org.mark.lib_unit_socket.SocketManager;
+import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.thingshello.ctrl.DeviceManager;
-import org.mark.thingshello.video.CameraAction;
+import org.mark.thingshello.ctrl.SimpleJsonReceiver;
 import org.mark.thingshello.video.CameraService;
+import org.mark.thingshello.video.CameraServiceConnection;
 
 /**
- * Skeleton of an Android Things activity.
- * <p>
- * Android Things peripheral APIs are accessible through the class
- * PeripheralManagerService. For example, the snippet below will open a GPIO pin and
- * set it to HIGH:
- * <p>
- * <pre>{@code
- * PeripheralManagerService service = new PeripheralManagerService();
- * mLedGpio = service.openGpio("BCM6");
- * mLedGpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
- * mLedGpio.setValue(true);
- * }</pre>
- * <p>
- * For more complex peripherals, look for an existing user-space driver, or implement one if none
- * is available.
- *
- * @see <a href="https://github.com/androidthings/contrib-drivers#readme">https://github.com/androidthings/contrib-drivers#readme</a>
+ * 初始化三大模块
+ * 1.Device 车硬件
+ * 2.Camera 摄像头
+ * 3.Socket 遥控通信
  */
 public class MainActivity extends Activity {
     @Nullable
     private DeviceManager mDeviceManager;
+    @Nullable
+    private CameraServiceConnection mCameraServiceConnection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,61 +32,60 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         bindDevice();
+        bindCameraService();
+        startSocket();
+    }
+
+    private void startSocket(){
+        SocketManager.getInstance().init(new SimpleJsonReceiver() {
+            @Override
+            public void onReceiverJson(String json, @CmdConstant.TYPE int type) {
+                Log.d("DeviceManager", "onReceiveMessage:" + json.length() + ", type:" + type);
+                if (mDeviceManager != null) {
+                    mDeviceManager.onCommand(json, type);
+                }
+                if (mCameraServiceConnection != null) {
+                    mCameraServiceConnection.onCommand(json, type);
+                }
+            }
+        });
+        SocketManager.getInstance().start();
+    }
+
+    private void stopSocket(){
+        SocketManager.getInstance().stop();
     }
 
     private void bindDevice() {
-        try {
-            mDeviceManager = new DeviceManager();
-            bindService();
-        } catch (Exception e) {
-            Log.e("MainActivity", "init DeviceManager", e);
-            finish();
+        mDeviceManager = new DeviceManager();
+    }
+
+    private void unbindDevice(){
+        if (mDeviceManager != null) {
+            mDeviceManager.release();
         }
     }
 
-    private void bindService() {
+    private void bindCameraService() {
+        mCameraServiceConnection = new CameraServiceConnection();
         Intent intent = new Intent(this, CameraService.class);
-        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+        bindService(intent, mCameraServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
-    ServiceConnection mServiceConnection = new ServiceConnection() {
-        CameraAction cameraAction;
-
-        @Override
-        public void onServiceConnected(ComponentName componentName, final IBinder iBinder) {
-            Log.d("MainActivity", "onServiceConnected");
-            try {
-                iBinder.linkToDeath(new IBinder.DeathRecipient() {
-                    @Override
-                    public void binderDied() {
-                        iBinder.unlinkToDeath(this, 0);
-                        Log.w("MainActivity", "DeathRecipient");
-                    }
-                }, 0);
-            } catch (RemoteException e) {
-                Log.e("MainActivity", "DeathRecipient", e);
-            }
-            Messenger messenger = new Messenger(iBinder);
-            cameraAction = new CameraAction(messenger);
-            mDeviceManager.add(cameraAction);
+    private void unbindCameraService(){
+        if (mCameraServiceConnection != null) {
+            unbindService(mCameraServiceConnection);
         }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            Log.d("MainActivity", "onServiceDisconnected");
-            mDeviceManager.remove(cameraAction);
-        }
-    };
+    }
 
     @Override
     protected void onDestroy() {
         Log.d("MainActivity", "onDestroy");
-        if (mDeviceManager != null) {
-            mDeviceManager.release();
-        }
-        unbindService(mServiceConnection);
+
+        stopSocket();
+        unbindCameraService();
+        unbindDevice();
         super.onDestroy();
     }
-
 
 }

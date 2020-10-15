@@ -4,7 +4,6 @@ import android.util.Log;
 
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.thingshello.ctrl.voice.BuzzerAction;
-import org.mark.thingshello.video.CameraAction;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +31,11 @@ public class DeviceHelper {
     }
 
     public void onCommand(String json, @CmdConstant.TYPE int type) {
+        if (deviceMap.size() == 0) {
+            Log.w("DeviceHelper", "onCommand device empty, not accept. type:" + type + " json:" + json);
+            return;
+        }
+
         for (Map.Entry<String, OnReceiverCommand> device : deviceMap.entrySet()) {
             try {
                 device.getValue().onCommand(json, type);
@@ -53,6 +57,8 @@ public class DeviceHelper {
         if (o instanceof BuzzerAction) {
             BuzzerAction buzzerAction = (BuzzerAction) o;
             buzzerAction.di();
+        } else {
+            Log.e("DeviceHelper", "didi error, not found device");
         }
     }
 }

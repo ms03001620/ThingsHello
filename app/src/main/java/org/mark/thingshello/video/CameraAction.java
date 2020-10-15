@@ -26,7 +26,7 @@ public class CameraAction extends OnReceiverCommand {
         this.mMessenger = messenger;
     }
 
-    private Messenger mMessengerFromCameraService = new Messenger(new Handler() {
+    final private Messenger mMessengerFromCameraService = new Messenger(new Handler() {
         @Override
         public void handleMessage(Message msg) {
             Bundle bundle = msg.getData();
@@ -71,7 +71,7 @@ public class CameraAction extends OnReceiverCommand {
     }
 
     private void sendCameraInfoToClient() {
-        Log.d("DeviceManager", "sendCameraInfoToClient");
+        Log.d(CameraService.TAG, "sendCameraInfoToClient");
         try {
             CameraUtils.CameraInfo info = CameraUtils.makeCameraInfo(App.getContext());
 
@@ -87,6 +87,6 @@ public class CameraAction extends OnReceiverCommand {
 
     @Override
     public void release() {
-
+        mMessenger = null;
     }
 }

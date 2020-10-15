@@ -2,56 +2,69 @@ package org.mark.thingshello.ctrl;
 
 import android.util.Log;
 
-import org.mark.lib_unit_socket.SocketManager;
-import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.thingshello.ctrl.comp.bind.ExclusiveBind;
 import org.mark.thingshello.ctrl.light.ForwardLightAction;
 import org.mark.thingshello.ctrl.servo.CameraServo;
 import org.mark.thingshello.ctrl.voice.BuzzerAction;
 import org.mark.thingshello.ctrl.wheel.WheelAction;
 
+import java.io.IOException;
+
 /**
  * Created by Mark on 2018/7/25
  * adb shell am startservice -n com.google.wifisetup/.WifiSetupService -a WifiSetupService.Connect -e ssid "Xiaomi_5377" -e passphrase "nono12345"
  */
 public class DeviceManager {
-    private DeviceHelper mDeviceHelper;
+    private final DeviceHelper mDeviceHelper;
     ExclusiveBind exclusiveBind;
 
-    public DeviceManager() throws Exception {
+    public DeviceManager() {
         mDeviceHelper = new DeviceHelper();
+        exclusiveBind = new ExclusiveBind();
         // 该设备可以使用一下硬件
         if ("iot_rpi3".equals(android.os.Build.MODEL)) {
-            exclusiveBind = new ExclusiveBind();
-            mDeviceHelper.add(new WheelAction(exclusiveBind));
-            mDeviceHelper.add(new BuzzerAction());
-            mDeviceHelper.add(new ForwardLightAction());
-            mDeviceHelper.add(new CameraServo(exclusiveBind));
+            initWheel();
+            initBuzzer();
+            initLight();
+            initCameraServo();
         }
-
-        SocketManager.getInstance().init(new SimpleJsonReceiver() {
-            @Override
-            public void onReceiverJson(String json, @CmdConstant.TYPE int type) {
-                Log.d("DeviceManager", "onReceiveMessage:" + json.length() + ", type:" + type);
-                mDeviceHelper.onCommand(json, type);
-            }
-        });
-
-        SocketManager.getInstance().start();
-        // 告知系统已就绪
+        // "滴滴"蜂鸣器发声提示驱动已就绪
         mDeviceHelper.didi();
     }
 
-    public void add(OnReceiverCommand cameraAction) {
-        mDeviceHelper.add(cameraAction);
+    private void initWheel() {
+        try {
+            mDeviceHelper.add(new WheelAction(exclusiveBind));
+        } catch (Exception e) {
+            Log.e("DeviceManager", "initWheel:", e);
+        }
     }
 
-    public void remove(OnReceiverCommand cameraAction) {
-        mDeviceHelper.remove(cameraAction);
+    private void initBuzzer() {
+        try {
+            mDeviceHelper.add(new BuzzerAction());
+        } catch (IOException e) {
+            Log.e("DeviceManager", "initBuzzer:", e);
+        }
+    }
+
+    private void initLight() {
+        try {
+            mDeviceHelper.add(new ForwardLightAction());
+        } catch (IOException e) {
+            Log.e("DeviceManager", "initLight:", e);
+        }
+    }
+
+    private void initCameraServo() {
+        mDeviceHelper.add(new CameraServo(exclusiveBind));
     }
 
     public void release() {
-        SocketManager.getInstance().stop();
         mDeviceHelper.release();
+    }
+
+    public void onCommand(String json, int type) {
+        mDeviceHelper.onCommand(json, type);
     }
 }
