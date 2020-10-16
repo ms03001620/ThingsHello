@@ -6,6 +6,7 @@ import android.util.Log;
 import com.google.android.things.pio.PeripheralManager;
 import com.google.android.things.pio.Pwm;
 
+import org.mark.base.thread.WorkThreadHandler;
 import org.mark.lib_unit_socket.bean.CameraServoCmd;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
@@ -52,6 +53,9 @@ public class CameraServo extends OnReceiverCommand implements Bindable {
                     float d = convert(0.8f, 1.5f, cameraServoCmd.getProgress());
                     Log.d("CameraServo", "progress:" + cameraServoCmd.getProgress() + ", dp:" + d);
                     mPwm.setPwmDutyCycle(100 * d / PULSE_PERIOD_MS);
+
+                    autoUnbindThread.removeRunnable(autoStopRunnable);
+                    autoUnbindThread.runWorkThreadDelay(autoStopRunnable, 500);
                 } catch (Exception e) {
                     Log.e("CameraServo", "onCommand", e);
                 }
@@ -61,6 +65,7 @@ public class CameraServo extends OnReceiverCommand implements Bindable {
 
     @Override
     public void release() {
+        autoUnbindThread.release();
         if (mPwm == null) {
             return;
         }
@@ -90,4 +95,15 @@ public class CameraServo extends OnReceiverCommand implements Bindable {
     public void onUnBind() {
         release();
     }
+
+    Runnable autoStopRunnable = new Runnable() {
+        @Override
+        public void run() {
+            exclusiveBind.release(CameraServo.this);
+        }
+    };
+
+    WorkThreadHandler autoUnbindThread = new WorkThreadHandler();
+
+
 }

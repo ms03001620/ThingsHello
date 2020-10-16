@@ -25,6 +25,16 @@ public class ExclusiveBind {
 
     public void release() {
         Log.d("ExclusiveBind", "release");
-        uniqueBindable = null;
+        if (uniqueBindable != null) {
+            uniqueBindable.onUnBind();
+            uniqueBindable = null;
+        }
+    }
+
+    public void release(Bindable bindable) {
+        if (uniqueBindable == bindable) {
+            bindable.onUnBind();
+            uniqueBindable = null;
+        }
     }
 }
