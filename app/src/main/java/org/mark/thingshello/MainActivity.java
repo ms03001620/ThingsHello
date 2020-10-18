@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.mark.lib_unit_socket.SocketManager;
@@ -13,6 +12,8 @@ import org.mark.thingshello.ctrl.DeviceManager;
 import org.mark.thingshello.ctrl.SimpleJsonReceiver;
 import org.mark.thingshello.video.CameraService;
 import org.mark.thingshello.video.CameraServiceConnection;
+
+import androidx.annotation.Nullable;
 
 /**
  * 初始化三大模块

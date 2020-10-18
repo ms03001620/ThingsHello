@@ -2,7 +2,6 @@ package org.mark.mobile.preview;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +14,8 @@ import org.mark.lib_unit_socket.bean.CameraServoCmd;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.mobile.R;
 import org.mark.mobile.connect.ConnectedManager;
+
+import androidx.fragment.app.Fragment;
 
 public class EyesFragment extends Fragment {
     private static final String TAG = "EyesFragment";

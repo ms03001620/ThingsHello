@@ -1,9 +1,10 @@
 package org.mark.mobile.ctrl;
 
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.gcssloop.widget.RockerView;
+
+import androidx.annotation.NonNull;
 
 /**
  * Created by mark on 2018/7/28

@@ -1,7 +1,6 @@
 package org.mark.mobile;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -9,6 +8,8 @@ import com.gcssloop.widget.RockerView;
 
 import org.mark.lib_unit_socket.bean.WheelCmd;
 import org.mark.mobile.ctrl.RockerListener;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class TestActivity extends AppCompatActivity {
     TextView mTextView;

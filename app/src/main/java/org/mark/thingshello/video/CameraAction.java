@@ -5,7 +5,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -15,6 +14,8 @@ import org.mark.lib_unit_socket.SocketManager;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.thingshello.App;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
+
+import androidx.annotation.NonNull;
 
 /**
  * Created by Mark on 2018/8/19

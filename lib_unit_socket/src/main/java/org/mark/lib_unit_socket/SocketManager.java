@@ -1,13 +1,14 @@
 package org.mark.lib_unit_socket;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.mark.lib_unit_socket.bean.CmdConstant;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class SocketManager extends CmdConstant {
     private static final String TAG = "SocketManager";

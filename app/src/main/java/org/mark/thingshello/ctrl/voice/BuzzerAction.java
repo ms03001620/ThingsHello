@@ -3,7 +3,6 @@ package org.mark.thingshello.ctrl.voice;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.annotation.NonNull;
 
 import com.google.android.things.pio.Gpio;
 import com.google.android.things.pio.PeripheralManager;
@@ -14,6 +13,8 @@ import org.mark.thingshello.ctrl.BoardDefaults;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
 
 import java.io.IOException;
+
+import androidx.annotation.NonNull;
 
 
 /**

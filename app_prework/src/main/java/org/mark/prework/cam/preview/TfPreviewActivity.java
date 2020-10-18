@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.TextureView;
 import android.widget.TextView;
@@ -22,6 +21,8 @@ import org.mark.prework.cam.ConfigData;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class TfPreviewActivity extends AppCompatActivity {
 

@@ -5,10 +5,11 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.mark.lib_unit_socket.bean.CmdConstant;
+
+import androidx.annotation.Nullable;
 
 /**
  * Created by mark on 2020/10/15

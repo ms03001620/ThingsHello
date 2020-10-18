@@ -1,6 +1,5 @@
 package org.mark.thingshello.video.sender;
 
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.mark.lib_unit_socket.ClientMessageCallback;
@@ -8,6 +7,8 @@ import org.mark.lib_unit_socket.udp.UdpServerThread;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import androidx.annotation.NonNull;
 
 /**
  * Created by Mark on 2018/8/25

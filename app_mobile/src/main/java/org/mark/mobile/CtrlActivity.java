@@ -1,9 +1,6 @@
 package org.mark.mobile;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -25,6 +22,10 @@ import org.mark.mobile.connect.ConnectedManager;
 import org.mark.mobile.ctrl.KeyIndex;
 import org.mark.mobile.ctrl.RockerListener;
 import org.mark.mobile.preview.EyesFragment;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class CtrlActivity extends AppCompatActivity {
     private static final String TAG = "CtrlActivity";

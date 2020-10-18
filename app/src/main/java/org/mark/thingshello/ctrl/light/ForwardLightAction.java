@@ -1,7 +1,5 @@
 package org.mark.thingshello.ctrl.light;
 
-import android.support.annotation.NonNull;
-
 import com.leinardi.android.things.pio.SoftPwm;
 
 import org.mark.lib_unit_socket.bean.CmdConstant;
@@ -10,6 +8,8 @@ import org.mark.thingshello.ctrl.BoardDefaults;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
 
 import java.io.IOException;
+
+import androidx.annotation.NonNull;
 
 /**
  * 彩色前灯

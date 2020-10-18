@@ -1,9 +1,9 @@
 package org.mark.thingshello.ctrl;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import org.mark.lib_unit_socket.bean.JsonReceiver;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class SimpleJsonReceiver extends JsonReceiver {
     @Override

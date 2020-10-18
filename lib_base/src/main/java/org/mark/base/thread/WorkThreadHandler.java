@@ -3,8 +3,9 @@ package org.mark.base.thread;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.annotation.UiThread;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.UiThread;
 
 /**
  * Created by Mark on 2018/8/21

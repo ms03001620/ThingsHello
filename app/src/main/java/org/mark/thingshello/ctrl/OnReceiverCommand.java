@@ -1,10 +1,11 @@
 package org.mark.thingshello.ctrl;
 
-import android.support.annotation.NonNull;
 
 import com.google.gson.Gson;
 
 import org.mark.lib_unit_socket.bean.CmdConstant;
+
+import androidx.annotation.NonNull;
 
 /**
  * Created by Mark on 2018/7/25

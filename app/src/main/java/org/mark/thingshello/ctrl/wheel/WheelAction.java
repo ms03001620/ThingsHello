@@ -1,6 +1,5 @@
 package org.mark.thingshello.ctrl.wheel;
 
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.mark.lib_unit_socket.bean.CmdConstant;
@@ -9,6 +8,8 @@ import org.mark.lib_unit_socket.bean.WheelRotateCmd;
 import org.mark.thingshello.ctrl.OnReceiverCommand;
 import org.mark.thingshello.ctrl.comp.bind.Bindable;
 import org.mark.thingshello.ctrl.comp.bind.ExclusiveBind;
+
+import androidx.annotation.NonNull;
 
 /**
  * AIN1-----40----29(wiringPi编码)--21

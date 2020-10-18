@@ -1,7 +1,5 @@
 package org.mark.lib_unit_socket.bean;
 
-import android.support.annotation.IntDef;
-
 import com.google.gson.Gson;
 
 import org.json.JSONException;
@@ -9,6 +7,8 @@ import org.json.JSONObject;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+
+import androidx.annotation.IntDef;
 
 
 public abstract class CmdConstant {

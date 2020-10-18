@@ -9,8 +9,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -25,6 +23,9 @@ import org.mark.thingshello.video.sender.ConnectSelector;
 
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class CameraPresent {
 

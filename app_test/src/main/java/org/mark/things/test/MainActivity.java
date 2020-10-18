@@ -11,7 +11,6 @@ public class MainActivity extends Activity {
     public static final int WHAT_EXIT = 1000;
     public static final int ROUND = 2000;
     public static final int DI = 3000;
-    Servo mServo;
 
     BuzzerAction mBuzzerAction;
 
@@ -23,11 +22,7 @@ public class MainActivity extends Activity {
                     mBuzzerAction.di();
                     break;
                 case ROUND:
-                    try {
-                        mServo.setAngle(45);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+
                     break;
                 default:
                 case WHAT_EXIT:
@@ -51,12 +46,7 @@ public class MainActivity extends Activity {
     }
 
     private void initServo() {
-        try {
-            mServo = new Servo(11);
-            mServo.setEnabled(true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
 
     }
 
@@ -70,13 +60,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        if (mServo != null) {
-            try {
-                mServo.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+
         super.onDestroy();
     }
 }

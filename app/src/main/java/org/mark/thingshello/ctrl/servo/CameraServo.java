@@ -1,6 +1,5 @@
 package org.mark.thingshello.ctrl.servo;
 
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.android.things.pio.PeripheralManager;
@@ -14,6 +13,8 @@ import org.mark.thingshello.ctrl.comp.bind.Bindable;
 import org.mark.thingshello.ctrl.comp.bind.ExclusiveBind;
 
 import java.io.IOException;
+
+import androidx.annotation.NonNull;
 
 /**
  * 摄像头舵机

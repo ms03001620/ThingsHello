@@ -1,7 +1,5 @@
 package org.mark.mobile.connect;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import org.mark.lib_unit_socket.SocketManager;
 import org.mark.lib_unit_socket.bean.CmdConstant;
@@ -11,6 +9,9 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Created by Mark on 2018/8/10

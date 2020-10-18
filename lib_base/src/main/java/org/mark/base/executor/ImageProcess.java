@@ -1,12 +1,14 @@
 package org.mark.base.executor;
 
-import android.support.annotation.NonNull;
+
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
 
 /**
  * Created by Mark on 2018/8/29

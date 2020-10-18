@@ -2,10 +2,8 @@ package org.mark.prework.grid;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
+
 import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.Menu;
@@ -19,12 +17,13 @@ import com.obsez.android.lib.filechooser.ChooserDialog;
 import org.mark.prework.R;
 import org.mark.prework.TfFileUtils;
 import org.mark.prework.db.DbMock;
-import org.mark.prework.grid.GridPresent;
-import org.mark.prework.grid.ImageGridAdapter;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class GridActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;

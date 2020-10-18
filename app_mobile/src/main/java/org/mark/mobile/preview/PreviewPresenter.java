@@ -1,8 +1,6 @@
 package org.mark.mobile.preview;
 
 import android.graphics.Bitmap;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.mark.base.CameraUtils;
@@ -15,6 +13,9 @@ import org.mark.mobile.connect.ConnectedManager;
 import org.mark.mobile.connect.udp.UdpReceiver;
 
 import java.lang.ref.WeakReference;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Created by Mark on 2018/8/19

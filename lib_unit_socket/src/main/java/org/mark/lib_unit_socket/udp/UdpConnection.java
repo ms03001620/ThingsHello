@@ -1,6 +1,5 @@
 package org.mark.lib_unit_socket.udp;
 
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.mark.lib_unit_socket.ClientMessageCallback;
@@ -8,6 +7,8 @@ import org.mark.lib_unit_socket.ClientMessageCallback;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+
+import androidx.annotation.Nullable;
 
 /**
  * 发送和接收，主要操作pocket
