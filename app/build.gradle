@@ -38,7 +38,7 @@ dependencies {
     implementation 'io.reactivex:rxandroid:1.2.1'
     implementation project(path: ':lib_base')
 
-    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
 
     implementation 'com.google.code.gson:gson:2.8.5'
 }
