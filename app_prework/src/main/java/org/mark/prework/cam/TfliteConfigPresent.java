@@ -19,13 +19,9 @@ class TfliteConfigPresent {
         mActivity.onFileFolderOpen();
     }
 
-    public void doModelPixelSetting() {
-        mActivity.onPixelChooseDialogOpen();
-    }
-
     public void doPreviewStart() {
         if(!mConfigData.isValid()){
-            mActivity.onToastShow("Config is not valid");
+            mActivity.onToastShow("Config is not complete");
             return;
         }
         mActivity.onPreviewStart(mConfigData);

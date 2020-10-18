@@ -100,7 +100,7 @@ public class TfPreviewActivity extends AppCompatActivity {
                 TfFileUtils.ModelFolderInfo info = TfFileUtils.checkModelFolder(new File(configData.getModelPath()));
                 classifier = TensorFlowImageClassifier.create(info.getModel(), info.getLabel(), configData.getWidth());
                 mTextureView.setAspectRatio(configData.getWidth(), configData.getHeight());
-            } catch (IOException e) {
+            } catch (Exception e) {
                 Log.d("TfPreviewActivity", "processIntent", e);
                 return false;
             }

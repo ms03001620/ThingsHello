@@ -24,7 +24,7 @@ public class TfFileUtils {
         private boolean checked;
         private String error;
 
-        boolean isChecked() {
+        public boolean isChecked() {
             return checked;
         }
 

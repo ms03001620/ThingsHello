@@ -1,8 +1,8 @@
 package org.mark.prework.cam;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,7 +19,7 @@ import java.io.File;
 /**
  * 配置Tflite摄像头识别所需要的选项
  */
-public class TfliteConfigActivity extends AppCompatActivity {
+public class TfliteConfigActivity extends PermissionActivity {
 
     private TfliteConfigPresent mPresent;
 
@@ -32,6 +32,20 @@ public class TfliteConfigActivity extends AppCompatActivity {
         findViewById(R.id.btn_model_check).setOnClickListener(mListener);
         findViewById(R.id.btn_model_pixel).setOnClickListener(mListener);
         findViewById(R.id.btn_open_camera).setOnClickListener(mListener);
+        //set default 224*224
+        mPresent.saveWidth(224);
+        mPresent.saveHeight(224);
+        loadPrePath();
+    }
+
+    private void loadPrePath() {
+        String modelPath = DbMock.getInstance().loadRecentModelPath();
+        if (!TextUtils.isEmpty(modelPath)) {
+            loadModel(new File(modelPath));
+        } else {
+            TextView textView = findViewById(R.id.text_model);
+            textView.setText("please select tf model.");
+        }
     }
 
     private View.OnClickListener mListener = new View.OnClickListener() {
@@ -42,10 +56,19 @@ public class TfliteConfigActivity extends AppCompatActivity {
                     mPresent.doModelChoose();
                     break;
                 case R.id.btn_model_pixel:
-                    mPresent.doModelPixelSetting();
                     break;
                 case R.id.btn_open_camera:
-                    mPresent.doPreviewStart();
+                    checkPermissionCamera(new CheckPermissionCameraCallback() {
+                        @Override
+                        public void onRejected() {
+                            onToastShow("need camera permission");
+                        }
+
+                        @Override
+                        public void onAccept() {
+                            mPresent.doPreviewStart();
+                        }
+                    });
                     break;
             }
 
@@ -67,16 +90,16 @@ public class TfliteConfigActivity extends AppCompatActivity {
                 .withChosenListener(new ChooserDialog.Result() {
                     @Override
                     public void onChoosePath(String path, File pathFile) {
-                        mPresent.saveModelPath(path);
+                        loadModel(pathFile);
                     }
                 });
 
         chooserDialog.build().show();
     }
 
-    public void onPixelChooseDialogOpen() {
-        mPresent.saveWidth(224);
-        mPresent.saveHeight(224);
+    private void loadModel(File file){
+        mPresent.saveModelPath(file.getPath());
+        showModelInfo(file);
     }
 
     public void onPreviewStart(ConfigData configData) {
@@ -88,4 +111,23 @@ public class TfliteConfigActivity extends AppCompatActivity {
     public void onToastShow(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
+
+    public void showModelInfo(File file) {
+        TextView textView = findViewById(R.id.text_model);
+        TfFileUtils.ModelFolderInfo info = TfFileUtils.checkModelFolder(file);
+
+        if (info.isChecked()) {
+            try {
+                textView.setText(file.getName());
+            } catch (Exception e) {
+                textView.setText(e.toString());
+            }
+        } else {
+            textView.setText(info.getError());
+        }
+
+        DbMock.getInstance().saveRecentModelPath(file.getPath());
+        DbMock.getInstance().saveRecentAccessPath(file.getParent());
+    }
+
 }
