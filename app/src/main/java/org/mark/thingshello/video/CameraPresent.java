@@ -139,19 +139,23 @@ public class CameraPresent {
 
         @Override
         public void onImageAvailable(ImageReader reader) {
-            Image image = reader.acquireNextImage();
-            ByteBuffer imageBuf = image.getPlanes()[0].getBuffer();
-            final byte[] imageBytes = new byte[imageBuf.remaining()];
-            imageBuf.get(imageBytes);
-            image.close();
+            try {
+                Image image = reader.acquireNextImage();
+                ByteBuffer imageBuf = image.getPlanes()[0].getBuffer();
+                final byte[] imageBytes = new byte[imageBuf.remaining()];
+                imageBuf.get(imageBytes);
+                image.close();
 
-            if (cameraCmd.isTransferVideo()) {
-                time = System.currentTimeMillis();
+                if (cameraCmd.isTransferVideo()) {
+                    time = System.currentTimeMillis();
 
-                CameraUtils.BitmapAndBytes bitmapAndBytes = compressImage(imageBytes, cameraCmd.getWidth(), cameraCmd.getHeight());
+                    CameraUtils.BitmapAndBytes bitmapAndBytes = compressImage(imageBytes, cameraCmd.getWidth(), cameraCmd.getHeight());
 
-                Log.d(CameraService.TAG, "udp sendImageToClient before:" + imageBytes.length + ", after:" + bitmapAndBytes.getBitmapBytes().length);
-                sendImageToClient(bitmapAndBytes.getBitmapBytes());
+                    Log.d(CameraService.TAG, "udp sendImageToClient before:" + imageBytes.length + ", after:" + bitmapAndBytes.getBitmapBytes().length);
+                    sendImageToClient(bitmapAndBytes.getBitmapBytes());
+                }
+            } catch (Exception e) {
+                Log.e(CameraService.TAG, "onImageAvailable", e);
             }
         }
     };
