@@ -131,8 +131,8 @@ public class DoorbellCamera {
                         public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
                         }
                     }, mCameraHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            Log.e(TAG, "preview", e);
         }
     }
 
