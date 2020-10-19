@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.util.Log;
 
 /**
  * Created by Mark on 2018/8/25
@@ -14,15 +15,27 @@ public class ConnectSelector implements ISend {
 
     public ConnectSelector(String target, Messenger messenger) {
         this.messenger = messenger;
-        mSender = new UdpSender();
+        try {
+            mSender = new UdpSender();
+        } catch (Exception e) {
+            Log.e("ConnectSelector", "udpInit:", e);
+        }
     }
 
     @Override
     public void send(byte[] bytes) {
+        if (mSender == null) {
+            Log.w("ConnectSelector", "send sender null!");
+            return;
+        }
         mSender.send(bytes);
     }
 
     public void release() {
+        if (mSender == null) {
+            Log.w("ConnectSelector", "release sender null!");
+            return;
+        }
         mSender.release();
     }
 

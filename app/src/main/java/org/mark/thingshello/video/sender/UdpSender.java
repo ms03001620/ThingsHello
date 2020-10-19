@@ -17,40 +17,31 @@ public class UdpSender implements ISend {
     private UdpServerThread mUdpServerThread;
     private ExecutorService mExecutorForWrite;
 
-    public UdpSender() {
-        initUdp();
-    }
+    public UdpSender() throws Exception{
+        mExecutorForWrite = Executors.newCachedThreadPool();
+        mUdpServerThread = new UdpServerThread(8000, new ClientMessageCallback() {
+            @Override
+            public void onReceiveMessage(byte[] bytes, int type) {
 
-    private void initUdp() {
-        try {
-            mExecutorForWrite = Executors.newCachedThreadPool();
-            mUdpServerThread = new UdpServerThread(8000, new ClientMessageCallback() {
-                @Override
-                public void onReceiveMessage(byte[] bytes, int type) {
+            }
 
-                }
+            @Override
+            public void onExceptionToReOpen(@NonNull Exception e) {
 
-                @Override
-                public void onExceptionToReOpen(@NonNull Exception e) {
+            }
 
-                }
+            @Override
+            public void onLogMessage(String message, Exception e) {
+            }
 
-                @Override
-                public void onLogMessage(String message, Exception e) {
-                }
-
-                @Override
-                public void onStatusChange(@NonNull Status status) {
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            @Override
+            public void onStatusChange(@NonNull Status status) {
+            }
+        });
 
         // 启动线程等待udp client链接到服务器
         start();
     }
-
 
     public void start() {
         mUdpServerThread.start();
