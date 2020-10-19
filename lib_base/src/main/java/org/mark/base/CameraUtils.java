@@ -117,6 +117,14 @@ public class CameraUtils {
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
     }
 
+    public static Bitmap createFromBytes(float degrees, Bitmap bm) {
+        Matrix m = new Matrix();
+        m.setRotate(degrees);
+        Bitmap bitmap = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), m, true);
+        bm.recycle();
+        return bitmap;
+    }
+
 
     /**
      * 从相机获取到的原始图片一般都非常巨大。几乎每种分辨率原始图片都如此

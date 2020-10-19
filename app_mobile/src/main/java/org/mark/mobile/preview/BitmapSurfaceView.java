@@ -7,10 +7,13 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import org.mark.base.CameraUtils;
 
 import androidx.annotation.WorkerThread;
 
@@ -25,6 +28,8 @@ public class BitmapSurfaceView extends SurfaceView {
     private volatile boolean isSurfaceCreated;
 
     private Paint paint = new Paint();
+
+    private volatile float degrees;
 
     public BitmapSurfaceView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -54,11 +59,8 @@ public class BitmapSurfaceView extends SurfaceView {
         setFocusableInTouchMode(true);
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
-        System.out.println("w:"+getWidth()+", h:"+getHeight());
+    public void setDegrees(float degrees) {
+        this.degrees = degrees;
     }
 
     Rect r1, r2;
@@ -75,13 +77,14 @@ public class BitmapSurfaceView extends SurfaceView {
         if (r2 == null && getWidth() != 0) {
             r2 = new Rect(0, 0, getWidth(), getHeight());
         }
+        if (degrees != 0) {
+            bitmap = CameraUtils.createFromBytes(degrees, bitmap);
+        }
         Canvas canvas = null;
         try {
             canvas = surfaceHolder.lockCanvas();
-            //canvas.drawColor(Color.WHITE);
             canvas.drawBitmap(bitmap, r1, r2, paint);
         } catch (Exception e) {
-            e.printStackTrace();
             Log.e("BitmapSurfaceView", "draw", e);
         } finally {
             if (canvas != null) {
