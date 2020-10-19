@@ -23,6 +23,7 @@ public class CameraServo extends OnReceiverCommand implements Bindable {
     private static final double PULSE_PERIOD_MS = 20;  // Frequency of 50Hz (1000/20)
     private Pwm mPwm;
     ExclusiveBind exclusiveBind;
+    WorkThreadHandler autoUnbindThread;
 
     public CameraServo(ExclusiveBind exclusiveBind) {
         this.exclusiveBind = exclusiveBind;
@@ -30,6 +31,7 @@ public class CameraServo extends OnReceiverCommand implements Bindable {
 
     private void init() {
         try {
+            autoUnbindThread = new WorkThreadHandler();
             Log.d("CameraServo", "init");
             mPwm = PeripheralManager.getInstance().openPwm("PWM0");
             mPwm.setPwmFrequencyHz(1000 / PULSE_PERIOD_MS);
@@ -66,7 +68,11 @@ public class CameraServo extends OnReceiverCommand implements Bindable {
 
     @Override
     public void release() {
+        stop();
         autoUnbindThread.release();
+    }
+
+    private void stop() {
         if (mPwm == null) {
             return;
         }
@@ -103,8 +109,5 @@ public class CameraServo extends OnReceiverCommand implements Bindable {
             exclusiveBind.release(CameraServo.this);
         }
     };
-
-    WorkThreadHandler autoUnbindThread = new WorkThreadHandler();
-
 
 }
