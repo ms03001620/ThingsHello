@@ -20,7 +20,7 @@ import androidx.fragment.app.Fragment;
 public class EyesFragment extends Fragment {
     private static final String TAG = "EyesFragment";
     PreviewPresenter mPresent;
-    private ImageView mPreview;
+    private BitmapSurfaceView mPreview;
     private TextView mTextInfo;
     private TextView mTextBytes;
 
@@ -59,10 +59,10 @@ public class EyesFragment extends Fragment {
     }
 
     public void updateImage(final Bitmap bitmap, final String sizeString) {
-        mPreview.post(new Runnable() {
+        mPreview.draw(bitmap);
+        mTextBytes.post(new Runnable() {
             @Override
             public void run() {
-                mPreview.setImageBitmap(bitmap);
                 mTextBytes.setText(sizeString);
             }
         });

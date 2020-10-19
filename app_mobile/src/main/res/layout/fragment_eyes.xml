@@ -5,10 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ImageView
+    <org.mark.mobile.preview.BitmapSurfaceView
         android:id="@+id/image"
         android:layout_width="match_parent"
-        android:scaleType="fitXY"
         android:layout_height="match_parent" />
 
     <TextView
