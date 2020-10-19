@@ -65,18 +65,24 @@ public class PreviewPresenter {
     private ClientMessageCallback mUdpCallback = new ClientMessageCallback() {
         long totalBytes;
         long start = System.currentTimeMillis();
+        String byteMsg;
 
         @Override
         public void onReceiveMessage(final byte[] bytes, int type) {
             totalBytes += bytes.length;
-            Log.d(TAG, "udp receive:" + bytes.length + ", total:" + totalBytes);
             mWorkThreadHandler.runWorkThread(new Runnable() {
                 @Override
                 public void run() {
                     Bitmap bitmap = CameraUtils.createFromBytes(bytes);
                     EyesFragment fragment = mWeakView.get();
                     if (fragment != null && fragment.isAdded()) {
-                        fragment.updateImage(bitmap, "Total:" + StringUtils.getByteSize(totalBytes) + ", " + calcDataSeconds(start, totalBytes) + " KB");
+                        fragment.updateImage(bitmap);
+                        String curMsg = StringUtils.getByteSize(totalBytes);
+                        if (!curMsg.equals(byteMsg)) {
+                            byteMsg = curMsg;
+                            Log.v(TAG, "udp receive:" + bytes.length + ", total:" + totalBytes);
+                            fragment.updateBytesDesc("Total:" + curMsg + ", " + calcDataSeconds(start, totalBytes) + " KB");
+                        }
                     }
                 }
             });

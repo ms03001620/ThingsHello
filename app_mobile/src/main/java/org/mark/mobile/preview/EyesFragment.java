@@ -58,8 +58,11 @@ public class EyesFragment extends Fragment {
         return root;
     }
 
-    public void updateImage(final Bitmap bitmap, final String sizeString) {
+    public void updateImage(final Bitmap bitmap) {
         mPreview.draw(bitmap);
+    }
+
+    public void updateBytesDesc(final String sizeString) {
         mTextBytes.post(new Runnable() {
             @Override
             public void run() {
