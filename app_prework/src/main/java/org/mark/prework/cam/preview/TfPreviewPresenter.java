@@ -52,7 +52,9 @@ class TfPreviewPresenter {
 
         ModelWithMetaClassifier mclassifier = (ModelWithMetaClassifier) classifier;
 
+        long start = System.currentTimeMillis();
         List<Category> categories = mclassifier.getCategory(bitmap);
+        Log.d("classifyFrame", "pass:" + (System.currentTimeMillis() - start));
 
         displayStrategy.process(categories, new DisplayStrategy.INotifyDisplay() {
             @Override

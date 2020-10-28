@@ -1,5 +1,7 @@
 package org.mark.prework.cam.preview.category;
 
+import android.util.Log;
+
 import org.tensorflow.lite.support.label.Category;
 
 import java.util.List;
@@ -37,8 +39,10 @@ public class DisplayStrategy {
     }
 
     public void process(List<Category> categories, INotifyDisplay notifyDisplay){
+        long start = System.currentTimeMillis();
         categories = iSort.sort(categories);
         categories = iMemory.memorySort(categories);
         notifyDisplay.notify(categories);
+        Log.d("classifyFrame", "process result pass:" + (System.currentTimeMillis() - start));
     }
 }
