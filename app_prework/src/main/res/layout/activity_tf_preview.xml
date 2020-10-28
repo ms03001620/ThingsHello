@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <org.mark.prework.cam.preview.AutoFitTextureView
         android:id="@+id/texture"
@@ -10,23 +11,36 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true" />
 
-    <FrameLayout
+    <LinearLayout
         android:id="@+id/control"
         android:layout_width="match_parent"
         android:layout_height="112dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
         android:background="#cc4285f4">
 
         <TextView
             android:id="@+id/text"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingLeft="80dp"
+            android:paddingLeft="20dp"
             android:textColor="#FFF"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:layout_weight=".5"
+            tools:text="abc"
+            android:textSize="12sp" />
 
-    </FrameLayout>
+        <TextView
+
+            android:id="@+id/textRight"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="20dp"
+            android:layout_weight=".5"
+            android:textColor="#FFF"
+            tools:text="123"
+            android:textSize="12sp" />
+
+    </LinearLayout>
 
 </RelativeLayout>
