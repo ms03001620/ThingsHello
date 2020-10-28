@@ -40,6 +40,10 @@ class TfliteConfigPresent {
         mConfigData.width = i;
     }
 
+    public void saveIntervals(long intervals){
+        mConfigData.classifyIntervals = intervals;
+    }
+
     public void saveHeight(int i) {
         mConfigData.height = i;
     }

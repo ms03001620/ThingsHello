@@ -35,6 +35,7 @@ public class TfliteConfigActivity extends PermissionActivity {
         //set default 224*224
         mPresent.saveWidth(224);
         mPresent.saveHeight(224);
+        mPresent.saveIntervals(100);
         loadPrePath();
     }
 

@@ -95,7 +95,7 @@ class TfPreviewPresenter {
         //TfFileUtils.ModelFolderInfo info = TfFileUtils.checkModelFolder(new File(configData.getModelPath()));
         //classifier = TensorFlowImageClassifier.create(info.getModel(), info.getLabel(), configData.getWidth());
         classifier = new ModelWithMetaClassifier(applicationContext);
-        workThreadHandler.runWorkThreadTimer(mClassifyRunnable, 500);
+        workThreadHandler.runWorkThreadTimer(mClassifyRunnable, configData.getClassifyIntervals());
     }
 
     public void stopClassifier() {
