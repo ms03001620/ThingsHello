@@ -122,7 +122,7 @@ public class DoorbellCamera {
                         public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                             try {
                                 cameraCaptureSession.setRepeatingRequest(request,/*mCaptureCallback*/cameraCaptureSessionCallback, mCameraHandler);
-                            } catch (CameraAccessException e) {
+                            } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         }
