@@ -9,6 +9,7 @@ import android.widget.Toast;
 
 import com.obsez.android.lib.filechooser.ChooserDialog;
 
+import org.mark.ffmpeg.FFUtils;
 import org.mark.prework.R;
 import org.mark.prework.TfFileUtils;
 import org.mark.prework.cam.preview.TfPreviewActivity;
@@ -37,6 +38,8 @@ public class TfliteConfigActivity extends PermissionActivity {
         mPresent.saveHeight(224);
         mPresent.saveIntervals(100);
         loadPrePath();
+
+        System.out.println(FFUtils.avCodecInfo());
     }
 
     private void loadPrePath() {

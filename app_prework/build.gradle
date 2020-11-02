@@ -33,6 +33,7 @@ dependencies {
     implementation project(':lib_tensorflow')
     implementation project(path: ':lib_base')
     implementation project(':lib_camera')
+    implementation project(':lib_ffmpeg')
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
 
     testImplementation 'junit:junit:4.12'
