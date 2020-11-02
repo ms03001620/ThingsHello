@@ -44,7 +44,9 @@ class TfPreviewPresenter {
     };
 
     private void classifyFrame() {
+        //long startf = System.currentTimeMillis();
         Bitmap bitmap = findBitmapFormView();
+        //Log.d("classifyFrame", "create bitmap pass:" + (System.currentTimeMillis() - startf));
         if (bitmap == null) {
             Log.d("TfPreviewActivity", "bitmap null");
             return;
