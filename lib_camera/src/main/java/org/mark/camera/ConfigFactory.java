@@ -34,4 +34,9 @@ public class ConfigFactory implements IConfig {
     public void release() {
         config.release();
     }
+
+    @Override
+    public int getTemplateType() {
+        return config.getTemplateType();
+    }
 }

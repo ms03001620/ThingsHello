@@ -1,10 +1,10 @@
 package org.mark.prework.cam;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -13,9 +13,9 @@ import androidx.core.content.ContextCompat;
  * Created by mark on 2020/10/18
  */
 
-public class PermissionActivity extends AppCompatActivity {
+public class PermissionActivity extends Activity {
 
-    interface CheckPermissionCameraCallback {
+    public interface CheckPermissionCameraCallback {
         void onRejected();
 
         void onAccept();

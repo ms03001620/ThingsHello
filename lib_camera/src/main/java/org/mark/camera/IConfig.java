@@ -10,4 +10,5 @@ public interface IConfig {
     int getHeight();
     Surface getSurface();
     void release();
+    int getTemplateType();
 }

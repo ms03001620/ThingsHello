@@ -32,7 +32,7 @@ public class DoorbellCamera {
 
     private HandlerThread mCameraThread;
     private Handler mCameraHandler;
-    private ConfigFactory mConfig;
+    private IConfig mConfig;
 
     public final static int CAMERA_ID = CameraCharacteristics.LENS_FACING_FRONT;
 
@@ -52,7 +52,7 @@ public class DoorbellCamera {
      * 获取相机并自动开启预览模式
      */
     @SuppressLint("MissingPermission")
-    public void initializeCamera(Context context, ConfigFactory config) {
+    public void initializeCamera(Context context, IConfig config) {
         mCameraThread = new HandlerThread("CameraBackground");
         mCameraThread.start();
         mCameraHandler = new Handler(mCameraThread.getLooper());
@@ -111,7 +111,8 @@ public class DoorbellCamera {
 
     private void preview() {
         try {
-            final CaptureRequest.Builder builder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+            int defTemplateType = mConfig.getTemplateType() == 0 ? CameraDevice.TEMPLATE_RECORD : mConfig.getTemplateType();
+            final CaptureRequest.Builder builder = mCameraDevice.createCaptureRequest(defTemplateType);
             builder.addTarget(mConfig.getSurface());
             // builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
             final CaptureRequest request = builder.build();

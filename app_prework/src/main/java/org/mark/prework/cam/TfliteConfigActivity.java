@@ -38,8 +38,6 @@ public class TfliteConfigActivity extends PermissionActivity {
         mPresent.saveHeight(224);
         mPresent.saveIntervals(100);
         loadPrePath();
-
-        System.out.println(FFUtils.avCodecInfo());
     }
 
     private void loadPrePath() {

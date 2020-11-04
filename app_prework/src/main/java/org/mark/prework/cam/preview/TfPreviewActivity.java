@@ -1,5 +1,6 @@
 package org.mark.prework.cam.preview;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
@@ -13,9 +14,8 @@ import org.mark.camera.DoorbellCamera;
 import org.mark.prework.R;
 import org.mark.prework.cam.ConfigData;
 
-import androidx.appcompat.app.AppCompatActivity;
 
-public class TfPreviewActivity extends AppCompatActivity {
+public class TfPreviewActivity extends Activity {
     private AutoFitTextureView mTextureView;
     ConfigFactory config;
     private TextView mTextView;

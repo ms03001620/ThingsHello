@@ -44,4 +44,11 @@ public class ConfigTexture implements IConfig {
     public void release() {
 
     }
+
+    @Override
+    public int getTemplateType() {
+        return 0;
+    }
+
+
 }

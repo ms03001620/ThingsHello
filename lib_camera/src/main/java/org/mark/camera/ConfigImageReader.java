@@ -59,4 +59,9 @@ public class ConfigImageReader implements IConfig {
         mImageReader.close();
         mWorkThread.quitSafely();
     }
+
+    @Override
+    public int getTemplateType() {
+        return 0;
+    }
 }
