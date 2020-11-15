@@ -1,2 +1,2 @@
 include ':lib_ffmpeg'
-include ':app', ':lib_unit_socket', ':app_mobile', ':lib_base', ':lib_tensorflow', ':app_prework', ':lib_camera', ':app_test'
+include ':app', ':lib_unit_socket', ':app_mobile', ':lib_base', ':lib_tensorflow', ':app_prework', ':lib_camera', ':app_test', 'app_rtmp'
