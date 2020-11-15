@@ -28,7 +28,7 @@ public class ConfigFFReader implements IConfig {
         this.height = height;
 
        // mImageReader = ImageReader.newInstance(640, 480,ImageFormat.YUV_420_888, 1);
-        mImageReader = ImageReader.newInstance(width, height, ImageFormat.YUV_420_888, 1);
+        mImageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
 
         mWorkThread = new HandlerThread("CustomWorkThread");
         mWorkThread.start();
@@ -43,13 +43,14 @@ public class ConfigFFReader implements IConfig {
         public void onImageAvailable(ImageReader reader) {
             Image image = reader.acquireNextImage();
             if (image == null) {
-                Log.w("FFmpegPushPresenter", "onImageAvailable acquireNextImage null");
+                Log.w("ConfigFFReader", "onImageAvailable acquireNextImage null");
                 return;
             }
             secondsCountUtils.run(new SecondsCountUtils.OnSecondReport() {
                 @Override
                 public void report(int count, long ms) {
-                    Log.v("FFmpegPushPresenter", "onImageAvailable " + image.getWidth() + ", " + image.getHeight() + "  config " + width + ", " + height + " count:" + count + ", ms:" + ms);
+                    printImageInfo(image);
+                    Log.v("ConfigFFReader", "onImageAvailable " + image.getWidth() + ", " + image.getHeight() + "  config " + width + ", " + height + " count:" + count + ", ms:" + ms);
                 }
             });
 
@@ -61,6 +62,28 @@ public class ConfigFFReader implements IConfig {
             image.close();
         }
     };
+
+    private void printImageInfo(Image image){
+        int p = image.getPlanes().length;
+        int w = image.getWidth();
+        int h = image.getHeight();
+
+
+
+        StringBuilder stringBuffer = new StringBuilder();
+        stringBuffer.append("planes:" + p);
+        stringBuffer.append(", ");
+
+        stringBuffer.append("width:" + w);
+        stringBuffer.append(", ");
+
+        stringBuffer.append("height:" + h);
+        stringBuffer.append(", ");
+
+
+        Log.v("ConfigFFReader", "yuv info:"+stringBuffer.toString());
+    }
+
 
 
     private void processImage(Image image){
