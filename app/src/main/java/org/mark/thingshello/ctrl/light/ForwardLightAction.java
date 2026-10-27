@@ -52,9 +52,13 @@ public class ForwardLightAction extends OnReceiverCommand {
     }
 
     public void disable() {
-        pwmRed.setPwmDutyCycle(0);
-        pwmGreen.setPwmDutyCycle(0);
-        pwmBlue.setPwmDutyCycle(0);
+        try {
+            pwmRed.setPwmDutyCycle(0);
+            pwmGreen.setPwmDutyCycle(0);
+            pwmBlue.setPwmDutyCycle(0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void release() {

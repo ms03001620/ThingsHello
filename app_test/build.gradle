@@ -30,6 +30,5 @@ dependencies {
 
 
     compileOnly 'com.google.android.things:androidthings:1.0'
-    implementation 'com.leinardi.android.things:pio-softpwm:0.2'
     implementation 'com.google.code.gson:gson:2.8.5'
 }

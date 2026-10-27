@@ -32,7 +32,6 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     compileOnly 'com.google.android.things:androidthings:1.0'
-    implementation 'com.leinardi.android.things:pio-softpwm:0.2'
 
     implementation 'io.reactivex:rxjava:1.2.6'
     implementation 'io.reactivex:rxandroid:1.2.1'
