@@ -2,6 +2,10 @@
 
 本文件是仓库级导航。先按任务定位模块，再阅读对应入口和实现；新增模块或移动入口时同步更新本文件。下文路径均相对仓库根目录。
 
+## 当前重点：Pi 3 Java 迁移
+
+当前任务是将 `app` 小车系统迁移到 Raspberry Pi OS Lite + Java。保留 `app/` 原源码不动，计划在独立 `car_pi/` 工程逐步重构；目前该工程尚未创建。实施顺序、代码映射、Pi 实机环境结果及分阶段验收方法见 [Pi 3 Java 迁移计划](doc/migration/pi3-java-plan.md)。以平台迁移为主，不顺带开展业务改版或全面 bug 修复；每阶段分别记录模拟验证与硬件实测结果。
+
 ## 项目概况与阅读顺序
 
 ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通过 Android 手机控制 Android Things / Raspberry Pi 小车，并接收摄像头画面；同时包含图像识别、FFmpeg 推流和外设实验应用。
