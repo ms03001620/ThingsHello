@@ -1,0 +1,10 @@
+[
+  {"type":0,"body":{"left":35,"right":-20},"expected":{"left":35,"right":-20}},
+  {"type":1,"body":{"red":1,"green":0,"blue":0},"expected":[100,100,100]},
+  {"type":2,"body":{"di":true},"expected":"on; off after 500ms"},
+  {"type":4,"body":{"progress":100},"expected":{"pulseMs":1.5,"releaseMs":500}},
+  {"type":6,"body":{"rotate":"LEFT","speed":40},"expected":{"left":-40,"right":40}},
+  {"type":6,"body":{"rotate":"RIGHT","speed":25},"expected":{"left":25,"right":-25}},
+  {"type":3,"body":{"action":1,"width":320,"height":240,"transferVideo":true},"expected":"type 5 camera info"},
+  {"type":3,"body":{"action":0},"expected":"camera closes"}
+]
