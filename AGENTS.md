@@ -4,7 +4,7 @@
 
 ## 当前重点：Pi 3 Java 迁移
 
-当前任务是将 `app` 小车系统迁移到 Raspberry Pi OS Lite + Java。保留 `app/` 原源码不动，计划在独立 `car_pi/` 工程逐步重构；目前该工程尚未创建。实施顺序、代码映射、Pi 实机环境结果及分阶段验收方法见 [Pi 3 Java 迁移计划](doc/migration/pi3-java-plan.md)。以平台迁移为主，不顺带开展业务改版或全面 bug 修复；每阶段分别记录模拟验证与硬件实测结果。
+当前任务是将 `app` 小车系统迁移到 Raspberry Pi OS Lite + Java。保留 `app/` 原源码不动，在独立 `car_pi/` 工程逐步重构；当前提供 Java 21 recording 服务和协议验收入口。实施顺序、代码映射、Pi 实机环境结果及分阶段验收方法见 [Pi 3 Java 迁移计划](doc/migration/pi3-java-plan.md)。以平台迁移为主，不顺带开展业务改版或全面 bug 修复；每阶段分别记录模拟验证与硬件实测结果。
 
 ## 项目概况与阅读顺序
 
@@ -21,6 +21,7 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 
 | 模块 | 职责 | 源码根目录 / 首读入口 |
 | --- | --- | --- |
+| `car_pi` | 独立 Java 21 小车服务，不加入 Android 构建 | `car_pi/README.md`；`src/main/java/org/mark/carpi/CarMain.java`；`./gradlew test installDist` |
 | `app` | 小车主应用：外设控制、接收命令、摄像头服务 | `app/src/main/java/org/mark/thingshello/`；`MainActivity.java` |
 | `app_mobile` | 手机主应用：连接、摇杆遥控、视频预览 | `app_mobile/src/main/java/org/mark/mobile/`；`MainActivity.java`、`CtrlActivity.java` |
 | `lib_unit_socket` | 两端共用的 TCP / UDP 通信、命令类型及数据对象 | `lib_unit_socket/src/main/java/org/mark/lib_unit_socket/`；`SocketManager.java`、`ConnectedThread.java`、`bean/` |
