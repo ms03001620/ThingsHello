@@ -1,0 +1,110 @@
+{
+  "time": "2026-10-28T15:20:43.903679459Z",
+  "os": "Linux",
+  "kernel": "6.18.50+rpt-rpi-v8",
+  "arch": "aarch64",
+  "java": "21.0.13+9-1-deb13u2-Debian",
+  "version": "0.2.3-service",
+  "backend": "recording",
+  "physicalIO": false,
+  "camera": false,
+  "tensorflow": false,
+  "artifactSha256": "2d390fdf3c6f6ee0df30643472fcb8d4c6f5f442a973417980f7e96d8da18db3",
+  "protocol": {
+    "time": "2026-10-28T15:20:25.948899154Z",
+    "os": "Linux",
+    "kernel": "6.18.50+rpt-rpi-v8",
+    "arch": "aarch64",
+    "java": "21.0.13+9-1-deb13u2-Debian",
+    "version": "0.2.3-service",
+    "backend": "recording",
+    "physicalIO": false,
+    "camera": false,
+    "tensorflow": false,
+    "suite": "protocol",
+    "verification": "已验证",
+    "scope": "TCP loopback + recording, no physical output or old phone acceptance",
+    "checks": [
+      "fragmented header/body",
+      "coalesced frames",
+      "types 0..6",
+      "signed 0xFF response",
+      "recorded action values",
+      "servo/wheel exclusion",
+      "500ms releases",
+      "invalid JSON/range rejection",
+      "port rebind after shutdown"
+    ],
+    "status": "PASS"
+  },
+  "fixtureVideo": {
+    "time": "2026-10-28T15:20:27.771506809Z",
+    "os": "Linux",
+    "kernel": "6.18.50+rpt-rpi-v8",
+    "arch": "aarch64",
+    "java": "21.0.13+9-1-deb13u2-Debian",
+    "version": "0.2.3-service",
+    "backend": "recording",
+    "physicalIO": false,
+    "camera": false,
+    "tensorflow": false,
+    "suite": "fixture-video",
+    "scope": "fixture loopback; phone display unverified",
+    "cycles": 10,
+    "verification": "已验证",
+    "jpegBytes": 5186,
+    "status": "PASS"
+  },
+  "lifecycle": {
+    "status": "PASS",
+    "verification": "已验证",
+    "runs": [
+      {
+        "iteration": 1,
+        "exit": 143,
+        "status": "PASS"
+      },
+      {
+        "iteration": 2,
+        "exit": 143,
+        "status": "PASS"
+      },
+      {
+        "iteration": 3,
+        "exit": 143,
+        "status": "PASS"
+      }
+    ]
+  },
+  "network": {
+    "status": "PASS",
+    "verification": "已验证",
+    "bytes": 5187,
+    "jpegSha256": "010abfae4b220b563e730f578b57133bddc9191a846d8ca688c21c7bfc6992d1",
+    "sourcePort": 8000,
+    "clientPort": 53134
+  },
+  "service": "Result=success\nNRestarts=0\nMemoryCurrent=[not set]\nActiveState=active\nSubState=running\n",
+  "reboot": {
+    "status": "PASS",
+    "verification": "已验证",
+    "bootIdChanged": true,
+    "service": "active",
+    "result": "success",
+    "restarts": 0,
+    "network": {
+      "status": "PASS",
+      "verification": "已验证",
+      "bytes": 5187,
+      "jpegSha256": "010abfae4b220b563e730f578b57133bddc9191a846d8ca688c21c7bfc6992d1",
+      "sourcePort": 8000,
+      "clientPort": 54329
+    }
+  },
+  "unverified": [
+    "physical GPIO/PWM/motors/servo/lights/buzzer",
+    "real camera",
+    "old phone UI",
+    "30-minute stability"
+  ]
+}

@@ -11,4 +11,4 @@ dependencies {
 }
 test { useJUnitPlatform() }
 jar { manifest { attributes 'Implementation-Version': project.version } }
-distributions { main { contents { from('config') { into 'config' }; from('scripts') { into 'scripts' }; from('acceptance') { into 'acceptance' }; from('NOTICE.md'); from('README.md') } } }
+distributions { main { contents { from('deploy') { into 'deploy' }; from('config') { into 'config' }; from('scripts') { into 'scripts'; filePermissions { unix('rwxr-xr-x') } }; from('acceptance') { into 'acceptance' }; from('NOTICE.md'); from('README.md') } } }

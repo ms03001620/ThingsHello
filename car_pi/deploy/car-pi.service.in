@@ -1,0 +1,18 @@
+[Unit]
+Description=ThingsHello Pi Java recording service
+After=network.target
+
+[Service]
+Type=simple
+User=@USER@
+WorkingDirectory=@ROOT@/current
+ExecStart=@ROOT@/current/bin/car-pi serve --config @ROOT@/config/service.properties
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
