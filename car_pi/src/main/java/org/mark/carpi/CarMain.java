@@ -30,8 +30,8 @@ public final class CarMain {
                 String suite = options.getOrDefault("--suite","");
                 Map<String,Object> result = environment();
                 result.put("suite",suite);
-                if (suite.equals("protocol")) {
-                    try { result.putAll(ProtocolVerification.run()); }
+                if (suite.equals("protocol") || suite.equals("fixture-video")) {
+                    try { result.putAll(suite.equals("protocol") ? ProtocolVerification.run() : FixtureVerification.run()); }
                     catch (Exception | AssertionError e) { result.put("status","FAIL"); result.put("reason",e.toString()); }
                 } else { result.put("status","BLOCKED"); result.put("reason","Suite not implemented; real hardware and camera unverified"); }
                 report(options,result);

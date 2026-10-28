@@ -20,7 +20,7 @@ public final class CarRuntime implements AutoCloseable {
         try {
             server.setReuseAddress(true);
             server.bind(new InetSocketAddress(config.bind(),config.port()));
-            created = new CommandDispatcher(new RecordingHardware(config.actions()));
+            created = new CommandDispatcher(new RecordingHardware(config.actions()), new org.mark.carpi.camera.CameraController(config.camera(),config.bind(),config.udpPort()));
         } catch (IOException | RuntimeException e) { server.close(); if (created != null) created.close(); throw e; }
         dispatcher = created;
     }
