@@ -17,7 +17,6 @@ public final class LgpioClient implements GpioBackend {
     private boolean closed;
     public LgpioClient(HardwareConfig config) throws IOException { this(config, Map.of()); }
     public LgpioClient(HardwareConfig config, Map<String,String> environment) throws IOException {
-        if(config.servo()!=null)throw new IllegalArgumentException("lgpio servo not enabled: use verified hardware PWM adapter");
         Map<Integer,Integer> inactive = new LinkedHashMap<>();
         if(config.left()!=null) for(var motor : List.of(config.left(),config.right()))
             for(int pin : List.of(motor.in1(),motor.in2(),motor.pwm())) inactive.put(pin,0);
@@ -28,7 +27,7 @@ public final class LgpioClient implements GpioBackend {
         try(var resource=LgpioClient.class.getResourceAsStream("/lgpio_worker.py")) {
             if(resource==null)throw new FileNotFoundException("lgpio_worker.py");
             Files.copy(resource,script,StandardCopyOption.REPLACE_EXISTING);
-            ProcessBuilder builder=new ProcessBuilder("python3","-u",script.toString(),new Gson().toJson(inactive));
+            ProcessBuilder builder=new ProcessBuilder("python3","-u",script.toString(),new Gson().toJson(inactive),config.servo()==null?"none":config.servo().toString());
             builder.environment().putAll(environment);builder.redirectError(ProcessBuilder.Redirect.INHERIT);
             started=builder.start();
         } catch(IOException | RuntimeException e) { Files.deleteIfExists(script);throw e; }
@@ -62,7 +61,7 @@ public final class LgpioClient implements GpioBackend {
     public int frequency(int p,int hz)throws IOException { return command("frequency",p,hz); }
     public void range(int p,int range)throws IOException { command("range",p,range); }
     public void pwm(int p,int duty)throws IOException { command("pwm",p,duty); }
-    public void servo(int p,int us)throws IOException { throw new IOException("lgpio servo unsupported; hardware PWM required"); }
+    public void servo(int p,int us)throws IOException { command("servo",p,us); }
     public boolean isAlive() { return worker.isAlive(); }
     private void abort() {
         boolean interrupted=Thread.interrupted();

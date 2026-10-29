@@ -18,7 +18,7 @@ public record HardwareConfig(String backend,String host,int port,Motor left,Moto
         if(flag(p,"light.enabled",false)) { lights=List.of(pin(p,"light.red",22),pin(p,"light.green",27),pin(p,"light.blue",24));lightHigh=requiredFlag(p,"light.activeHigh"); }
         if(flag(p,"buzzer.enabled",false)) { buzzer=pin(p,"buzzer.pin",8);buzzerHigh=requiredFlag(p,"buzzer.activeHigh"); }
         if(flag(p,"servo.enabled",false)) { if(!p.containsKey("servo.pin"))throw new IllegalArgumentException("Explicit BCM servo.pin required; PWM0 is not a BCM pin");servo=pin(p,"servo.pin",-1); }
-        if(backend.equals("lgpio") && servo!=null)throw new IllegalArgumentException("lgpio servo output is disabled; use the verified hardware PWM path");
+        if(backend.equals("lgpio") && servo!=null && servo!=18)throw new IllegalArgumentException("lgpio hardware PWM servo requires BCM18 / PWM0");
         List<Integer> all=new ArrayList<>(lights);
         if(left!=null) { all.addAll(List.of(left.in1,left.in2,left.pwm,right.in1,right.in2,right.pwm)); }
         if(buzzer!=null)all.add(buzzer);if(servo!=null)all.add(servo);

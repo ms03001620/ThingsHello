@@ -42,6 +42,10 @@
     "configuredPwmHz": 300,
     "waveformPrecision": "unverified"
   },
-  "mobilePhysicalObservation": "pending",
+  "mobilePhysicalObservation": {
+    "verification": "已验证",
+    "scope": "手机灯、视频、车轮可用",
+    "userFeedback": "启动 app-mobile了 现在 实际测试。灯，视频 轮 都可用了。舵机还不行"
+  },
   "artifactSha256": "464b1e63cbff5ba521fa407bea151734f145e2cc6a0537c9d2d8d14550f1cd94"
 }

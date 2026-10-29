@@ -61,3 +61,23 @@ Pi 上切换：`scripts/activate.sh /home/pi/thingshello car-pi-<version>`；成
 控制连接断开时释放轮子；服务停止时先清理 GPIO 子进程。systemd 应使用模板中的 `KillMode=mixed`，让 Java 先做有序清理。切换到实机配置前应确认接线、车轮架空，并备份旧配置。
 
 在 Pi 分发目录执行 `python3 scripts/verify-control.py --allow-motion` 可做有限时长的物理轮动测试，验证归零、断连、SIGTERM 后使能低电平；它会真实驱动车轮，仅限架空时使用。
+
+
+### BCM18 硬件 PWM 舵机（0.5.2-servo）
+
+`lgpio` 后端现在允许 `servo.enabled=true`、`servo.pin=18`；worker 对舵机访问 `/sys/class/pwm/pwmchip0/pwm0`，不通过 lgpio 申请 BCM18。周期 20 ms、脉宽 800..1500 us，协议类型 4 及 500 ms 释放不变。之前版本的“舵机未启用”说明仅指历史部署。
+
+部署前，在 `/boot/firmware/config.txt` 的 `[all]` 节配置 `dtoverlay=pwm,pin=18,func=2`；首次启用可运行 `sudo dtoverlay pwm pin=18 func=2`（已有 overlay 时不要重复加载）。此硬件 PWM 与板载模拟音频冲突。
+
+从发布目录安装准备服务：
+
+```sh
+sudo install -m 755 deploy/prepare-servo-pwm.sh /usr/local/sbin/car-pi-prepare-servo
+sudo install -m 644 deploy/car-pi-servo-pwm.service /etc/systemd/system/
+sudo mkdir -p /etc/systemd/system/car-pi.service.d
+sudo install -m 644 deploy/servo-pwm.conf /etc/systemd/system/car-pi.service.d/
+sudo systemctl daemon-reload
+sudo systemctl start car-pi-servo-pwm.service
+```
+
+准备服务以 root 导出 PWM0、关闭输出并赋予 gpio 组写权限；Java 与 worker 仍以 pi 运行。服务依赖保证重启后先准备 PWM。禁用舵机并回退时恢复旧配置、移除 `servo-pwm.conf` 后 daemon-reload；只恢复旧程序不足以回退配置。

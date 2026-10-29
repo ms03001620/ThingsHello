@@ -1,0 +1,8 @@
+[Unit]
+Description=Prepare BCM18 hardware PWM for ThingsHello servo
+Before=car-pi.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/car-pi-prepare-servo
+RemainAfterExit=yes

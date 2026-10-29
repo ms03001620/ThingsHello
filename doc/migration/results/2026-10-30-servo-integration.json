@@ -1,0 +1,56 @@
+{
+  "time": "2026-10-29T23:56:59.197945+00:00",
+  "status": "PASS",
+  "version": "0.5.2-servo",
+  "checks": [
+    {
+      "progress": 50,
+      "active": {
+        "period": "20000000",
+        "duty_cycle": "1150000",
+        "enable": "1"
+      },
+      "after650ms": {
+        "period": "20000000",
+        "duty_cycle": "1150000",
+        "enable": "0"
+      }
+    },
+    {
+      "progress": 0,
+      "active": {
+        "period": "20000000",
+        "duty_cycle": "800000",
+        "enable": "1"
+      },
+      "after650ms": {
+        "period": "20000000",
+        "duty_cycle": "800000",
+        "enable": "0"
+      }
+    },
+    {
+      "progress": 100,
+      "active": {
+        "period": "20000000",
+        "duty_cycle": "1500000",
+        "enable": "1"
+      },
+      "after650ms": {
+        "period": "20000000",
+        "duty_cycle": "1500000",
+        "enable": "0"
+      }
+    }
+  ],
+  "disconnect": {
+    "period": "20000000",
+    "duty_cycle": "1150000",
+    "enable": "0"
+  },
+  "physicalObservation": {
+    "verification": "已验证",
+    "userFeedback": "舵机也可以 了。",
+    "scope": "app_mobile 滑块控制舵机实际动作"
+  }
+}

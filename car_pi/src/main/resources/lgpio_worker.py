@@ -1,10 +1,26 @@
 # GPIO worker: PWM timing comes from native liblgpio, not this Python loop.
-import json, signal, sys, time
+import json, os, signal, sys, time
+from pathlib import Path
 import lgpio
 
 inactive = {int(pin): int(value) for pin, value in json.loads(sys.argv[1]).items()}
 handle = lgpio.gpiochip_open(0)
 claimed, frequencies = set(), {}
+servo_pin = None if len(sys.argv) < 3 or sys.argv[2] == "none" else int(sys.argv[2])
+pwm_path = Path(os.environ.get("CAR_PI_PWM_PATH", "/sys/class/pwm/pwmchip0/pwm0"))
+
+def pwm_write(name, value):
+    (pwm_path / name).write_text(str(value))
+
+def servo(value):
+    if value != 0 and not 800 <= value <= 1500:
+        raise ValueError("Servo pulse outside 800..1500 us")
+    if value == 0:
+        pwm_write("enable", 0)
+    else:
+        pwm_write("duty_cycle", value * 1000)
+        pwm_write("enable", 1)
+
 
 def checked(value):
     if value < 0:
@@ -38,6 +54,11 @@ def free(pin):
 
 def cleanup():
     errors = []
+    if servo_pin is not None:
+        try:
+            servo(0)
+        except Exception as error:
+            errors.append(str(error))
     for pin in list(claimed):
         try:
             free(pin)
@@ -51,8 +72,16 @@ def interrupt(signum, frame):
 
 signal.signal(signal.SIGTERM, interrupt)
 signal.signal(signal.SIGINT, interrupt)
-print(json.dumps({"ok": True, "value": 0}), flush=True)
+ready = False
 try:
+    if servo_pin is not None:
+        if servo_pin != 18:
+            raise ValueError("Hardware PWM0 requires BCM18")
+        servo(0)
+        pwm_write("duty_cycle", 0)
+        pwm_write("period", 20000000)
+    ready = True
+    print(json.dumps({"ok": True, "value": 0}), flush=True)
     for line in sys.stdin:
         try:
             request = json.loads(line)
@@ -60,6 +89,15 @@ try:
             if op == "close":
                 break
             pin, value = int(request["pin"]), int(request["value"])
+            if servo_pin is not None and pin == servo_pin:
+                if op == "servo":
+                    servo(value)
+                elif op == "mode" and value == 0:
+                    servo(0)  # Keep ALT5 pin mux; never claim PWM0 through lgpio.
+                else:
+                    raise ValueError("Servo pin is reserved for hardware PWM")
+                print(json.dumps({"ok": True, "value": 0}), flush=True)
+                continue
             if pin not in inactive:
                 raise ValueError("GPIO not configured")
             result = 0
@@ -98,4 +136,6 @@ try:
             print(json.dumps({"ok": False, "error": str(error)}), flush=True)
 finally:
     errors = cleanup()
+    if not ready:
+        errors.append("Hardware PWM initialization failed")
     print(json.dumps({"ok": not errors, "value": 0, "error": "; ".join(errors)}), flush=True)

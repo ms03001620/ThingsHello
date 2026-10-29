@@ -80,3 +80,7 @@ python3 -c "d=open('/tmp/f.mjpg','rb').read().split(b'\xff\xd8'); open('/tmp/sho
 
 - TCP 指令类型 3（`CAMERA`）开/关摄像头，类型 5 返回摄像头信息（含 `error`、`sentFrames`、`droppedFrames`）。
 - 图像以单帧 JPEG 通过 UDP 8000 发送，单包上限 65506 字节，超出的帧丢弃。320×240 MJPG 一般远小于此上限。
+
+## Java 集成现状（0.5.2-servo）
+
+手机灯、视频、车轮已获现场确认。舵机已由 lgpio worker 单独调用 sysfs 硬件 PWM0，配置 `servo.enabled=true`、`servo.pin=18`。不会用 lgpio 软件 PWM 驱动舵机。部署步骤见 `car_pi/README.md`，本版本手机实际动作确认见 [集成记录](results/2026-10-30-servo-integration.md)。
