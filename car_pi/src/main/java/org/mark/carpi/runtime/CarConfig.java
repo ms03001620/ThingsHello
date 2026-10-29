@@ -5,7 +5,8 @@ import org.mark.carpi.hardware.linux.HardwareConfig;
 import java.nio.file.*;
 import java.util.Properties;
 
-public record CarConfig(String bind, int port, Path actions, String camera, int udpPort, HardwareConfig hardware) {
+public record CarConfig(String bind, int port, Path actions, String camera, int udpPort, HardwareConfig hardware, String cameraDevice) {
+    public CarConfig(String bind,int port,Path actions,String camera,int udpPort,HardwareConfig hardware) { this(bind,port,actions,camera,udpPort,hardware,"/dev/video0"); }
     public CarConfig(String bind, int port, Path actions, String camera, int udpPort) { this(bind,port,actions,camera,udpPort,HardwareConfig.recording()); }
     public CarConfig(String bind, int port, Path actions) { this(bind,port,actions,"disabled",0); }
     public static CarConfig load(Path path) throws IOException {
@@ -15,9 +16,9 @@ public record CarConfig(String bind, int port, Path actions, String camera, int 
         int port = Integer.parseInt(p.getProperty("tcp.port","8010"));
         if (port < 0 || port > 65535) throw new IllegalArgumentException("tcp.port");
         String camera = p.getProperty("camera","disabled");
-        if (!java.util.Set.of("disabled","fixture","rpicam").contains(camera)) throw new IllegalArgumentException("Camera backend unavailable: " + camera);
+        if (!java.util.Set.of("disabled","fixture","rpicam","v4l2").contains(camera)) throw new IllegalArgumentException("Camera backend unavailable: " + camera);
         int udpPort = Integer.parseInt(p.getProperty("udp.port","8000"));
         if (udpPort < 0 || udpPort > 65535) throw new IllegalArgumentException("udp.port");
-        return new CarConfig(p.getProperty("bind","0.0.0.0"),port,Path.of(p.getProperty("actions.path","results/actions.jsonl")),camera,udpPort,hardware);
+        return new CarConfig(p.getProperty("bind","0.0.0.0"),port,Path.of(p.getProperty("actions.path","results/actions.jsonl")),camera,udpPort,hardware,p.getProperty("camera.device","/dev/video0"));
     }
 }

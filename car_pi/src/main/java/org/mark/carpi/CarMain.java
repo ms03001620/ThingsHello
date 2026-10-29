@@ -40,7 +40,8 @@ public final class CarMain {
                     try { result.putAll(suite.equals("protocol") ? ProtocolVerification.run() : FixtureVerification.run()); }
                     catch (Exception | AssertionError e) { result.put("status","FAIL"); result.put("reason",e.toString()); }
                 } else if(suite.equals("camera")) {
-                    try(var source=new org.mark.carpi.camera.RpicamFrameSource("rpicam-vid")) {
+                    var config=CarConfig.load(options.containsKey("--config") ? Path.of(options.get("--config")) : null);
+                    try(org.mark.carpi.camera.FrameSource source=config.camera().equals("v4l2") ? new org.mark.carpi.camera.V4l2FrameSource(config.cameraDevice()) : new org.mark.carpi.camera.RpicamFrameSource("rpicam-vid")) {
                         byte[] jpeg=source.frame();var image=javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(jpeg));
                         if(image==null || image.getWidth()!=320 || image.getHeight()!=240)throw new java.io.IOException("Invalid capture dimensions");
                         result.put("status","PASS");result.put("scope","single frame only; phone/10min stability unverified");result.put("jpegBytes",jpeg.length);
