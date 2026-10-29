@@ -9,8 +9,8 @@ public record HardwareConfig(String backend,String host,int port,Motor left,Moto
     public static HardwareConfig load(Properties p) {
         String backend=p.getProperty("backend","recording");
         if(backend.equals("recording"))return recording();
-        if(!backend.equals("pigpio"))throw new IllegalArgumentException("Unknown backend: "+backend);
-        if(!flag(p,"hardware.confirmed",false))throw new IllegalArgumentException("pigpio requires hardware.confirmed=true after wiring/polarity review");
+        if(!Set.of("pigpio","lgpio").contains(backend))throw new IllegalArgumentException("Unknown backend: "+backend);
+        if(!flag(p,"hardware.confirmed",false))throw new IllegalArgumentException("Real hardware requires hardware.confirmed=true after wiring/polarity review");
         Motor left=null,right=null;List<Integer> lights=List.of();Integer buzzer=null,servo=null;Boolean lightHigh=null,buzzerHigh=null;
         if(flag(p,"wheel.enabled",false)) {
             left=motor(p,"left",21,20,16);right=motor(p,"right",26,19,13);
@@ -18,6 +18,7 @@ public record HardwareConfig(String backend,String host,int port,Motor left,Moto
         if(flag(p,"light.enabled",false)) { lights=List.of(pin(p,"light.red",22),pin(p,"light.green",27),pin(p,"light.blue",24));lightHigh=requiredFlag(p,"light.activeHigh"); }
         if(flag(p,"buzzer.enabled",false)) { buzzer=pin(p,"buzzer.pin",8);buzzerHigh=requiredFlag(p,"buzzer.activeHigh"); }
         if(flag(p,"servo.enabled",false)) { if(!p.containsKey("servo.pin"))throw new IllegalArgumentException("Explicit BCM servo.pin required; PWM0 is not a BCM pin");servo=pin(p,"servo.pin",-1); }
+        if(backend.equals("lgpio") && servo!=null)throw new IllegalArgumentException("lgpio servo output is disabled; use the verified hardware PWM path");
         List<Integer> all=new ArrayList<>(lights);
         if(left!=null) { all.addAll(List.of(left.in1,left.in2,left.pwm,right.in1,right.in2,right.pwm)); }
         if(buzzer!=null)all.add(buzzer);if(servo!=null)all.add(servo);

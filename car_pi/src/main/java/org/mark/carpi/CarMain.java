@@ -19,7 +19,7 @@ public final class CarMain {
             case "doctor" -> {
                 var config=CarConfig.load(options.containsKey("--config") ? Path.of(options.get("--config")) : null);
                 var result=environment();result.put("backend",config.hardware().backend());result.put("cameraMode",config.camera());
-                result.put("physicalIOConfigured",config.hardware().backend().equals("pigpio"));
+                result.put("physicalIOConfigured",!config.hardware().backend().equals("recording"));
                 result.put("physicalIOVerified",false);result.put("realCameraVerified",false);
                 report(options,result);
             }

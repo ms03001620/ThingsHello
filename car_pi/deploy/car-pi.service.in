@@ -1,5 +1,5 @@
 [Unit]
-Description=ThingsHello Pi Java recording service
+Description=ThingsHello Pi Java car service
 After=network.target
 
 [Service]
@@ -11,6 +11,7 @@ SuccessExitStatus=143
 Restart=on-failure
 RestartSec=3
 TimeoutStopSec=15
+KillMode=mixed
 NoNewPrivileges=true
 PrivateTmp=true
 

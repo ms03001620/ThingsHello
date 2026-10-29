@@ -89,6 +89,14 @@ public final class CommandDispatcher implements AutoCloseable {
             default -> hardware.action(id,"unsupported.type",frame.type());
         }
     }
+    /** Release motion on control disconnect; do not leave a physical motor running without its client. */
+    public Future<?> releaseControl() {
+        return queue.submit(() -> {
+            if (servoRelease != null) servoRelease.cancel(false);
+            try { if (!owner.equals("none")) hardware.action(0,owner+".release",true); }
+            finally { owner="none"; }
+        });
+    }
     public void close() {
         try {
             queue.submit(() -> {

@@ -42,19 +42,28 @@ class PigpioTest {
         assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(p));
     }
     @Test void frequencyMismatchNeverEnablesMotorDuty() {
-        var gpio=new Fake();gpio.hz=320;var hardware=new PigpioHardware(gpio,config(),new Audit());
+        var gpio=new Fake();gpio.hz=320;var hardware=new LinuxHardware(gpio,config(),new Audit());
         assertThrows(UncheckedIOException.class,()->hardware.action(1,"wheel.bind",true));
         assertFalse(gpio.calls.stream().anyMatch(s->s.startsWith("pwm") && !s.endsWith(":0")));
         assertTrue(gpio.closed);assertThrows(IllegalStateException.class,()->hardware.action(2,"wheel.speed",Map.of("left",40,"right",40)));
         hardware.close();
     }
     @Test void reverseStopServoAndReleaseUseConfiguredPins() {
-        var gpio=new Fake();var hardware=new PigpioHardware(gpio,config(),new Audit());
+        var gpio=new Fake();var hardware=new LinuxHardware(gpio,config(),new Audit());
         hardware.action(1,"wheel.bind",true);hardware.action(1,"wheel.speed",Map.of("left",-35,"right",20));
         assertTrue(gpio.calls.contains("write:21:false"));assertTrue(gpio.calls.contains("write:20:true"));assertTrue(gpio.calls.contains("pwm:16:35"));
         hardware.action(2,"servo.pulseMs",1.5);assertTrue(gpio.calls.contains("servo:18:1500"));
         hardware.action(3,"buzzer.enabled",true);assertTrue(gpio.calls.contains("write:8:false"));
         hardware.close();assertTrue(gpio.calls.contains("servo:18:0"));assertTrue(gpio.calls.contains("mode:16:0"));assertTrue(gpio.closed);
+    }
+    @Test void sameDirectionSpeedUpdatesDoNotPulseStopBetweenFrames() {
+        var gpio=new Fake();
+        try(var hardware=new LinuxHardware(gpio,config(),new Audit())) {
+            hardware.action(1,"wheel.bind",true);
+            hardware.action(2,"wheel.speed",Map.of("left",20,"right",20));gpio.calls.clear();
+            hardware.action(3,"wheel.speed",Map.of("left",30,"right",30));
+            assertEquals(List.of("pwm:16:30","pwm:13:30"),gpio.calls);
+        }
     }
     private HardwareConfig config() {
         Properties p=new Properties();p.setProperty("backend","pigpio");p.setProperty("hardware.confirmed","true");p.setProperty("wheel.enabled","true");

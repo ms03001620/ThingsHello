@@ -49,3 +49,15 @@ Pi 上切换：`scripts/activate.sh /home/pi/thingshello car-pi-<version>`；成
 - `droppedFrames` 当前统计超过 UDP 大小上限的帧；源端 30→5fps 主动取样不在该计数内。资源采样中的 RSS/CPU 为 Java 进程，不包含采集子进程。
 
 真实硬件测试表见 `doc/migration/hardware-test-table.md`。
+
+## 手机车轮控制（2026-10-30）
+
+如果摄像头可见但车轮不动，先检查服务实际使用的配置：`backend=recording` 只写动作日志，不驱动 GPIO。成功收到 `wheel.speed` 并不等于硬件已接入。
+
+当前真实车轮配置为 `config/pi3-lgpio.properties`。它使用系统 `python3-lgpio` 的原生软件定时 PWM，Java 通过专用子进程调用，不运行 pigpiod、不采用 Java/Python sleep 生成 PWM。默认配置频率 300Hz；`pwm.configuredHz` 记录配置值，不能当作仪器测得的波形频率。
+
+引脚维持旧 app：左轮 21/20/16，右轮 26/19/13；正向分别为 BCM20/19 高电平。灯和蜂鸣器一并接入真实输出。舵机仍需独立的硬件 PWM 路径，lgpio 配置暂不启用舵机。
+
+控制连接断开时释放轮子；服务停止时先清理 GPIO 子进程。systemd 应使用模板中的 `KillMode=mixed`，让 Java 先做有序清理。切换到实机配置前应确认接线、车轮架空，并备份旧配置。
+
+在 Pi 分发目录执行 `python3 scripts/verify-control.py --allow-motion` 可做有限时长的物理轮动测试，验证归零、断连、SIGTERM 后使能低电平；它会真实驱动车轮，仅限架空时使用。

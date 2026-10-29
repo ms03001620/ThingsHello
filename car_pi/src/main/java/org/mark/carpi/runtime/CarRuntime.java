@@ -29,7 +29,7 @@ public final class CarRuntime implements AutoCloseable {
     private static Hardware hardware(CarConfig config) throws IOException {
         Hardware audit=new RecordingHardware(config.actions(),config.hardware().backend());
         if(config.hardware().backend().equals("recording"))return audit;
-        try { return new PigpioHardware(new PigpioClient(config.hardware().host(),config.hardware().port()),config.hardware(),audit); }
+        try { return new LinuxHardware(config.hardware().backend().equals("lgpio") ? new LgpioClient(config.hardware()) : new PigpioClient(config.hardware().host(),config.hardware().port()),config.hardware(),audit); }
         catch(IOException | RuntimeException e) { audit.close();throw e; }
     }
     public int port() { return server.getLocalPort(); }
@@ -60,7 +60,11 @@ public final class CarRuntime implements AutoCloseable {
                 }).get();
             }
         } catch (Exception e) { if (!closed.get()) System.err.println("client: " + e); }
-        finally { clients.remove(socket); }
+        finally {
+            if (!closed.get()) try { dispatcher.releaseControl().get(3,TimeUnit.SECONDS); }
+            catch (Exception e) { System.err.println("disconnect stop: "+e); }
+            clients.remove(socket);
+        }
     }
     public void close() {
         if (!closed.compareAndSet(false,true)) return;

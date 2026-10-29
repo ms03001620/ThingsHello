@@ -4,11 +4,12 @@ import org.mark.carpi.hardware.Hardware;
 import java.io.*;
 import java.util.*;
 
-/** Experimental real output adapter, enabled only by explicit reviewed configuration. */
-public final class PigpioHardware implements Hardware {
+/** Shared Linux action driver; transport owns native GPIO/PWM timing and resource release. */
+public final class LinuxHardware implements Hardware {
     private final GpioBackend io;private final HardwareConfig config;private final Hardware audit;
     private boolean faulted,closed;
-    public PigpioHardware(GpioBackend io,HardwareConfig config,Hardware audit) { this.io=io;this.config=config;this.audit=audit; }
+    private final Map<HardwareConfig.Motor,Integer> speeds=new HashMap<>();
+    public LinuxHardware(GpioBackend io,HardwareConfig config,Hardware audit) { this.io=io;this.config=config;this.audit=audit; }
     public synchronized void action(long command,String action,Object value) {
         audit.action(command,action,value);
         if(Set.of("command","rejected","camera.request","unsupported.type").contains(action)) return;
@@ -42,15 +43,21 @@ public final class PigpioHardware implements Hardware {
     private void require(boolean enabled,String device) { if(!enabled)throw new IllegalStateException(device+" disabled in hardware config"); }
     private void bind(HardwareConfig.Motor m,long command) throws IOException {
         io.pwm(m.pwm(),0);io.write(m.in1(),false);io.write(m.in2(),false);io.range(m.pwm(),100);
+        speeds.put(m,0);
         int actual=io.frequency(m.pwm(),config.frequency());
-        audit.action(command,"pwm.actualHz",Map.of("pin",m.pwm(),"requested",config.frequency(),"actual",actual));
+        audit.action(command,config.backend().equals("lgpio")?"pwm.configuredHz":"pwm.actualHz",Map.of("pin",m.pwm(),"requested",config.frequency(),"actual",actual));
         if(Math.abs(actual-config.frequency())>config.maxError())throw new IOException("PWM frequency mismatch: requested "+config.frequency()+", actual "+actual);
     }
     private void drive(HardwareConfig.Motor m,int speed)throws IOException {
-        io.pwm(m.pwm(),0);
-        io.write(m.in1(),speed!=0 && ((speed>0)==m.forwardHigh()));
-        io.write(m.in2(),speed!=0 && ((speed>0)!=m.forwardHigh()));
+        int previous=speeds.getOrDefault(m,0);
+        if(speed==previous)return;
+        if(Integer.signum(speed)!=Integer.signum(previous)) {
+            io.pwm(m.pwm(),0);
+            io.write(m.in1(),speed!=0 && ((speed>0)==m.forwardHigh()));
+            io.write(m.in2(),speed!=0 && ((speed>0)!=m.forwardHigh()));
+        }
         io.pwm(m.pwm(),Math.abs(speed));
+        speeds.put(m,speed);
     }
     @FunctionalInterface private interface Operation { void run()throws IOException; }
     private void attemptAll(List<Operation> operations)throws IOException {
@@ -59,6 +66,7 @@ public final class PigpioHardware implements Hardware {
         if(failure!=null)throw failure;
     }
     private void releaseMotor(HardwareConfig.Motor m)throws IOException {
+        speeds.remove(m);
         attemptAll(List.of(()->io.pwm(m.pwm(),0),()->io.write(m.in1(),false),()->io.write(m.in2(),false),
             ()->io.mode(m.pwm(),0),()->io.mode(m.in1(),0),()->io.mode(m.in2(),0)));
     }

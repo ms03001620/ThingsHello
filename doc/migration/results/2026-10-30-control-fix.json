@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-30",
+  "rootCause": "active configuration backend=recording; wheel commands were logged but not output",
+  "version": "0.5.1-control",
+  "backend": "lgpio",
+  "unitTests": 22,
+  "failures": 0,
+  "nativeControl": {
+    "status": "PASS",
+    "time": "2026-10-29T23:43:56.220557+00:00",
+    "checks": [
+      {
+        "name": "left zero command",
+        "levels": {
+          "16": "16: op -- -- | lo // GPIO16 = output",
+          "13": "13: op -- -- | lo // GPIO13 = output"
+        }
+      },
+      {
+        "name": "right zero command",
+        "levels": {
+          "16": "16: op -- -- | lo // GPIO16 = output",
+          "13": "13: op -- -- | lo // GPIO13 = output"
+        }
+      },
+      {
+        "name": "disconnect stops motors",
+        "levels": {
+          "16": "16: op -- -- | lo // GPIO16 = output",
+          "13": "13: op -- -- | lo // GPIO13 = output"
+        }
+      },
+      {
+        "name": "SIGTERM stops motors",
+        "levels": {
+          "16": "16: op -- -- | lo // GPIO16 = output",
+          "13": "13: op -- -- | lo // GPIO13 = output"
+        }
+      }
+    ],
+    "exit": 143,
+    "configuredPwmHz": 300,
+    "waveformPrecision": "unverified"
+  },
+  "mobilePhysicalObservation": "pending",
+  "artifactSha256": "464b1e63cbff5ba521fa407bea151734f145e2cc6a0537c9d2d8d14550f1cd94"
+}
