@@ -4,6 +4,8 @@ import org.mark.carpi.control.CommandDispatcher;
 import org.mark.carpi.hardware.recording.RecordingHardware;
 import org.mark.carpi.protocol.FrameCodec;
 import java.io.*;
+import org.mark.carpi.hardware.Hardware;
+import org.mark.carpi.hardware.linux.*;
 import java.net.*;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -20,9 +22,15 @@ public final class CarRuntime implements AutoCloseable {
         try {
             server.setReuseAddress(true);
             server.bind(new InetSocketAddress(config.bind(),config.port()));
-            created = new CommandDispatcher(new RecordingHardware(config.actions()), new org.mark.carpi.camera.CameraController(config.camera(),config.bind(),config.udpPort()));
+            created = new CommandDispatcher(hardware(config), new org.mark.carpi.camera.CameraController(config.camera(),config.bind(),config.udpPort()));
         } catch (IOException | RuntimeException e) { server.close(); if (created != null) created.close(); throw e; }
         dispatcher = created;
+    }
+    private static Hardware hardware(CarConfig config) throws IOException {
+        Hardware audit=new RecordingHardware(config.actions(),config.hardware().backend());
+        if(config.hardware().backend().equals("recording"))return audit;
+        try { return new PigpioHardware(new PigpioClient(config.hardware().host(),config.hardware().port()),config.hardware(),audit); }
+        catch(IOException | RuntimeException e) { audit.close();throw e; }
     }
     public int port() { return server.getLocalPort(); }
     public void start() { workers.submit(this::accept); }

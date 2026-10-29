@@ -1,0 +1,92 @@
+{
+  "version": "0.3.2-adapters",
+  "artifactSha256": "ef49a9572f1f1cb35e690bc44b02d9b13659f3adbe607e176fe0f777ea1662c8",
+  "unitTests": {
+    "tests": 18,
+    "failures": 0,
+    "errors": 0
+  },
+  "doctor": {
+    "time": "2026-10-29T11:37:55.894336980Z",
+    "os": "Linux",
+    "kernel": "6.18.50+rpt-rpi-v8",
+    "arch": "aarch64",
+    "java": "21.0.13+9-1-deb13u2-Debian",
+    "version": "0.3.2-adapters",
+    "physicalIOVerified": false,
+    "realCameraVerified": false,
+    "tensorflow": false,
+    "backend": "recording",
+    "cameraMode": "fixture",
+    "physicalIOConfigured": false
+  },
+  "protocol": {
+    "time": "2026-10-29T11:37:21.169385571Z",
+    "os": "Linux",
+    "kernel": "6.18.50+rpt-rpi-v8",
+    "arch": "aarch64",
+    "java": "21.0.13+9-1-deb13u2-Debian",
+    "version": "0.3.2-adapters",
+    "physicalIOVerified": false,
+    "realCameraVerified": false,
+    "tensorflow": false,
+    "suite": "protocol",
+    "checks": [
+      "fragmented header/body",
+      "coalesced frames",
+      "types 0..6",
+      "signed 0xFF response",
+      "recorded action values",
+      "servo/wheel exclusion",
+      "500ms releases",
+      "invalid JSON/range rejection",
+      "port rebind after shutdown"
+    ],
+    "scope": "TCP loopback + recording, no physical output or old phone acceptance",
+    "verification": "已验证",
+    "status": "PASS"
+  },
+  "fixtureVideo": {
+    "time": "2026-10-29T11:37:22.966132685Z",
+    "os": "Linux",
+    "kernel": "6.18.50+rpt-rpi-v8",
+    "arch": "aarch64",
+    "java": "21.0.13+9-1-deb13u2-Debian",
+    "version": "0.3.2-adapters",
+    "physicalIOVerified": false,
+    "realCameraVerified": false,
+    "tensorflow": false,
+    "suite": "fixture-video",
+    "scope": "fixture loopback; phone display unverified",
+    "cycles": 10,
+    "verification": "已验证",
+    "jpegBytes": 5186,
+    "status": "PASS"
+  },
+  "missingCamera": {
+    "status": "PASS",
+    "scope": "no-camera failure handling, not physical capture",
+    "cycles": 3,
+    "exit": 143
+  },
+  "camera": {
+    "status": "BLOCKED",
+    "reason": "no cameras available",
+    "exit": 2,
+    "verification": "未验证"
+  },
+  "network": {
+    "status": "PASS",
+    "verification": "已验证",
+    "bytes": 5187,
+    "jpegSha256": "010abfae4b220b563e730f578b57133bddc9191a846d8ca688c21c7bfc6992d1",
+    "sourcePort": 8000,
+    "clientPort": 57367
+  },
+  "service": {
+    "status": "active",
+    "result": "success",
+    "restarts": 0,
+    "mode": "recording + fixture"
+  }
+}

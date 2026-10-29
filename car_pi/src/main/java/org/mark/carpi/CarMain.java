@@ -16,14 +16,20 @@ public final class CarMain {
             options.put(args[i],args[i+1]);
         }
         switch (args[0]) {
-            case "doctor" -> report(options, environment());
+            case "doctor" -> {
+                var config=CarConfig.load(options.containsKey("--config") ? Path.of(options.get("--config")) : null);
+                var result=environment();result.put("backend",config.hardware().backend());result.put("cameraMode",config.camera());
+                result.put("physicalIOConfigured",config.hardware().backend().equals("pigpio"));
+                result.put("physicalIOVerified",false);result.put("realCameraVerified",false);
+                report(options,result);
+            }
             case "serve" -> {
                 var config = CarConfig.load(options.containsKey("--config") ? Path.of(options.get("--config")) : null);
                 var runtime = new CarRuntime(config);
                 CountDownLatch stopped = new CountDownLatch(1);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> { try { runtime.close(); } finally { stopped.countDown(); } }, "car-shutdown"));
                 runtime.start();
-                System.out.println("READY tcp="+runtime.port()+" backend=recording");
+                System.out.println("READY tcp="+runtime.port()+" backend="+config.hardware().backend());
                 stopped.await();
             }
             case "verify" -> {
@@ -33,6 +39,12 @@ public final class CarMain {
                 if (suite.equals("protocol") || suite.equals("fixture-video")) {
                     try { result.putAll(suite.equals("protocol") ? ProtocolVerification.run() : FixtureVerification.run()); }
                     catch (Exception | AssertionError e) { result.put("status","FAIL"); result.put("reason",e.toString()); }
+                } else if(suite.equals("camera")) {
+                    try(var source=new org.mark.carpi.camera.RpicamFrameSource("rpicam-vid")) {
+                        byte[] jpeg=source.frame();var image=javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(jpeg));
+                        if(image==null || image.getWidth()!=320 || image.getHeight()!=240)throw new java.io.IOException("Invalid capture dimensions");
+                        result.put("status","PASS");result.put("scope","single frame only; phone/10min stability unverified");result.put("jpegBytes",jpeg.length);
+                    } catch(java.io.IOException e) { result.put("status","BLOCKED");result.put("reason",e.toString()); }
                 } else { result.put("status","BLOCKED"); result.put("reason","Suite not implemented; real hardware and camera unverified"); }
                 report(options,result);
                 if (!"PASS".equals(result.get("status"))) System.exit(2);
@@ -46,7 +58,7 @@ public final class CarMain {
         out.put("kernel",System.getProperty("os.version")); out.put("arch",System.getProperty("os.arch"));
         out.put("java",System.getProperty("java.runtime.version"));
         out.put("version",Objects.toString(CarMain.class.getPackage().getImplementationVersion(),"development"));
-        out.put("backend","recording"); out.put("physicalIO",false); out.put("camera",false); out.put("tensorflow",false);
+        out.put("physicalIOVerified",false); out.put("realCameraVerified",false); out.put("tensorflow",false);
         return out;
     }
     private static void report(Map<String,String> options,Map<String,Object> result) throws Exception {

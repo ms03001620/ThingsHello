@@ -10,14 +10,17 @@ import java.util.Map;
 /** Records intended actions only; never claims physical output. */
 public final class RecordingHardware implements Hardware {
     private final BufferedWriter writer;
-    public RecordingHardware(Path path) throws IOException {
+    private final String backend;
+    public RecordingHardware(Path path) throws IOException { this(path,"recording"); }
+    public RecordingHardware(Path path,String backend) throws IOException {
+        this.backend=backend;
         Files.createDirectories(path.toAbsolutePath().getParent());
         writer = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
     public synchronized void action(long command, String action, Object value) {
         try {
             writer.write(new Gson().toJson(Map.of("time", Instant.now().toString(), "command", command,
-                "action", action, "value", value, "backend", "recording")));
+                "action", action, "value", value, "backend", backend)));
             writer.newLine(); writer.flush();
         } catch (IOException e) { throw new UncheckedIOException(e); }
     }

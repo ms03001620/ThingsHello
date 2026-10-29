@@ -39,8 +39,9 @@ public final class CommandDispatcher implements AutoCloseable {
         if (next.equals(owner)) return;
         if (servoRelease != null) servoRelease.cancel(false);
         if (!owner.equals("none")) hardware.action(id, owner + ".release", true);
+        owner = "none";
+        hardware.action(id, next + ".bind", true);
         owner = next;
-        hardware.action(id, owner + ".bind", true);
     }
     private void dispatch(long id, Frame frame, Consumer<Frame> response) {
         JsonObject o = JsonParser.parseString(frame.body()).getAsJsonObject();
@@ -93,9 +94,11 @@ public final class CommandDispatcher implements AutoCloseable {
             queue.submit(() -> {
                 if (servoRelease != null) servoRelease.cancel(false);
                 if (buzzerStop != null) buzzerStop.cancel(false);
-                if (!owner.equals("none")) hardware.action(0,owner+".release",true);
-                camera.close();
-                hardware.action(0,"all.stop",true);
+                try { if (!owner.equals("none")) hardware.action(0,owner+".release",true); }
+                finally {
+                    try { camera.close(); }
+                    finally { hardware.action(0,"all.stop",true); }
+                }
             }).get(5,TimeUnit.SECONDS);
         } catch (Exception e) { throw new IllegalStateException("control shutdown",e); }
         finally {

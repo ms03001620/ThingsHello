@@ -1,0 +1,36 @@
+# Experimental; NOT enabled by default, not verified on the current Pi OS.
+backend=pigpio
+hardware.confirmed=false
+pigpio.host=127.0.0.1
+pigpio.port=8888
+bind=0.0.0.0
+tcp.port=8010
+udp.port=8000
+camera=disabled
+actions.path=results/hardware-actions.jsonl
+
+# Enable only connected and reviewed devices. Required polarities have no guessed default.
+wheel.enabled=false
+left.in1=21
+left.in2=20
+left.pwm=16
+right.in1=26
+right.in2=19
+right.pwm=13
+# left.forwardHigh=<true or false, verified against wiring>
+# right.forwardHigh=<true or false, verified against wiring>
+pwm.frequencyHz=300
+# Standard pigpio PWM rounds to a supported frequency (often 320Hz).
+# Zero tolerance REJECTS that mismatch. Change only after checking driver specifications.
+pwm.maxErrorHz=0
+
+light.enabled=false
+light.red=22
+light.green=27
+light.blue=24
+# light.activeHigh=<true or false>
+buzzer.enabled=false
+buzzer.pin=8
+# buzzer.activeHigh=<true or false>
+servo.enabled=false
+# servo.pin=<confirmed BCM number, not the old Android name PWM0>
