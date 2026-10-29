@@ -1,0 +1,382 @@
+{
+  "collectedDate": "2026-10-30",
+  "testDates": [
+    "2026-10-29",
+    "2026-10-30"
+  ],
+  "usbEndurance": {
+    "status": "PASS",
+    "cycles": [
+      {
+        "cycle": 1,
+        "status": "PASS"
+      },
+      {
+        "cycle": 2,
+        "status": "PASS"
+      },
+      {
+        "cycle": 3,
+        "status": "PASS"
+      },
+      {
+        "cycle": 4,
+        "status": "PASS"
+      },
+      {
+        "cycle": 5,
+        "status": "PASS"
+      },
+      {
+        "cycle": 6,
+        "status": "PASS"
+      },
+      {
+        "cycle": 7,
+        "status": "PASS"
+      },
+      {
+        "cycle": 8,
+        "status": "PASS"
+      },
+      {
+        "cycle": 9,
+        "status": "PASS"
+      },
+      {
+        "cycle": 10,
+        "status": "PASS"
+      }
+    ],
+    "samples": [
+      {
+        "elapsed": 1.03,
+        "frames": 1,
+        "rssKiB": 51840,
+        "cpuSeconds": 2.79,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 31.18,
+        "frames": 151,
+        "rssKiB": 53172,
+        "cpuSeconds": 4.86,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 61.3,
+        "frames": 301,
+        "rssKiB": 53256,
+        "cpuSeconds": 6.7,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 91.41,
+        "frames": 451,
+        "rssKiB": 53336,
+        "cpuSeconds": 8.32,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 121.51,
+        "frames": 601,
+        "rssKiB": 53456,
+        "cpuSeconds": 10.13,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 151.61,
+        "frames": 751,
+        "rssKiB": 53472,
+        "cpuSeconds": 11.98,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 181.72,
+        "frames": 901,
+        "rssKiB": 53472,
+        "cpuSeconds": 13.83,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 211.83,
+        "frames": 1051,
+        "rssKiB": 53472,
+        "cpuSeconds": 15.68,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 241.92,
+        "frames": 1201,
+        "rssKiB": 53472,
+        "cpuSeconds": 17.55,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 272.0,
+        "frames": 1351,
+        "rssKiB": 53472,
+        "cpuSeconds": 19.44,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 302.09,
+        "frames": 1501,
+        "rssKiB": 53472,
+        "cpuSeconds": 21.17,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 332.2,
+        "frames": 1651,
+        "rssKiB": 53476,
+        "cpuSeconds": 23.05,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 362.29,
+        "frames": 1801,
+        "rssKiB": 53476,
+        "cpuSeconds": 24.93,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 392.44,
+        "frames": 1951,
+        "rssKiB": 53424,
+        "cpuSeconds": 26.78,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 422.54,
+        "frames": 2101,
+        "rssKiB": 53428,
+        "cpuSeconds": 28.69,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 452.63,
+        "frames": 2251,
+        "rssKiB": 53456,
+        "cpuSeconds": 30.57,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 482.72,
+        "frames": 2401,
+        "rssKiB": 53340,
+        "cpuSeconds": 32.33,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 512.81,
+        "frames": 2551,
+        "rssKiB": 53344,
+        "cpuSeconds": 34.17,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 542.9,
+        "frames": 2701,
+        "rssKiB": 53344,
+        "cpuSeconds": 36.01,
+        "children": [
+          "1882"
+        ]
+      },
+      {
+        "elapsed": 572.98,
+        "frames": 2851,
+        "rssKiB": 53344,
+        "cpuSeconds": 37.83,
+        "children": [
+          "1882"
+        ]
+      }
+    ],
+    "frames": 2986,
+    "elapsed": 600.06,
+    "uniqueFrames": 2986,
+    "minJpegBytes": 2412,
+    "maxJpegBytes": 13304,
+    "cameraInfo": {
+      "sizes": [
+        {
+          "mWidth": 320,
+          "mHeight": 240
+        }
+      ],
+      "hardwareLevel": null,
+      "backend": "v4l2",
+      "error": "",
+      "sentFrames": 2996,
+      "droppedFrames": 0
+    },
+    "finalMetrics": {
+      "rssKiB": 53428,
+      "cpuSeconds": 39.52,
+      "children": []
+    },
+    "verification": "已验证",
+    "exit": 143,
+    "scope": "USB capture + Java TCP/UDP, not phone UI or waveform precision"
+  },
+  "lanLive": {
+    "status": "PASS",
+    "verification": "已验证",
+    "mode": "live",
+    "bytes": 7429,
+    "jpegSha256": "56d53b06b9e994839e1f88b4d64e53e96d67611088359de70d66e852981e8fe1",
+    "sourcePort": 8000,
+    "clientPort": 65203
+  },
+  "wheelDc": {
+    "executed": true,
+    "physicalObservation": "user confirmed wheel movement; per-wheel direction mapping not separately confirmed",
+    "actions": [
+      {
+        "action": "left-forward",
+        "elapsedSeconds": 0.20022373000006155,
+        "output": "DC pulse; not PWM verification"
+      },
+      {
+        "action": "left-reverse",
+        "elapsedSeconds": 0.2002145669998754,
+        "output": "DC pulse; not PWM verification"
+      },
+      {
+        "action": "right-forward",
+        "elapsedSeconds": 0.20022519799999827,
+        "output": "DC pulse; not PWM verification"
+      },
+      {
+        "action": "right-reverse",
+        "elapsedSeconds": 0.20028350999996292,
+        "output": "DC pulse; not PWM verification"
+      }
+    ]
+  },
+  "servoSysfs": {
+    "executed": true,
+    "physicalObservation": "user confirmed position changes",
+    "pulses": [
+      {
+        "pulseNs": 1150000,
+        "elapsedSeconds": 0.5007295989998966,
+        "periodNs": 20000000,
+        "enabledAfter": 0
+      },
+      {
+        "pulseNs": 800000,
+        "elapsedSeconds": 0.5009600220000721,
+        "periodNs": 20000000,
+        "enabledAfter": 0
+      },
+      {
+        "pulseNs": 1500000,
+        "elapsedSeconds": 0.5008601380000073,
+        "periodNs": 20000000,
+        "enabledAfter": 0
+      }
+    ]
+  },
+  "pigpioApi": {
+    "status": "PASS",
+    "scope": "daemon/API only; no active PWM waveform",
+    "pins": [
+      {
+        "pin": 16,
+        "requestedHz": 300,
+        "returnedHz": 320,
+        "duty": 0
+      },
+      {
+        "pin": 13,
+        "requestedHz": 300,
+        "returnedHz": 320,
+        "duty": 0
+      }
+    ]
+  },
+  "javaDigital": {
+    "status": "PASS",
+    "scope": "Java dispatcher to native GPIO API",
+    "exit": 143,
+    "physicalObservation": "same devices previously confirmed by user"
+  },
+  "manualObservations": {
+    "wheelsRaised": "已架空",
+    "lightAndBuzzer": "听到了蜂鸣响了 亮灯 也看见了",
+    "wheelMovement": "看到轮子转了 ok",
+    "servoMovement": "看到了"
+  },
+  "nativeShutdown": {
+    "normalTermination": "FAIL",
+    "cleanup": "SIGKILL",
+    "exit": 137,
+    "productionEnabled": false
+  },
+  "deployedVersion": "0.4.1-usb",
+  "artifactSha256": "7ff5af25b7d85ea3ca797a8be80b775ccc958dcb48be6614238f4ec0bd64f69e",
+  "notVerified": [
+    "300Hz waveform precision/jitter",
+    "motor speed calibration and full direction mapping",
+    "Java wheel/servo physical exclusion",
+    "pigpio DMA servo output",
+    "old phone UI preview",
+    "30-minute full integration"
+  ],
+  "cleanupReboot": {
+    "bootIdChanged": true,
+    "service": "active",
+    "result": "success",
+    "restarts": 0,
+    "servoPwmEnabled": false,
+    "pigpiodRemaining": false,
+    "lan": {
+      "status": "PASS",
+      "verification": "已验证",
+      "mode": "live",
+      "bytes": 5057,
+      "jpegSha256": "2e65ae3508b81b1f2d0b360f994a4afc7c52bbd7b24384ee2d7b755f14f5c1de",
+      "sourcePort": 8000,
+      "clientPort": 64692
+    }
+  }
+}

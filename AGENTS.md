@@ -4,7 +4,7 @@
 
 ## 当前重点：Pi 3 Java 迁移
 
-当前任务是将 `app` 小车系统迁移到 Raspberry Pi OS Lite + Java。保留 `app/` 原源码不动，在独立 `car_pi/` 工程逐步重构；当前提供 Java 21 recording/fixture 服务、rpicam 采集与实验性 pigpio 适配器；真实外设仍未验证。实施顺序、代码映射、Pi 实机环境结果及分阶段验收方法见 [Pi 3 Java 迁移计划](doc/migration/pi3-java-plan.md)。以平台迁移为主，不顺带开展业务改版或全面 bug 修复；每阶段分别记录模拟验证与硬件实测结果。
+当前任务是将 `app` 小车系统迁移到 Raspberry Pi OS Lite + Java。保留 `app/` 原源码不动，在独立 `car_pi/` 工程逐步重构；当前提供 Java 21 recording/fixture 服务、rpicam 采集与实验性 pigpio 适配器；USB 摄像头、灯、蜂鸣器、基本轮动和 sysfs 舵机已实测，完整控制集成尚未通过，见 [硬件测试表](doc/migration/hardware-test-table.md)。实施顺序、代码映射、Pi 实机环境结果及分阶段验收方法见 [Pi 3 Java 迁移计划](doc/migration/pi3-java-plan.md)。以平台迁移为主，不顺带开展业务改版或全面 bug 修复；每阶段分别记录模拟验证与硬件实测结果。
 
 ## 项目概况与阅读顺序
 

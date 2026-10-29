@@ -38,3 +38,14 @@ Pi 上切换：`scripts/activate.sh /home/pi/thingshello car-pi-<version>`；成
 - 外设异常会尝试停用所有已启用设备并锁定后端，重启才可重新使用。daemon 连接已丢失时无法保证远端物理输出已停止；日志只证明调用意图与返回值，不能替代波形或物理观察。
 
 实现参考：[Raspberry Pi rpicam 官方说明](https://www.raspberrypi.com/documentation/accessories/camera-software.html)、[pigpio 官方客户端协议与频率表](https://github.com/joan2937/pigpio/blob/master/pigpio.py)。未将这些实现作为库复制或打包。
+
+## USB 摄像头实测入口
+
+当前 USB UVC 设备应使用 `config/usb.properties`（V4L2 原生 MJPG）；部署时将 `camera.device` 设置为 `/dev/v4l/by-id/usb-lihappe8_Corp._USB_2.0_Camera-video-index0`。源端采集 30fps，Java 取最新帧以约 5fps 发送。
+
+- 单帧：`bin/car-pi verify --suite camera --config config/usb.properties --output results/usb-camera.json`。
+- 10 次启停与 10 分钟运行：在 Pi 分发目录执行 `python3 scripts/verify-usb.py --duration 600 --cycles 10`，使用独立的 18010/18000 端口和 recording 外设，不操作 GPIO。
+- 局域网实图：`python3 scripts/network-smoke.py <PI_IP> --expect live --output results/live.json`，结果旁保存收到的 JPEG。
+- `droppedFrames` 当前统计超过 UDP 大小上限的帧；源端 30→5fps 主动取样不在该计数内。资源采样中的 RSS/CPU 为 Java 进程，不包含采集子进程。
+
+真实硬件测试表见 `doc/migration/hardware-test-table.md`。

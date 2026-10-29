@@ -42,8 +42,8 @@ echo 0        | sudo tee $P/enable         # 停止输出
 
 ### 用 pigpio 控制（car_pi 的 pigpio 后端）
 
-pigpiod 的 `set_servo_pulsewidth(18, 800..1500)` 在 BCM18 上走 DMA 定时，精度足够；
-当前 Pi 上尚未安装 pigpiod，接入后需按上表脉宽范围限制并实测确认。
+pigpiod 的 `set_servo_pulsewidth(18, 800..1500)` 走 DMA 定时；本轮没有验证该路径的舵机动作及波形精度，已通过的是上面的 sysfs 硬件 PWM。
+2026-10-30 已在 Pi 本地源码编译并启动 pigpio V79，但正常退出测试未通过，尚未安装常驻服务。具体记录见 [硬件测试表](hardware-test-table.md)。
 
 ---
 
