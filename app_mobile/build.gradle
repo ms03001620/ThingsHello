@@ -26,6 +26,9 @@ android {
 }
 
 dependencies {
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.14.2'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.14.2'
+    implementation 'com.google.android.exoplayer:exoplayer-rtsp:2.14.2'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':lib_unit_socket')
     implementation project(':lib_base')

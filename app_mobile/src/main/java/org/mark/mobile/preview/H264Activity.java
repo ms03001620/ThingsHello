@@ -6,12 +6,18 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.VideoView;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.source.rtsp.RtspMediaSource;
+import com.google.android.exoplayer2.ui.PlayerView;
 import androidx.appcompat.app.AppCompatActivity;
 
-/** Separate CSI preview. Android MediaPlayer handles RTSP/H264; no USB decoder changes. */
+/** Separate CSI preview. ExoPlayer handles RTSP/H264 over TCP. */
 public final class H264Activity extends AppCompatActivity {
-    private VideoView video;
+    private PlayerView video;
+    private SimpleExoPlayer player;
     private TextView status;
     private Uri stream;
     @Override public void onCreate(Bundle state) {
@@ -22,7 +28,8 @@ public final class H264Activity extends AppCompatActivity {
         Button back = new Button(this);
         back.setText("返回"); back.setOnClickListener(v -> finish()); root.addView(back);
         status = new TextView(this); root.addView(status);
-        video = new VideoView(this);
+        video = new PlayerView(this);
+        video.setUseController(false);
         root.addView(video, new LinearLayout.LayoutParams(-1, 0, 1));
         Button retry = new Button(this);
         retry.setText("重试"); retry.setOnClickListener(v -> play()); root.addView(retry);
@@ -31,19 +38,31 @@ public final class H264Activity extends AppCompatActivity {
         if (host != null && !host.trim().isEmpty()) {
             stream = new Uri.Builder().scheme("rtsp").encodedAuthority(host + ":8554").appendPath("csi").build();
         }
-        video.setOnPreparedListener(player -> { status.setText("H.264 排线摄像头"); video.start(); });
-        video.setOnErrorListener((player, what, extra) -> {
-            status.setText("视频连接失败，请确认小车 RTSP 服务已启动，点击重试。(" + what + "/" + extra + ")");
-            return true;
-        });
     }
+
     private void play() {
-        video.stopPlayback();
+        releasePlayer();
         if (stream == null) { status.setText("没有小车地址，请返回重新连接。"); return; }
         status.setText("正在连接排线摄像头…");
-        video.setVideoURI(stream);
-        video.start();
+        player = new SimpleExoPlayer.Builder(this).build();
+        video.setPlayer(player);
+        player.addListener(new Player.EventListener() {
+            @Override public void onPlaybackStateChanged(int state) {
+                if (state == Player.STATE_READY) status.setText("H.264 排线摄像头");
+            }
+            @Override public void onPlayerError(ExoPlaybackException error) {
+                status.setText("视频播放失败，点击重试：" + error.getMessage());
+            }
+        });
+        player.setMediaSource(new RtspMediaSource.Factory().setForceUseRtpTcp(true)
+                .createMediaSource(MediaItem.fromUri(stream)));
+        player.prepare();
+        player.setPlayWhenReady(true);
     }
     @Override protected void onStart() { super.onStart(); play(); }
-    @Override protected void onStop() { video.stopPlayback(); super.onStop(); }
+    private void releasePlayer() {
+        video.setPlayer(null);
+        if (player != null) { player.release(); player = null; }
+    }
+    @Override protected void onStop() { releasePlayer(); super.onStop(); }
 }

@@ -13,7 +13,7 @@ srt: false
 paths:
   csi:
     source: rpiCamera
-    sourceOnDemand: true
+    sourceOnDemand: false
     sourceOnDemandStartTimeout: 20s
     sourceOnDemandCloseAfter: 1s
     rpiCameraWidth: 640

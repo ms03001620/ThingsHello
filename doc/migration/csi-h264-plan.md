@@ -25,3 +25,7 @@
 ## App 安装后的车端部署核验
 
 用户已安装 APK。已核对 192.168.8.229：Java car-pi 0.5.2-servo 与独立 car-pi-rtsp 均 active，RTSP 配置与仓库一致。局域网完成 DESCRIBE → SETUP（TCP interleaved）→ PLAY，收到 4206 字节 RTP 数据：已验证。H.264 本次无 Java 控制程序改动，因此沿用现有 Java 发布，新增功能由已部署的独立 RTSP 服务提供。手机实际显示仍未验证。
+
+## 手机连接失败修复（进行中）
+
+手机日志对应 RTSP 连接后 EOF、未 SETUP。发现按需首次 DESCRIBE 缺少 sprop-parameter-sets；已将源改为常驻编码（服务停机释放），再次 DESCRIBE 含 SPS/PPS 和 profile-level-id。用户正在重试原 App。另将手机播放器改为 ExoPlayer 2.14.2 RTSP/TCP，APK 构建已通过；未确认手机画面前仍为未验证。此改动独立于 USB。
