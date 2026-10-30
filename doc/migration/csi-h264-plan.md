@@ -29,3 +29,7 @@
 ## 手机连接失败修复（进行中）
 
 手机日志对应 RTSP 连接后 EOF、未 SETUP。发现按需首次 DESCRIBE 缺少 sprop-parameter-sets；已将源改为常驻编码（服务停机释放），再次 DESCRIBE 含 SPS/PPS 和 profile-level-id。用户正在重试原 App。另将手机播放器改为 ExoPlayer 2.14.2 RTSP/TCP，APK 构建已通过；未确认手机画面前仍为未验证。此改动独立于 USB。
+
+## 延迟优化
+
+用户确认原 App 已显示排线画面：手机预览已验证，但报告延迟高。新增 ExoPlayer 低缓冲设置（150..500ms，起播100ms、重缓冲150ms）；车端 baseline profile、每10帧关键帧。需安装新版 APK；真实端到端延迟未测量，优化效果未验证。USB 无改动。

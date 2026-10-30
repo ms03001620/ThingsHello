@@ -21,6 +21,7 @@ paths:
     rpiCameraFPS: 20
     rpiCameraCodec: hardwareH264
     rpiCameraBitrate: 1000000
-    rpiCameraIDRPeriod: 20
+    rpiCameraIDRPeriod: 10
+    rpiCameraH264Profile: baseline
     rpiCameraHFlip: true
     rpiCameraVFlip: true

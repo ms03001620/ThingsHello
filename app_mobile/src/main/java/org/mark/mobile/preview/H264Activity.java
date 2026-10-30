@@ -7,6 +7,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.ExoPlaybackException;
@@ -44,7 +45,11 @@ public final class H264Activity extends AppCompatActivity {
         releasePlayer();
         if (stream == null) { status.setText("没有小车地址，请返回重新连接。"); return; }
         status.setText("正在连接排线摄像头…");
-        player = new SimpleExoPlayer.Builder(this).build();
+        DefaultLoadControl buffering = new DefaultLoadControl.Builder()
+                .setBufferDurationsMs(150, 500, 100, 150)
+                .setPrioritizeTimeOverSizeThresholds(true)
+                .build();
+        player = new SimpleExoPlayer.Builder(this).setLoadControl(buffering).build();
         video.setPlayer(player);
         player.addListener(new Player.EventListener() {
             @Override public void onPlaybackStateChanged(int state) {
