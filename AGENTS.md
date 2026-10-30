@@ -100,4 +100,4 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 
 ## 排线 H.264 / RTSP 新预览
 
-续接计划：`doc/migration/csi-h264-plan.md`。Pi 服务配置与部署：`car_pi/deploy/csi/`；手机入口 `CtrlActivity` 的 `btn_h264`，独立页面 `app_mobile/.../preview/H264Activity.java`。旧 USB JPEG/UDP 保留。
+续接计划：`doc/migration/csi-h264-plan.md`；720p 低延迟根因与优化记录：`doc/migration/csi-h264-latency-optimization.md`。Pi 服务配置与部署：`car_pi/deploy/csi/`；手机入口 `CtrlActivity` 的 `btn_h264`，独立页面 `app_mobile/.../preview/H264Activity.java`。旧 USB JPEG/UDP 保留。

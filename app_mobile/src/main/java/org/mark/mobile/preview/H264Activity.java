@@ -24,8 +24,32 @@ public final class H264Activity extends AppCompatActivity {
     private long lastStatsTime;
     private int lastRenderedFrames;
     private com.google.android.exoplayer2.decoder.DecoderCounters lastCounters;
+    private float appliedSpeed = 1.0f;
     private Uri stream;
     private final android.os.Handler diagnostics = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable catchUp = new Runnable() {
+        @Override public void run() {
+            if (player == null) return;
+            float next = 1.0f;
+            if (player.getPlaybackState() == Player.STATE_READY) {
+                long bufferedMs = player.getTotalBufferedDuration();
+                if (bufferedMs > 350) {
+                    next = 1.25f;
+                } else if (bufferedMs > 140) {
+                    next = 1.15f;
+                } else if (bufferedMs > 75) {
+                    next = 1.05f;
+                } else if (bufferedMs > 45) {
+                    next = appliedSpeed > 1.0f ? 1.05f : 1.0f;
+                }
+            }
+            if (next != appliedSpeed) {
+                appliedSpeed = next;
+                player.setPlaybackSpeed(next);
+            }
+            diagnostics.postDelayed(this, 200);
+        }
+    };
     private final Runnable bufferSample = new Runnable() {
         @Override public void run() {
             if (player == null) return;
@@ -71,7 +95,11 @@ public final class H264Activity extends AppCompatActivity {
         video.setPlayer(player);
         player.addListener(new Player.EventListener() {
             @Override public void onPlaybackStateChanged(int state) {
-                if (state == Player.STATE_READY) status.setText("H.264 排线摄像头");
+                if (state == Player.STATE_READY) {
+                    status.setText("H.264 排线摄像头");
+                    diagnostics.removeCallbacks(catchUp);
+                    diagnostics.post(catchUp);
+                }
             }
             @Override public void onPlayerError(ExoPlaybackException error) {
                 status.setText("视频播放失败，点击重试：" + error.getMessage());
@@ -81,6 +109,7 @@ public final class H264Activity extends AppCompatActivity {
                 .createMediaSource(MediaItem.fromUri(stream)));
         player.prepare();
         player.setPlayWhenReady(true);
+        diagnostics.post(catchUp);
         diagnostics.post(bufferSample);
     }
     private void updateStreamInfo() {
@@ -111,7 +140,9 @@ public final class H264Activity extends AppCompatActivity {
 
     @Override protected void onStart() { super.onStart(); play(); }
     private void releasePlayer() {
+        diagnostics.removeCallbacks(catchUp);
         diagnostics.removeCallbacks(bufferSample);
+        appliedSpeed = 1.0f;
         lastCounters = null;
         lastStatsTime = 0;
         lastRenderedFrames = 0;

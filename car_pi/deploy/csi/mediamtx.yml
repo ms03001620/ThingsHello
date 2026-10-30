@@ -20,9 +20,10 @@ paths:
     rpiCameraHeight: 720
     # Use the 4:3 binned sensor mode to avoid the narrower 1080p sensor crop.
     rpiCameraMode: "1296:972:10:P"
-    rpiCameraFPS: 20
+    rpiCameraFPS: 30
+    rpiCameraDenoise: "off"
     rpiCameraCodec: hardwareH264
-    rpiCameraBitrate: 2000000
+    rpiCameraBitrate: 2500000
     rpiCameraIDRPeriod: 10
     rpiCameraH264Profile: baseline
     rpiCameraHFlip: true

@@ -77,3 +77,13 @@
 按用户要求改为每5秒采样/刷新，渲染FPS按实际采样间隔计算，页面标注“近5秒”。首次无完整采样显示占位；退出页面仍取消任务。代码已完成，沿用已有统计数据，不增加网络或解码工作。
 
 5秒刷新版本：JDK17构建及ADB覆盖安装Pixel 10已验证；现场显示效果未验证。
+
+## 720p 不降分辨率低延迟优化（P0）
+
+完整根因分析、分级方案与回退说明见 [720p 视频延迟分析与优化记录](csi-h264-latency-optimization.md)。定位结论：`exoplayer-rtsp:2.14.2` 的 `SinglePeriodTimeline` 固定 `isDynamic=false`，内置直播追帧未启用；常驻流连接时 `RtpH264Reader` 以首个非 IDR 帧锁基准时间，导致约 170～240ms 缓冲常驻不回落。另实机 `wlan0` 默认 `power_save=on` 且处在拥挤的 2.4GHz 信道 11。
+
+- [x] `H264Activity` 增加 200ms 播放缓冲巡检与分层倍速追帧（`>350ms` 1.25x、`>140ms` 1.15x、`>75ms` 1.05x、`<=45ms` 恢复 1.0x），离开/重试重置：已完成。
+- [x] 车端 `mediamtx.yml` 保持 1280×720（`1296:972:10:P`），升至 30fps、2.5Mbps、`rpiCameraDenoise: "off"`，备份 `/opt/car-pi-rtsp/mediamtx-before-p0-30fps.yml`：已部署并验证服务 active、硬件 H264 正常。
+- [x] 车端 `wlan0` 关闭无线省电（运行态 `Power save: off` 及 NetworkManager 持久化 `powersave=disable`）：已验证。
+- [x] JDK17 `assembleDebug` 构建并 ADB 覆盖安装 Pixel 10：已验证。
+- [ ] 手机现场播放缓冲回落读数、流畅度与体感延迟对比：待现场验证。
