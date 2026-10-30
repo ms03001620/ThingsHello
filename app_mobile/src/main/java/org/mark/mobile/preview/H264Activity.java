@@ -21,6 +21,15 @@ public final class H264Activity extends AppCompatActivity {
     private SimpleExoPlayer player;
     private TextView status;
     private Uri stream;
+    private final android.os.Handler diagnostics = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable bufferSample = new Runnable() {
+        @Override public void run() {
+            if (player == null) return;
+            android.util.Log.d("CsiLatency", "bufferedMs=" + player.getTotalBufferedDuration()
+                    + " state=" + player.getPlaybackState());
+            diagnostics.postDelayed(this, 2000);
+        }
+    };
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -49,7 +58,7 @@ public final class H264Activity extends AppCompatActivity {
                 .setBufferDurationsMs(150, 500, 100, 150)
                 .setPrioritizeTimeOverSizeThresholds(true)
                 .build();
-        player = new SimpleExoPlayer.Builder(this).setLoadControl(buffering).build();
+        player = new SimpleExoPlayer.Builder(this, new LowLatencyRenderersFactory(this)).setLoadControl(buffering).build();
         video.setPlayer(player);
         player.addListener(new Player.EventListener() {
             @Override public void onPlaybackStateChanged(int state) {
@@ -63,9 +72,11 @@ public final class H264Activity extends AppCompatActivity {
                 .createMediaSource(MediaItem.fromUri(stream)));
         player.prepare();
         player.setPlayWhenReady(true);
+        diagnostics.post(bufferSample);
     }
     @Override protected void onStart() { super.onStart(); play(); }
     private void releasePlayer() {
+        diagnostics.removeCallbacks(bufferSample);
         video.setPlayer(null);
         if (player != null) { player.release(); player = null; }
     }
