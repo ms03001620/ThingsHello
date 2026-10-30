@@ -55,7 +55,7 @@ public final class H264Activity extends AppCompatActivity {
         if (stream == null) { status.setText("没有小车地址，请返回重新连接。"); return; }
         status.setText("正在连接排线摄像头…");
         DefaultLoadControl buffering = new DefaultLoadControl.Builder()
-                .setBufferDurationsMs(150, 500, 100, 150)
+                .setBufferDurationsMs(75, 200, 50, 75)
                 .setPrioritizeTimeOverSizeThresholds(true)
                 .build();
         player = new SimpleExoPlayer.Builder(this, new LowLatencyRenderersFactory(this)).setLoadControl(buffering).build();
