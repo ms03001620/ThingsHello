@@ -16,11 +16,11 @@ paths:
     sourceOnDemand: false
     sourceOnDemandStartTimeout: 20s
     sourceOnDemandCloseAfter: 1s
-    rpiCameraWidth: 640
-    rpiCameraHeight: 480
+    rpiCameraWidth: 1280
+    rpiCameraHeight: 720
     rpiCameraFPS: 20
     rpiCameraCodec: hardwareH264
-    rpiCameraBitrate: 1000000
+    rpiCameraBitrate: 2000000
     rpiCameraIDRPeriod: 10
     rpiCameraH264Profile: baseline
     rpiCameraHFlip: true

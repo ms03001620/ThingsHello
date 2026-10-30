@@ -1,6 +1,6 @@
 # CSI H.264 RTSP
 
-独立 MediaMTX 1.21.3 服务，保留 Java USB 配置。地址 `rtsp://小车IP:8554/csi`。常驻启用 OV5647，以确保首次 DESCRIBE 已具备 SPS/PPS；停止服务时释放摄像头。640x480/20fps、1Mbps、硬件 H.264；双翻转纠正实拍倒置。
+独立 MediaMTX 1.21.3 服务，保留 Java USB 配置。地址 `rtsp://小车IP:8554/csi`。常驻启用 OV5647，以确保首次 DESCRIBE 已具备 SPS/PPS；停止服务时释放摄像头。1280x720/20fps、2Mbps、硬件 H.264；双翻转纠正实拍倒置。
 
 从官方 release 下载 `mediamtx_v1.21.3_linux_arm64.tar.gz`（64 位 Pi OS），解压到 `/opt/car-pi-rtsp`，将本目录 mediamtx.yml 放入该目录。安装：
 
