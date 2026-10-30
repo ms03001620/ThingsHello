@@ -21,3 +21,7 @@
 - 手机 APK 构建使用 JDK17；默认 JDK23 会导致旧 AGP dex 失败。命令：`JAVA_HOME=/Users/mazhenjin/Library/Java/JavaVirtualMachines/jbr-17.0.12/Contents/Home ./gradlew :app_mobile:assembleDebug`。
 - 下一步：安装 `app_mobile/build/outputs/apk/debug/app_mobile-debug.apk`，连接 192.168.8.229:8010，点击 h264；确认画面/返回/重试。手机解码和持续视频仍未验证，不能因 DESCRIBE 成功标记全部实测通过。
 - 原 USB 页面、采集、协议均未修改。H264Activity 仅依赖当前连接 host，并单独管理 RTSP 播放器。
+
+## App 安装后的车端部署核验
+
+用户已安装 APK。已核对 192.168.8.229：Java car-pi 0.5.2-servo 与独立 car-pi-rtsp 均 active，RTSP 配置与仓库一致。局域网完成 DESCRIBE → SETUP（TCP interleaved）→ PLAY，收到 4206 字节 RTP 数据：已验证。H.264 本次无 Java 控制程序改动，因此沿用现有 Java 发布，新增功能由已部署的独立 RTSP 服务提供。手机实际显示仍未验证。
