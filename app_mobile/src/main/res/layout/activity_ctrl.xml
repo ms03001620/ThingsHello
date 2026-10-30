@@ -18,6 +18,12 @@
             android:layout_alignParentRight="true"
             android:text="preview" />
 
+        <Button
+            android:id="@+id/btn_h264"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="h264" />
+
         <SeekBar
             android:id="@+id/seek_speed"
             android:layout_width="250dp"

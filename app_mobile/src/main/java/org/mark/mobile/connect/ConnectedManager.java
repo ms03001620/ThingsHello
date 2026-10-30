@@ -39,7 +39,12 @@ public class ConnectedManager extends CmdConstant {
         return instance;
     }
 
+    private volatile String connectedHost;
+
+    public String getConnectedHost() { return connectedHost; }
+
     public void init(final String host, final int port) {
+        connectedHost = host;
         mExecutorForWrite.execute(new Runnable() {
             @Override
             public void run() {

@@ -1,0 +1,13 @@
+[Unit]
+Description=ThingsHello CSI H264 RTSP
+After=network.target
+[Service]
+User=pi
+SupplementaryGroups=video render
+WorkingDirectory=/opt/car-pi-rtsp
+ExecStart=/opt/car-pi-rtsp/mediamtx /opt/car-pi-rtsp/mediamtx.yml
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+[Install]
+WantedBy=multi-user.target

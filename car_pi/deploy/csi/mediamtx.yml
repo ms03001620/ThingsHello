@@ -1,0 +1,26 @@
+# MediaMTX 1.21.3, Raspberry Pi arm64 build with rpiCamera support.
+logLevel: info
+rtsp: true
+rtspAddress: :8554
+rtspTransports: [udp, tcp]
+rtpAddress: :8002
+rtcpAddress: :8003
+moq: false
+rtmp: false
+hls: false
+webrtc: false
+srt: false
+paths:
+  csi:
+    source: rpiCamera
+    sourceOnDemand: true
+    sourceOnDemandStartTimeout: 20s
+    sourceOnDemandCloseAfter: 1s
+    rpiCameraWidth: 640
+    rpiCameraHeight: 480
+    rpiCameraFPS: 20
+    rpiCameraCodec: hardwareH264
+    rpiCameraBitrate: 1000000
+    rpiCameraIDRPeriod: 20
+    rpiCameraHFlip: true
+    rpiCameraVFlip: true

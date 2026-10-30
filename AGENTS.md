@@ -97,3 +97,7 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 - `app` 与 `app_test` 各有 `com/leinardi/android/things/pio/SoftPwm.java`，修改 PWM 时核对两处用途。
 - 小车硬件初始化受 `DeviceManager` 中 `iot_rpi3` 型号判断限制；普通手机或模拟器上的构建/启动结果不能替代外设验证。设备使用细节见前述使用说明。
 - 搜索优先限定目标模块的 `src/main/java/` 和 `src/main/res/`，默认排除 `build/`、`.gradle/`、`.idea/`；模型、FFmpeg 头文件和二进制库仅在相关任务中展开。
+
+## 排线 H.264 / RTSP 新预览
+
+续接计划：`doc/migration/csi-h264-plan.md`。Pi 服务配置与部署：`car_pi/deploy/csi/`；手机入口 `CtrlActivity` 的 `btn_h264`，独立页面 `app_mobile/.../preview/H264Activity.java`。旧 USB JPEG/UDP 保留。

@@ -25,6 +25,7 @@
             android:name=".CtrlActivity"
             android:launchMode="singleTop" />
         <activity android:name=".preview.PreviewActivity" />
+        <activity android:name=".preview.H264Activity" android:exported="false" />
         <activity
             android:name=".TestActivity">
         </activity>

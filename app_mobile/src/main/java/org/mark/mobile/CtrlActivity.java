@@ -43,6 +43,12 @@ public class CtrlActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.btn_h264).setOnClickListener(view -> {
+            android.content.Intent intent = new android.content.Intent(this, org.mark.mobile.preview.H264Activity.class);
+            intent.putExtra("host", ConnectedManager.getInstance().getConnectedHost());
+            startActivity(intent);
+        });
+
         SeekBar seekBar = findViewById(R.id.seek_speed);
         seekBar.setMax(100);
         seekBar.setProgress(WheelCmd.DEFAULT_SPEED);
