@@ -18,3 +18,5 @@ journalctl -u car-pi-rtsp -f
 参考：https://mediamtx.org/docs/references/configuration-file
 
 进度与下一步：doc/migration/csi-h264-plan.md。
+
+720p 显式选择1296×972传感器模式，避免自动选择1080p模式造成取景变窄；输出仍为1280×720，16:9会裁剪部分上下视野。
