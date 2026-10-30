@@ -30,7 +30,7 @@ public final class H264Activity extends AppCompatActivity {
         @Override public void run() {
             if (player == null) return;
             updateStreamInfo();
-            diagnostics.postDelayed(this, 1000);
+            diagnostics.postDelayed(this, 5000);
         }
     };
     @Override public void onCreate(Bundle state) {
@@ -104,7 +104,7 @@ public final class H264Activity extends AppCompatActivity {
         lastCounters = counters;
         lastStatsTime = now;
         String text = dimensions + "  ·  H.264 / RTSP-TCP\n渲染 " + fps
-                + " 帧/秒  ·  累计丢帧 " + dropped
+                + " 帧/秒（近5秒）  ·  累计丢帧 " + dropped
                 + "  ·  播放缓冲 " + player.getTotalBufferedDuration() + " ms（非总延迟）";
         if (!text.contentEquals(streamInfo.getText())) streamInfo.setText(text);
     }
