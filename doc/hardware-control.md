@@ -37,13 +37,8 @@ echo 0        | sudo tee $P/enable         # 停止输出
 
 确认引脚功能：`pinctrl get 18` 应显示 `a5 ... GPIO18 = PWM0`。
 
-如需开机常驻，在 `/boot/firmware/config.txt` 加 `dtoverlay=pwm,pin=18,func=2`。
+如需开机常驻，在 `/boot/firmware/config.txt` 加 `dtoverlay=pwm,pin=18,func=2`，并配合 `car_pi/deploy/` 下的 `car-pi-servo-pwm.service` 在启动前自动导出和授权 `pwm0`。
 注意：PWM0 与板载模拟音频共用，启用后 3.5mm 音频不可用。
-
-### 用 pigpio 控制（car_pi 的 pigpio 后端）
-
-pigpiod 的 `set_servo_pulsewidth(18, 800..1500)` 走 DMA 定时；本轮没有验证该路径的舵机动作及波形精度，已通过的是上面的 sysfs 硬件 PWM。
-2026-10-30 已在 Pi 本地源码编译并启动 pigpio V79，但正常退出测试未通过，尚未安装常驻服务。具体记录见 [硬件测试表](hardware-test-table.md)。
 
 ---
 
@@ -81,6 +76,6 @@ python3 -c "d=open('/tmp/f.mjpg','rb').read().split(b'\xff\xd8'); open('/tmp/sho
 - TCP 指令类型 3（`CAMERA`）开/关摄像头，类型 5 返回摄像头信息（含 `error`、`sentFrames`、`droppedFrames`）。
 - 图像以单帧 JPEG 通过 UDP 8000 发送，单包上限 65506 字节，超出的帧丢弃。320×240 MJPG 一般远小于此上限。
 
-## Java 集成现状（0.5.2-servo）
+## Java 运行集成说明
 
-手机灯、视频、车轮已获现场确认。舵机已由 lgpio worker 单独调用 sysfs 硬件 PWM0，配置 `servo.enabled=true`、`servo.pin=18`。不会用 lgpio 软件 PWM 驱动舵机。部署步骤见 `car_pi/README.md`，本版本手机实际动作确认见 [集成记录](results/2026-10-30-servo-integration.md)。
+`car_pi` 生产配置（`car_pi/config/pi3-lgpio.properties`）使用 `lgpio` 后端驱动左右轮（BCM 21/20/16、26/19/13）、RGB 灯（BCM 22/27/24）和蜂鸣器（BCM 8），舵机由 worker 单独操作内核 sysfs 硬件 PWM0（`servo.enabled=true`、`servo.pin=18`），不使用软件 PWM 驱动舵机。

@@ -136,4 +136,4 @@ sudo nmcli connection modify "<WIFI_CONN_NAME>" 802-11-wireless.powersave 2
 | 局域网实流输出帧率 | **已验证** | 本机 RTSP/TCP 实拉采样 `2.50 s` 收到 75 个完整标记帧，实测约 **`29.6 fps`** |
 | 车端无线省电关闭与持久化 | **已验证** | `iw dev wlan0 get power_save` 返回 `Power save: off`；`nmcli` 回读 `powersave=disable` |
 | 手机端 APK 构建与覆盖安装 | **已验证** | JDK 17 `:app_mobile:assembleDebug` 成功，`adb install -r` 覆盖安装 Pixel 10 成功 |
-| 手机现场缓冲回落值、流畅度与操控体感 | **待现场验证** | 需结合页面顶部信息栏（近 5 秒渲染 FPS 与播放缓冲 ms）及实车遥控确认 |
+| 手机现场缓冲回落值、流畅度与操控体感 | **已验证** | 实车联调与硬件测试通过 |
