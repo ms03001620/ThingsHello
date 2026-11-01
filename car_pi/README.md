@@ -63,5 +63,6 @@ sudo systemctl stop car-pi
 - `config/`：树莓派实车硬件运行配置（`pi3-lgpio.properties`）。
 - `deploy/`：系统部署配置，包含 systemd 服务单元模板、硬件初始化脚本、流媒体服务配置及命令手册（[deploy/README.md](deploy/README.md)）。
 - `gradle/`：Gradle Wrapper 构建包装器配置。
+- `hardware-tests/`：树莓派实机验证脚本（控制、USB 摄像头、网络、生命周期、缺失摄像头冒烟测试），需在发布目录根下运行，运行方式与结果判定见 [hardware-tests/README.md](hardware-tests/README.md)。
 - `scripts/`：版本打包上传与树莓派端版本切换脚本。
 - `src/`：Java 业务源码、资源文件及单元测试代码。
