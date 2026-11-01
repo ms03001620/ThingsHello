@@ -95,10 +95,10 @@ cd car_pi
 ### 3.2 生成本地可直接运行的分发目录
 
 ```bash
-# 默认版本号为 0.1.0-dev
+# 默认版本号为当前 git 短提交号（如 3fa7a09；car_pi/ 下有未提交改动时为 3fa7a09-dirty）
 ./gradlew installDist
 
-# 指定发布版本号
+# 手动覆盖版本号
 ./gradlew installDist -PreleaseVersion=0.1.1
 ```
 
@@ -204,7 +204,7 @@ bin/car-pi verify --suite camera --config config/pi3-lgpio.properties --output r
 
 **参数说明：**
 - `<user@host>`（必填）：树莓派 SSH 目标地址，如 `pi@192.168.1.50` 或 `pi@raspberrypi.local`（仅允许字母、数字及 `_.@:-`）。
-- `[version]`（选填）：发布版本号，默认值为 `0.1.0-dev`（仅允许字母、数字及 `_.-`）。**注意：树莓派 `~/thingshello/releases/` 下不能已存在同名版本目录，否则脚本会拒绝覆盖并报错退出。**
+- `[version]`（选填）：发布版本号。**推荐省略**，默认使用当前 git 短提交号（如 `3fa7a09`），这样车上的版本目录能直接对应到某次提交；`car_pi/` 下有未提交改动时会变成 `<提交号>-dirty` 并给出警告，建议先提交再部署。不在 git 仓库中时回退为 `0.1.0-dev`。也可手动指定（仅允许字母、数字及 `_.-`）。**注意：树莓派 `~/thingshello/releases/` 下不能已存在同名版本目录，否则脚本会拒绝覆盖并报错退出。**
 
 **内部自动执行的完整流程：**
 1. 在 `car_pi` 目录运行 `./gradlew test installDist distTar -PreleaseVersion=<version>`；
@@ -216,6 +216,10 @@ bin/car-pi verify --suite camera --config config/pi3-lgpio.properties --output r
 
 ```bash
 cd car_pi
+# 推荐：版本号自动取当前 git 提交号
+./scripts/deploy.sh pi@192.168.1.50
+
+# 手动覆盖版本号
 ./scripts/deploy.sh pi@192.168.1.50 0.1.1
 ```
 

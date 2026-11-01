@@ -1,6 +1,15 @@
 plugins { id 'application' }
 repositories { mavenCentral() }
-version = providers.gradleProperty('releaseVersion').getOrElse('0.1.0-dev')
+// 默认版本号 = 当前 git 短提交号（工作区有未提交改动时加 -dirty）；可用 -PreleaseVersion=xxx 手动覆盖
+def gitVersion = {
+    try {
+        def sha = ['git', 'rev-parse', '--short=7', 'HEAD'].execute(null, projectDir).text.trim()
+        if (!sha) return '0.1.0-dev'
+        def dirty = ['git', 'status', '--porcelain', '--', '.'].execute(null, projectDir).text.trim()
+        return dirty ? "${sha}-dirty" : sha
+    } catch (Exception ignored) { return '0.1.0-dev' }
+}
+version = providers.gradleProperty('releaseVersion').getOrElse(gitVersion())
 java { sourceCompatibility = JavaVersion.VERSION_21; targetCompatibility = JavaVersion.VERSION_21 }
 tasks.withType(JavaCompile).configureEach { options.release = 21; options.encoding = 'UTF-8' }
 application { mainClass = 'org.mark.carpi.CarMain' }
