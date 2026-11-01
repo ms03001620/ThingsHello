@@ -285,7 +285,9 @@ sudo install -m 755 "$REL/deploy/prepare-servo-pwm.sh" /usr/local/sbin/car-pi-pr
 sudo cp "$REL/deploy/car-pi-servo-pwm.service" /etc/systemd/system/
 ```
 
-主服务对它是弱依赖（`Wants=`）：PWM 准备失败时只影响舵机，车轮、灯和视频照常可用，可用 `journalctl -u car-pi-servo-pwm -b` 排查。
+- 主服务对它是弱依赖（`Wants=`），且 `lgpio_worker.py` 内置了硬件 `PWM0` 软降级保护。
+- 当 `car-pi-servo-pwm` 失败（如未开启 `dtoverlay` 或 `/sys/class/pwm/pwmchip0/pwm0` 无权限）时，`car-pi` 仅在日志输出 `servo PWM0 unavailable` 告警并自动跳过舵机输出，**不会阻塞进程启动或触发硬件熔断，车轮、灯光、蜂鸣器和视频均照常可用**。
+- 排查时可查看 `journalctl -u car-pi-servo-pwm -b` 与 `journalctl -u car-pi -b`。
 
 旧版本曾安装 `/etc/systemd/system/car-pi.service.d/servo-pwm.conf` 覆盖文件，升级时请删除，避免与新模板重复：
 

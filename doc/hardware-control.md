@@ -78,4 +78,6 @@ python3 -c "d=open('/tmp/f.mjpg','rb').read().split(b'\xff\xd8'); open('/tmp/sho
 
 ## Java 运行集成说明
 
-`car_pi` 生产配置（`car_pi/config/pi3-lgpio.properties`）使用 `lgpio` 后端驱动左右轮（BCM 21/20/16、26/19/13）、RGB 灯（BCM 22/27/24）和蜂鸣器（BCM 8），舵机由 worker 单独操作内核 sysfs 硬件 PWM0（`servo.enabled=true`、`servo.pin=18`），不使用软件 PWM 驱动舵机。
+- 生产配置 `car_pi/config/pi3-lgpio.properties` 使用 `lgpio` 后端驱动左右轮（BCM 21/20/16、26/19/13）、RGB 灯（BCM 22/27/24）和蜂鸣器（BCM 8）。
+- 舵机由 worker 单独操作内核 sysfs 硬件 PWM0（`servo.enabled=true`、`servo.pin=18`），不使用软件 PWM 驱动舵机。
+- 若启动时 sysfs `pwm0` 节点未就绪或无写权限，worker 会打印告警并自动降级禁用舵机，不影响车轮、灯光和蜂鸣器正常工作。

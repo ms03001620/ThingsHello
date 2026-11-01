@@ -74,13 +74,31 @@ class LgpioTest {
             assertEquals(2,calls.stream().filter("wheel.bind"::equals).count());
         }
     }
-    @Test void hardwareServoUsesSysfsAndReleasesOnTimeoutAndDisconnect() throws Exception {
+    @Test void missingPwmDegradesServoOnlyWithoutBreakingWheels() throws Exception {
         var base=config();
         var c=new HardwareConfig(base.backend(),base.host(),base.port(),base.left(),base.right(),
             base.lights(),base.lightHigh(),base.buzzer(),base.buzzerHigh(),18,base.frequency(),base.maxError());
         var env=new HashMap<>(fakeLibrary());
         env.put("CAR_PI_PWM_PATH",temporary.resolve("missing-pwm").toString());
-        assertThrows(java.io.IOException.class,()->new LgpioClient(c,env));
+        Hardware audit=new Hardware(){public void action(long id,String action,Object value){}public void close(){}};
+        try(var client=new LgpioClient(c,env)) {
+            assertThrows(java.io.IOException.class,()->client.servo(18,1501));
+            try(var dispatcher=new CommandDispatcher(new LinuxHardware(client,c,audit))) {
+                dispatcher.submit(new Frame(4,"{\"progress\":50}"),f->{}).get();
+                dispatcher.submit(new Frame(0,"{\"left\":40,\"right\":40}"),f->{}).get();
+            }
+        }
+        String calls=Files.readString(temporary.resolve("calls"));
+        assertTrue(calls.contains("pwm:16:300:40"));
+        assertTrue(calls.contains("pwm:13:300:40"));
+        assertFalse(calls.contains("claim:18:"));
+        assertTrue(calls.endsWith("closed\n"));
+    }
+    @Test void hardwareServoUsesSysfsAndReleasesOnTimeoutAndDisconnect() throws Exception {
+        var base=config();
+        var c=new HardwareConfig(base.backend(),base.host(),base.port(),base.left(),base.right(),
+            base.lights(),base.lightHigh(),base.buzzer(),base.buzzerHigh(),18,base.frequency(),base.maxError());
+        var env=new HashMap<>(fakeLibrary());
         Path pwm=Files.createDirectory(temporary.resolve("pwm"));
         for(String name:List.of("enable","duty_cycle","period"))Files.writeString(pwm.resolve(name),"0");
         env.put("CAR_PI_PWM_PATH",pwm.toString());

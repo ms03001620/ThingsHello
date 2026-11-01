@@ -8,18 +8,26 @@ handle = lgpio.gpiochip_open(0)
 claimed, frequencies = set(), {}
 servo_pin = None if len(sys.argv) < 3 or sys.argv[2] == "none" else int(sys.argv[2])
 pwm_path = Path(os.environ.get("CAR_PI_PWM_PATH", "/sys/class/pwm/pwmchip0/pwm0"))
+servo_ready = False
 
 def pwm_write(name, value):
     (pwm_path / name).write_text(str(value))
 
 def servo(value):
+    global servo_ready
     if value != 0 and not 800 <= value <= 1500:
         raise ValueError("Servo pulse outside 800..1500 us")
-    if value == 0:
-        pwm_write("enable", 0)
-    else:
-        pwm_write("duty_cycle", value * 1000)
-        pwm_write("enable", 1)
+    if not servo_ready:
+        return
+    try:
+        if value == 0:
+            pwm_write("enable", 0)
+        else:
+            pwm_write("duty_cycle", value * 1000)
+            pwm_write("enable", 1)
+    except OSError as error:
+        servo_ready = False
+        print("servo PWM0 disabled (%s): %s" % (pwm_path, error), file=sys.stderr, flush=True)
 
 
 def checked(value):
@@ -54,7 +62,7 @@ def free(pin):
 
 def cleanup():
     errors = []
-    if servo_pin is not None:
+    if servo_ready:
         try:
             servo(0)
         except Exception as error:
@@ -77,9 +85,13 @@ try:
     if servo_pin is not None:
         if servo_pin != 18:
             raise ValueError("Hardware PWM0 requires BCM18")
-        servo(0)
-        pwm_write("duty_cycle", 0)
-        pwm_write("period", 20000000)
+        try:
+            pwm_write("enable", 0)
+            pwm_write("duty_cycle", 0)
+            pwm_write("period", 20000000)
+            servo_ready = True
+        except OSError as error:
+            print("servo PWM0 unavailable (%s): %s; continuing without servo" % (pwm_path, error), file=sys.stderr, flush=True)
     ready = True
     print(json.dumps({"ok": True, "value": 0}), flush=True)
     for line in sys.stdin:
