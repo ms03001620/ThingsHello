@@ -35,8 +35,8 @@
 # 树莓派真实硬件环境
 ./build/install/car-pi/bin/car-pi serve --config config/pi3-lgpio.properties
 
-# 本地无硬件模拟环境
-./build/install/car-pi/bin/car-pi serve --config config/fixture.properties
+# 本地无硬件模拟环境（不传 --config 默认以 recording 模式运行）
+./build/install/car-pi/bin/car-pi serve
 ```
 
 **关闭服务：**
@@ -60,8 +60,8 @@ sudo systemctl stop car-pi
 
 ## 目录说明
 
-- `config/`：运行配置文件，包含树莓派实机硬件、摄像头及本地模拟运行配置。
-- `deploy/`：系统部署配置，包含 systemd 服务单元模板、硬件初始化脚本及流媒体服务配置。
+- `config/`：树莓派实车硬件运行配置（`pi3-lgpio.properties`）。
+- `deploy/`：系统部署配置，包含 systemd 服务单元模板、硬件初始化脚本、流媒体服务配置及命令手册（[deploy/README.md](deploy/README.md)）。
 - `gradle/`：Gradle Wrapper 构建包装器配置。
 - `scripts/`：版本打包上传与树莓派端版本切换脚本。
 - `src/`：Java 业务源码、资源文件及单元测试代码。

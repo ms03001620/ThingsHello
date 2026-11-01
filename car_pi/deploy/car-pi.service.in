@@ -1,6 +1,7 @@
 [Unit]
 Description=ThingsHello Pi Java car service
-After=network.target
+Requires=car-pi-servo-pwm.service
+After=network.target car-pi-servo-pwm.service
 
 [Service]
 Type=simple

@@ -14,8 +14,6 @@ paths:
   csi:
     source: rpiCamera
     sourceOnDemand: false
-    sourceOnDemandStartTimeout: 20s
-    sourceOnDemandCloseAfter: 1s
     rpiCameraWidth: 1280
     rpiCameraHeight: 720
     # Use the 4:3 binned sensor mode to avoid the narrower 1080p sensor crop.

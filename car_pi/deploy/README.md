@@ -10,10 +10,9 @@
 
 | 路径 | 作用 |
 | --- | --- |
-| `deploy/car-pi.service.in` | 主服务 `systemd` 单元模板（含 `@USER@`、`@ROOT@` 占位符） |
+| `deploy/car-pi.service.in` | 主服务 `systemd` 单元模板（含 `@USER@`、`@ROOT@` 占位符及舵机预备服务依赖） |
 | `deploy/prepare-servo-pwm.sh` | 开机以 `root` 导出 BCM18 硬件 `PWM0` 并授权给 `gpio` 组的初始化脚本 |
 | `deploy/car-pi-servo-pwm.service` | 在 `car-pi.service` 启动前自动运行上述脚本的一次性（`oneshot`）服务 |
-| `deploy/servo-pwm.conf` | `car-pi.service` 的 Drop-in 依赖声明（绑定 `Requires` / `After` 舵机 PWM 服务） |
 | `deploy/csi/` | 排线摄像头 MediaMTX H.264 RTSP 独立服务配置（详见 [csi/README.md](csi/README.md)） |
 | `scripts/deploy.sh` | 开发机端一键测试、打包、SCP 上传并在树莓派运行环境自检 |
 | `scripts/activate.sh` | 树莓派端预检、软链接原子切换版本、重启服务及失败自动回滚 |
@@ -164,25 +163,13 @@ bin/car-pi doctor --config config/pi3-lgpio.properties --output results/doctor.j
 # 树莓派真实硬件运行
 bin/car-pi serve --config config/pi3-lgpio.properties
 
-# 开发机本地无硬件模拟运行（使用内置测试图作为摄像头画面）
-bin/car-pi serve --config config/fixture.properties
-
-# 仅记录硬件指令到 JSONL 文件，不操作真实 GPIO
-bin/car-pi serve --config config/recording.properties
+# 本地无硬件模拟运行（不传 --config 默认启用 recording 模式，将动作写入 results/actions.jsonl）
+bin/car-pi serve
 ```
 
-- **启动就绪标志**：标准输出打印 `READY tcp=8010 backend=lgpio`。
+- **启动就绪标志**：标准输出打印 `READY tcp=8010 backend=lgpio`（默认录制模式为 `backend=recording`）。
 - **优雅停止**：前台按 `Ctrl + C`（`SIGINT`）或后台执行 `kill <PID>`（`SIGTERM`）。Shutdown Hook 会自动关闭 Socket、停止摄像头采集、将车轮/灯/蜂鸣器复位并关闭舵机 PWM0。`SIGTERM` 退出码为 `143`（已在 `car-pi.service` 中配置 `SuccessExitStatus=143` 视为正常停止）。
-
-**内置配置文件对比（`config/` 目录）：**
-
-| 配置文件 | `backend` | `camera` | 适用场景 |
-| --- | --- | --- | --- |
-| `pi3-lgpio.properties` | `lgpio` | `v4l2` | **树莓派实车生产配置**（车轮、RGB 灯、蜂鸣器、BCM18 硬件 PWM 舵机、USB 摄像头） |
-| `usb.properties` | `recording` | `v4l2` | 单独测试 `/dev/video0` USB V4L2 摄像头采集，不驱动外设引脚 |
-| `rpicam.properties` | `recording` | `rpicam` | 单独测试 `rpicam-vid` MJPEG 管道采集 |
-| `fixture.properties` | `recording` | `fixture` | 本地联调手机 App：无须硬件与摄像头，回传内置 `320x240` 测试 JPEG |
-| `recording.properties` | `recording` | `disabled` | 仅监听 TCP 控制指令并将硬件动作写入 `results/actions.jsonl` |
+- **生产配置文件**：`config/pi3-lgpio.properties`（`backend=lgpio`、`camera=v4l2`，已配置车轮、RGB 灯、蜂鸣器、BCM18 硬件 PWM 舵机及 USB 摄像头路径）。
 
 ---
 
@@ -296,8 +283,6 @@ cp "$REL/config/pi3-lgpio.properties" "$ROOT/config/service.properties"
 ```bash
 sudo install -m 755 "$REL/deploy/prepare-servo-pwm.sh" /usr/local/sbin/car-pi-prepare-servo
 sudo cp "$REL/deploy/car-pi-servo-pwm.service" /etc/systemd/system/
-sudo mkdir -p /etc/systemd/system/car-pi.service.d
-sudo cp "$REL/deploy/servo-pwm.conf" /etc/systemd/system/car-pi.service.d/
 ```
 
 ### 步骤 3：生成并启用 `car-pi.service`
