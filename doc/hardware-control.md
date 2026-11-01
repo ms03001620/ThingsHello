@@ -47,8 +47,8 @@ echo 0        | sudo tee $P/enable         # 停止输出
 ### 结论
 
 - 摄像头是 **USB UVC 免驱摄像头**（USB ID `038f:6001`），设备节点 `/dev/video0`，不是 CSI 排线摄像头。
-- `rpicam-still` / `rpicam-vid` 报 `no cameras available`，**不能用**；`config/rpicam.properties` 不适用于这台车。
-- 应使用 V4L2：`car_pi` 配置用 `config/usb.properties`（`camera=v4l2`），部署时把 `camera.device` 改成 `/dev/v4l/by-id/usb-lihappe8_Corp._USB_2.0_Camera-video-index0`。
+- `rpicam-still` / `rpicam-vid` 报 `no cameras available`，`camera=rpicam` 模式不适用于 USB 摄像头。
+- 应使用 V4L2（`camera=v4l2`）：在 `car_pi/config/pi3-lgpio.properties` 中已将 `camera.device` 固定为 `/dev/v4l/by-id/usb-lihappe8_Corp._USB_2.0_Camera-video-index0`。
 - Pi 上已有 `v4l2-ctl`，没有 `ffmpeg`。
 
 ### 支持的格式
