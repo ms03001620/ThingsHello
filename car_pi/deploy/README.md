@@ -285,6 +285,15 @@ sudo install -m 755 "$REL/deploy/prepare-servo-pwm.sh" /usr/local/sbin/car-pi-pr
 sudo cp "$REL/deploy/car-pi-servo-pwm.service" /etc/systemd/system/
 ```
 
+主服务对它是弱依赖（`Wants=`）：PWM 准备失败时只影响舵机，车轮、灯和视频照常可用，可用 `journalctl -u car-pi-servo-pwm -b` 排查。
+
+旧版本曾安装 `/etc/systemd/system/car-pi.service.d/servo-pwm.conf` 覆盖文件，升级时请删除，避免与新模板重复：
+
+```bash
+sudo rm -f /etc/systemd/system/car-pi.service.d/servo-pwm.conf
+sudo rmdir --ignore-fail-on-non-empty /etc/systemd/system/car-pi.service.d 2>/dev/null || true
+```
+
 ### 步骤 3：生成并启用 `car-pi.service`
 
 将 `car-pi.service.in` 中的 `@USER@` 和 `@ROOT@` 替换为当前用户名与部署根目录绝对路径：

@@ -1,6 +1,6 @@
 [Unit]
 Description=ThingsHello Pi Java car service
-Requires=car-pi-servo-pwm.service
+Wants=car-pi-servo-pwm.service
 After=network.target car-pi-servo-pwm.service
 
 [Service]
