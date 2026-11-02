@@ -1,29 +1,36 @@
 package org.mark.carpi.runtime
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.job
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import org.mark.carpi.session.CarSession
+import org.mark.carpi.repository.CommandRepository
 import org.mark.carpi.repository.linux.HardwareConfig
 import org.mark.carpi.repository.linux.LgpioClient
 import org.mark.carpi.repository.linux.LinuxCarRepository
 import org.mark.carpi.repository.JsonlActionLogRecorder
 import org.mark.carpi.repository.LoggingCarRepository
 import org.mark.carpi.repository.simulated.SimulatedCarRepository
-import org.mark.carpi.protocol.FrameCodec
 import java.io.IOException
-import java.io.UncheckedIOException
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** TCP 控制服务：单控制端连接，按序把帧交给 CarSession。 */
+/** TCP 控制服务：单控制端连接，收集 CommandRepository 的 Flow，逐条交给 CarSession（处理完再读下一帧）。 */
 class CarRuntime(config: CarConfig) : AutoCloseable {
     private val server = ServerSocket()
     private val clients: MutableSet<Socket> = ConcurrentHashMap.newKeySet()
-    private val workers: ExecutorService = Executors.newCachedThreadPool()
+    /** accept 与客户端读循环（阻塞 socket IO，跑在 Dispatchers.IO 上）。 */
+    private val workers = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val session: CarSession
     private val closed = AtomicBoolean()
     private val hardwareConfig: HardwareConfig = config.hardware
@@ -47,7 +54,7 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
         val ms = hardwareConfig.startupBeepMs
         if (ms <= 0 || closed.get() || (hardwareConfig.real && hardwareConfig.buzzer == null)) return
         try {
-            session.beep(ms)
+            runBlocking { session.beep(ms) }
         } catch (e: RuntimeException) {
             System.err.println("WARN startup beep failed: $e")
         }
@@ -56,7 +63,7 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
     val port: Int get() = server.localPort
 
     fun start() {
-        workers.submit(::accept)
+        workers.launch { accept() }
     }
 
     private fun accept() {
@@ -68,7 +75,7 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
                     // Old phone is the single controller; bound resources for idle clients.
                     if (clients.isNotEmpty()) { socket.close(); return@synchronized }
                     clients.add(socket)
-                    workers.submit { read(socket) }
+                    workers.launch { serve(socket) }
                 }
             } catch (e: IOException) {
                 if (!closed.get()) System.err.println("accept: $e")
@@ -76,28 +83,19 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
         }
     }
 
-    private fun read(socket: Socket) {
+    private suspend fun serve(socket: Socket) {
         try {
             socket.use {
                 socket.tcpNoDelay = true
-                while (!closed.get()) {
-                    val frame = FrameCodec.read(socket.getInputStream()) ?: break
-                    // Await dispatch to preserve order and bound queued commands.
-                    session.submit(frame) { reply ->
-                        try {
-                            socket.getOutputStream().write(FrameCodec.encode(reply.type, reply.body))
-                        } catch (e: IOException) {
-                            throw UncheckedIOException(e)
-                        }
-                    }.get()
-                }
+                // 无 buffer：handle 返回后才读下一帧，保持顺序并限制排队。
+                CommandRepository(socket).commands().collect { session.handle(it) }
             }
         } catch (e: Exception) {
             if (!closed.get()) System.err.println("client: $e")
         } finally {
             if (!closed.get()) {
                 try {
-                    session.releaseControl().get(3, TimeUnit.SECONDS)
+                    withTimeout(3_000) { session.releaseControl() }
                 } catch (e: Exception) {
                     System.err.println("disconnect stop: $e")
                 }
@@ -112,13 +110,10 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
         synchronized(clients) {
             for (s in clients) try { s.close() } catch (e: IOException) { System.err.println(e) }
         }
-        workers.shutdown()
-        try {
-            if (!workers.awaitTermination(5, TimeUnit.SECONDS)) workers.shutdownNow()
-        } catch (e: InterruptedException) {
-            workers.shutdownNow()
-            Thread.currentThread().interrupt()
+        runBlocking {
+            withTimeoutOrNull(5_000) { workers.coroutineContext.job.children.toList().joinAll() }
         }
+        workers.cancel()
         session.close()
     }
 

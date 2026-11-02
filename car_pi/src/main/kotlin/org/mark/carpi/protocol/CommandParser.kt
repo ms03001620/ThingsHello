@@ -3,10 +3,14 @@ package org.mark.carpi.protocol
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import org.mark.carpi.model.Command
+import org.mark.carpi.model.ReceivedCommand
 import org.mark.carpi.protocol.FrameCodec.Frame
 
 /** 协议适配：Frame(type, JSON body) -> Command。gson 只出现在这里。 */
 object CommandParser {
+    /** 帧 -> 原始 type/body + 解析结果，供 CommandRepository 发射。 */
+    fun received(frame: Frame) = ReceivedCommand(frame.type, frame.body, parse(frame))
+
     fun parse(frame: Frame): Command = try {
         decode(frame)
     } catch (e: RuntimeException) {

@@ -1,5 +1,6 @@
 package org.mark.carpi.repository.linux
 
+import org.mark.carpi.beepBlocking
 import org.mark.carpi.recordingRepository
 import com.google.gson.JsonParser
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -49,11 +50,11 @@ class LinuxCarRepositoryTest {
     fun startupBeepTurnsBuzzerOnThenOffAndCloseSilencesIt() {
         val gpio = Fake()
         val session = carSession(recordingRepository(LinuxCarRepository(gpio, config()) { _, _, _ -> }) { _, _, _ -> })
-        session.beep(50).get()
+        session.beepBlocking(50)
         assertEquals("write:8:false", gpio.calls.last())
         Thread.sleep(300)
         assertEquals("write:8:true", gpio.calls.last())
-        session.beep(10000).get(); gpio.calls.clear()
+        session.beepBlocking(10000); gpio.calls.clear()
         session.close()
         assertTrue(gpio.calls.contains("write:8:true")); assertTrue(gpio.closed)
     }

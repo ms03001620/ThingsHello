@@ -9,7 +9,7 @@ class MoveServoUseCaseTest {
     private val log = mutableListOf<String>()
     private val repo = recordingRepository { command, action, value -> log += "$command $action $value" }
     private val sch = FakeScheduler()
-    private val moveServo = MoveServoUseCase(MotionLock(repo), repo, sch)
+    private val moveServo = MoveServoUseCase(MotionLock(repo), repo, sch.scope)
 
     @Test
     fun servoReleasesAfter500msWithTriggeringId() {

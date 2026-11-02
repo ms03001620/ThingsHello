@@ -1,5 +1,8 @@
 package org.mark.carpi.golden
 
+import org.mark.carpi.send
+import org.mark.carpi.beepBlocking
+import org.mark.carpi.releaseBlocking
 import com.google.gson.JsonParser
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -21,8 +24,6 @@ class CarSessionGoldenTest {
         carSession(SimulatedCarRepository.logged(log)).use { script(it, log) }
         return Files.readAllLines(log).map(::stripTime)
     }
-
-    private fun CarSession.send(type: Int, body: String) = submit(Frame(type, body)) {}.get()
 
     @Test
     fun framesOfAllTypesAndErrors(@TempDir dir: Path) {
@@ -63,15 +64,15 @@ class CarSessionGoldenTest {
             d.send(0, """{"left":5,"right":5}""") // 3: servo.release(by 3) + wheel.bind; old timer cancelled
             Thread.sleep(700)                     // 负向检查：被取消的舵机定时器不得触发（需真实等待超过 500ms）
             d.send(4, """{"progress":50}""")     // 4: wheel.release + servo.bind
-            d.releaseControl().get()              // servo.release id 0
+            d.releaseBlocking()              // servo.release id 0
             Thread.sleep(700)                     // 负向检查：no timed release
             d.send(2, """{"di":true}""")         // 5: buzzer on
             awaitLine(log, 5, "buzzer.enabled", "false") // buzzer off id 5
-            d.beep(10000).get()                   // id 0 buzzer on
+            d.beepBlocking(10000)                   // id 0 buzzer on
             d.send(6, """{"rotate":"LEFT","speed":0}""") // 6: wheel bind
             d.send(6, """{}""")                  // 7: already wheel, no bind
-            d.releaseControl().get()
-            d.releaseControl().get()              // no owner: nothing
+            d.releaseBlocking()
+            d.releaseBlocking()              // no owner: nothing
             d.send(4, """{"progress":10}""")     // 8: servo owner at close
         }
         assertEquals(golden("timers"), lines)
@@ -85,8 +86,8 @@ class CarSessionGoldenTest {
         }
         val hw = recordingRepository(closing) { command, action, value -> synchronized(events) { events += "$command:$action:$value" } }
         val d = carSession(hw)
-        d.submit(Frame(0, """{"left":1,"right":1}""")) {}.get()
-        d.beep(10000).get()
+        d.send(0, """{"left":1,"right":1}""")
+        d.beepBlocking(10000)
         d.close()
         assertEquals(
             listOf("1:command:{type=0, body={\"left\":1,\"right\":1}}", "1:wheel.bind:true", "1:wheel.speed:{left=1, right=1}",

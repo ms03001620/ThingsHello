@@ -65,6 +65,19 @@ sudo systemctl start car-pi
 sudo systemctl stop car-pi
 ```
 
+## 代码结构（`src/main/kotlin/org/mark/carpi/`）
+
+依赖只向内：`usecase/`、`session/`、`model/` 不依赖 gson、socket 或 `java.util.concurrent` 线程池。
+
+- `model/`：领域类型 `Command`（Wheel / Light / Beep / Servo / Rotate / Unsupported / Invalid）与 `ReceivedCommand`（原始 type、body + 解析结果）。
+- `protocol/`：`FrameCodec`（4 字节小端长度 + 1 字节 type + UTF-8 JSON）与 `CommandParser`（帧 -> `Command`，gson 只在这里）。
+- `repository/`：`CommandRepository`（把 socket 帧解析为 `Flow<ReceivedCommand>`，无缓冲，处理完一条才读下一帧）、
+  硬件端口 `CarRepository` 与事件日志 `ActionLog`、日志装饰器 `LoggingCarRepository`（先写 actions.jsonl 再执行）、`JsonlActionLogRecorder`；
+  实现位于 `repository/linux/`（lgpio 子进程）与 `repository/simulated/`。
+- `usecase/`：`DriveWheelUseCase`、`RotateUseCase`、`MoveServoUseCase`（500ms 自动释放）、`BeepUseCase`、`SetLightUseCase`，以及车轮/舵机独占锁 `MotionLock`。
+- `session/`：`CarSession`，所有指令与定时器在同一个单线程协程 dispatcher 上串行执行；定时器为 `delay` + `Job.cancel`。
+- `runtime/`：手工装配与启动（`CarRuntime` 单控制端 TCP 服务，收集 Flow 交给 `CarSession`，断开时在 `finally` 中释放运动部件）、`CarConfig`、`SelfCheck`（doctor 自检）。
+
 ## 目录说明
 
 - `config/`：树莓派实车硬件运行配置（`pi3-lgpio.properties`）。

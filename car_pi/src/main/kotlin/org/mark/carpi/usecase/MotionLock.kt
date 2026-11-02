@@ -1,18 +1,18 @@
 package org.mark.carpi.usecase
 
-import org.mark.carpi.model.Cancellable
+import kotlinx.coroutines.Job
 import org.mark.carpi.repository.CarRepository
 
 /**
  * 运动部件独占（车轮 / 舵机同一时刻只有一个 owner）。切换 owner 时先取消待执行的舵机自动释放，
- * 再释放旧 owner、绑定新 owner；所有动作都经 CarRepository 记录。单线程使用（无锁）。
+ * 再释放旧 owner、绑定新 owner；所有动作都经 CarRepository 记录。只在 CarSession 的单线程 dispatcher 上使用（无锁）。
  */
 class MotionLock(private val repository: CarRepository) {
     enum class Device { WHEEL, SERVO }
 
     var owner: Device? = null
         private set
-    private var pendingServoRelease: Cancellable? = null
+    private var pendingServoRelease: Job? = null
 
     /** 让 [device] 成为 owner；已是 owner 时为空操作。 */
     fun acquire(id: Long, device: Device) {
@@ -25,15 +25,18 @@ class MotionLock(private val repository: CarRepository) {
     }
 
     /** 记录新的舵机自动释放任务（替换前需先 [cancelPendingServoRelease]）。 */
-    fun setPendingServoRelease(task: Cancellable) { pendingServoRelease = task }
+    fun setPendingServoRelease(task: Job) { pendingServoRelease = task }
 
     fun cancelPendingServoRelease() { pendingServoRelease?.cancel() }
 
-    /** 定时释放：仅当 [device] 仍是 owner 时释放。 */
+    /** 定时释放：仅当 [device] 仍是 owner 时释放；释放失败也清空 owner（与 [releaseOwner] 一致）。 */
     fun releaseIfOwner(id: Long, device: Device) {
         if (owner == device) {
-            release(id, device)
-            owner = null
+            try {
+                release(id, device)
+            } finally {
+                owner = null
+            }
         }
     }
 

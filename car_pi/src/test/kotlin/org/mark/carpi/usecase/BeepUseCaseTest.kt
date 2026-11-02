@@ -11,7 +11,7 @@ class BeepUseCaseTest {
         val log = mutableListOf<String>()
         val repo = recordingRepository { command, action, value -> log += "$command $action $value" }
         val sch = FakeScheduler()
-        val beep = BeepUseCase(repo, sch)
+        val beep = BeepUseCase(repo, sch.scope)
         beep(1); sch.advance(499)
         assertEquals(listOf("1 buzzer.enabled true"), log)
         sch.advance(1)

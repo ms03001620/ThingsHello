@@ -1,5 +1,7 @@
 package org.mark.carpi.session
 
+import org.mark.carpi.send
+import org.mark.carpi.beepBlocking
 import org.mark.carpi.recordingRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -26,8 +28,8 @@ class CarSessionTest {
     fun switchingToWheelsCancelsOldServoRelease() {
         val r = Recorder()
         carSession(r.hardware).use { d ->
-            d.submit(Frame(4, """{"progress":0}""")) {}.get()
-            d.submit(Frame(0, """{"left":20,"right":20}""")) {}.get()
+            d.send(4, """{"progress":0}""")
+            d.send(0, """{"left":20,"right":20}""")
             Thread.sleep(650)
             assertEquals(1, r.events.count { it.action == "servo.release" })
             assertTrue(r.events.any { it.action == "servo.release" && it.id == 2L })
@@ -39,9 +41,9 @@ class CarSessionTest {
     fun repeatedServoCommandResetsReleaseDeadline() {
         val r = Recorder()
         carSession(r.hardware).use { d ->
-            d.submit(Frame(4, """{"progress":0}""")) {}.get()
+            d.send(4, """{"progress":0}""")
             Thread.sleep(200)
-            d.submit(Frame(4, """{"progress":50}""")) {}.get()
+            d.send(4, """{"progress":50}""")
             Thread.sleep(350)
             assertFalse(r.events.any { it.action == "servo.release" })
             Thread.sleep(350)
@@ -59,7 +61,7 @@ class CarSessionTest {
     private val repo = recordingRepository { command, action, value -> log += "$command $action $value" }
     private val sch = FakeScheduler()
     private fun actions() = log.filterNot { it.contains(" command ") }
-    private fun fakeSession(r: org.mark.carpi.repository.LoggingCarRepository = repo) = CarSession(r, r, sch)
+    private fun fakeSession(r: org.mark.carpi.repository.LoggingCarRepository = repo) = CarSession(r, r, sch.dispatcher)
 
     @Test
     fun beepFalseIsNoopAndBeepTrueStopsAfter500ms() {
@@ -85,7 +87,7 @@ class CarSessionTest {
         s.handle(6, "b", Command.Rotate(Command.Direction.LEFT, 40))
         s.releaseControlNow(); s.releaseControlNow()
         s.handle(4, "b", Command.Servo(100))
-        s.beep(10_000).get()
+        s.beepBlocking(10_000)
         s.close(); sch.advance(20_000)
         assertEquals(
             listOf("1 wheel.bind true", "1 wheel.speed {left=-40, right=40}", "0 wheel.release true",
@@ -104,5 +106,16 @@ class CarSessionTest {
         fakeSession(bad).use { it.handle(1, "b", Command.Light(true)) }
         // 装饰器先记录再委托：失败的动作行仍在，随后是 rejected
         assertEquals(listOf("1 light.rgb [100, 100, 100]", "1 rejected java.lang.IllegalStateException: faulted"), badLog.dropLast(1).takeLast(2))
+    }
+
+    @Test
+    fun testDispatcherCreatesNoSessionThread() {
+        fun sessionThreads() = Thread.getAllStackTraces().keys.count { it.name.startsWith("car-session") }
+        val before = sessionThreads()
+        fakeSession().use { s ->
+            s.handle(4, "b", Command.Servo(0))
+            assertEquals(before, sessionThreads())
+        }
+        assertEquals(before, sessionThreads())
     }
 }

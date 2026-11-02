@@ -1,5 +1,7 @@
 package org.mark.carpi.repository.linux
 
+import org.mark.carpi.send
+import org.mark.carpi.releaseBlocking
 import org.mark.carpi.recordingRepository
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -92,10 +94,10 @@ class LgpioTest {
         val calls = Collections.synchronizedList(mutableListOf<String>())
         val driver = recordingRepository { _, action, _ -> calls.add(action) }
         carSession(driver).use { session ->
-            session.submit(Frame(0, """{"left":40,"right":40}""")) {}.get()
-            session.releaseControl().get()
+            session.send(0, """{"left":40,"right":40}""")
+            session.releaseBlocking()
             assertEquals("wheel.release", calls.last())
-            session.submit(Frame(0, """{"left":0,"right":0}""")) {}.get()
+            session.send(0, """{"left":0,"right":0}""")
             assertEquals(2, calls.count { it == "wheel.bind" })
         }
     }
@@ -108,8 +110,8 @@ class LgpioTest {
         LgpioClient(c, env).use { client ->
             assertThrows(IOException::class.java) { client.servo(18, 1501) }
             carSession(LoggingCarRepository(LinuxCarRepository(client, c, recorder::record), recorder)).use { session ->
-                session.submit(Frame(4, """{"progress":50}""")) {}.get()
-                session.submit(Frame(0, """{"left":40,"right":40}""")) {}.get()
+                session.send(4, """{"progress":50}""")
+                session.send(0, """{"left":40,"right":40}""")
             }
         }
         val calls = Files.readString(temporary.resolve("calls"))
@@ -130,17 +132,17 @@ class LgpioTest {
             assertEquals("20000000", Files.readString(pwm.resolve("period")))
             assertThrows(IOException::class.java) { client.servo(18, 1501) }
             carSession(LoggingCarRepository(LinuxCarRepository(client, c, recorder::record), recorder)).use { session ->
-                session.submit(Frame(4, """{"progress":50}""")) {}.get()
+                session.send(4, """{"progress":50}""")
                 assertEquals("1150000", Files.readString(pwm.resolve("duty_cycle")))
                 assertEquals("1", Files.readString(pwm.resolve("enable")))
                 val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2)
                 while (Files.readString(pwm.resolve("enable")) != "0" && System.nanoTime() < deadline) Thread.sleep(20)
                 assertEquals("0", Files.readString(pwm.resolve("enable")))
-                session.submit(Frame(4, """{"progress":100}""")) {}.get()
+                session.send(4, """{"progress":100}""")
                 assertEquals("1500000", Files.readString(pwm.resolve("duty_cycle")))
-                session.releaseControl().get()
+                session.releaseBlocking()
                 assertEquals("0", Files.readString(pwm.resolve("enable")))
-                session.submit(Frame(4, """{"progress":0}""")) {}.get()
+                session.send(4, """{"progress":0}""")
             }
             assertEquals("0", Files.readString(pwm.resolve("enable")))
         }
