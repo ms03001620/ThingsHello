@@ -2,14 +2,14 @@ package org.mark.carpi.hardware.linux;
 
 import java.util.*;
 
-public record HardwareConfig(String backend,String host,int port,Motor left,Motor right,
+public record HardwareConfig(String backend,Motor left,Motor right,
         List<Integer> lights,Boolean lightHigh,Integer buzzer,Boolean buzzerHigh,Integer servo,int frequency,int maxError) {
     public record Motor(int in1,int in2,int pwm,boolean forwardHigh) {}
-    public static HardwareConfig recording() { return new HardwareConfig("recording","127.0.0.1",8888,null,null,List.of(),null,null,null,null,300,0); }
+    public static HardwareConfig recording() { return new HardwareConfig("recording",null,null,List.of(),null,null,null,null,300,0); }
     public static HardwareConfig load(Properties p) {
         String backend=p.getProperty("backend","recording");
         if(backend.equals("recording"))return recording();
-        if(!Set.of("pigpio","lgpio").contains(backend))throw new IllegalArgumentException("Unknown backend: "+backend);
+        if(!backend.equals("lgpio"))throw new IllegalArgumentException("Unknown backend: "+backend);
         if(!flag(p,"hardware.confirmed",false))throw new IllegalArgumentException("Real hardware requires hardware.confirmed=true after wiring/polarity review");
         Motor left=null,right=null;List<Integer> lights=List.of();Integer buzzer=null,servo=null;Boolean lightHigh=null,buzzerHigh=null;
         if(flag(p,"wheel.enabled",false)) {
@@ -18,14 +18,14 @@ public record HardwareConfig(String backend,String host,int port,Motor left,Moto
         if(flag(p,"light.enabled",false)) { lights=List.of(pin(p,"light.red",22),pin(p,"light.green",27),pin(p,"light.blue",24));lightHigh=requiredFlag(p,"light.activeHigh"); }
         if(flag(p,"buzzer.enabled",false)) { buzzer=pin(p,"buzzer.pin",8);buzzerHigh=requiredFlag(p,"buzzer.activeHigh"); }
         if(flag(p,"servo.enabled",false)) { if(!p.containsKey("servo.pin"))throw new IllegalArgumentException("Explicit BCM servo.pin required; PWM0 is not a BCM pin");servo=pin(p,"servo.pin",-1); }
-        if(backend.equals("lgpio") && servo!=null && servo!=18)throw new IllegalArgumentException("lgpio hardware PWM servo requires BCM18 / PWM0");
+        if(servo!=null && servo!=18)throw new IllegalArgumentException("lgpio hardware PWM servo requires BCM18 / PWM0");
         List<Integer> all=new ArrayList<>(lights);
         if(left!=null) { all.addAll(List.of(left.in1,left.in2,left.pwm,right.in1,right.in2,right.pwm)); }
         if(buzzer!=null)all.add(buzzer);if(servo!=null)all.add(servo);
         if(all.isEmpty())throw new IllegalArgumentException("No hardware device enabled");
         if(new HashSet<>(all).size()!=all.size())throw new IllegalArgumentException("Overlapping BCM pins");
         int hz=number(p,"pwm.frequencyHz",300,1,8000),error=number(p,"pwm.maxErrorHz",0,0,8000);
-        return new HardwareConfig(backend,p.getProperty("pigpio.host","127.0.0.1"),number(p,"pigpio.port",8888,1,65535),left,right,lights,lightHigh,buzzer,buzzerHigh,servo,hz,error);
+        return new HardwareConfig(backend,left,right,lights,lightHigh,buzzer,buzzerHigh,servo,hz,error);
     }
     private static Motor motor(Properties p,String name,int a,int b,int pwm) {
         return new Motor(pin(p,name+".in1",a),pin(p,name+".in2",b),pin(p,name+".pwm",pwm),requiredFlag(p,name+".forwardHigh"));

@@ -31,7 +31,7 @@ public final class CarRuntime implements AutoCloseable {
     private static Hardware hardware(CarConfig config) throws IOException {
         if(config.hardware().backend().equals("recording"))return new SimulatedHardware(config.actions());
         ActionLogRecorder recorder=new JsonlActionLogRecorder(config.actions(),config.hardware().backend());
-        try { return new LinuxHardware(config.hardware().backend().equals("lgpio") ? new LgpioClient(config.hardware()) : new PigpioClient(config.hardware().host(),config.hardware().port()),config.hardware(),recorder); }
+        try { return new LinuxHardware(new LgpioClient(config.hardware()),config.hardware(),recorder); }
         catch(IOException | RuntimeException e) { recorder.close();throw e; }
     }
     public int port() { return server.getLocalPort(); }

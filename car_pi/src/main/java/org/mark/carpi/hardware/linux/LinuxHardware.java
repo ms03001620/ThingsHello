@@ -46,7 +46,7 @@ public final class LinuxHardware implements Hardware {
         io.pwm(m.pwm(),0);io.write(m.in1(),false);io.write(m.in2(),false);io.range(m.pwm(),100);
         speeds.put(m,0);
         int actual=io.frequency(m.pwm(),config.frequency());
-        recorder.record(command,config.backend().equals("lgpio")?"pwm.configuredHz":"pwm.actualHz",Map.of("pin",m.pwm(),"requested",config.frequency(),"actual",actual));
+        recorder.record(command,"pwm.configuredHz",Map.of("pin",m.pwm(),"requested",config.frequency(),"actual",actual));
         if(Math.abs(actual-config.frequency())>config.maxError())throw new IOException("PWM frequency mismatch: requested "+config.frequency()+", actual "+actual);
     }
     private void drive(HardwareConfig.Motor m,int speed)throws IOException {

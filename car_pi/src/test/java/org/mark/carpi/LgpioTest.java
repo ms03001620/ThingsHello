@@ -77,7 +77,7 @@ class LgpioTest {
     }
     @Test void missingPwmDegradesServoOnlyWithoutBreakingWheels() throws Exception {
         var base=config();
-        var c=new HardwareConfig(base.backend(),base.host(),base.port(),base.left(),base.right(),
+        var c=new HardwareConfig(base.backend(),base.left(),base.right(),
             base.lights(),base.lightHigh(),base.buzzer(),base.buzzerHigh(),18,base.frequency(),base.maxError());
         var env=new HashMap<>(fakeLibrary());
         env.put("CAR_PI_PWM_PATH",temporary.resolve("missing-pwm").toString());
@@ -97,7 +97,7 @@ class LgpioTest {
     }
     @Test void hardwareServoUsesSysfsAndReleasesOnTimeoutAndDisconnect() throws Exception {
         var base=config();
-        var c=new HardwareConfig(base.backend(),base.host(),base.port(),base.left(),base.right(),
+        var c=new HardwareConfig(base.backend(),base.left(),base.right(),
             base.lights(),base.lightHigh(),base.buzzer(),base.buzzerHigh(),18,base.frequency(),base.maxError());
         var env=new HashMap<>(fakeLibrary());
         Path pwm=Files.createDirectory(temporary.resolve("pwm"));
