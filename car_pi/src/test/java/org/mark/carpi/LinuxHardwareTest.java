@@ -13,9 +13,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class LinuxHardwareTest {
     @TempDir Path temporary;
     @Test void hardwareModeDefaultsToSimulatedAndAcceptsLegacyBackendKey() {
-        assertEquals("simulated",HardwareConfig.load(new Properties()).mode());
+        assertEquals(HardwareMode.SIMULATED,HardwareConfig.load(new Properties()).mode());
         Properties legacy=new Properties();legacy.setProperty("backend","recording");
-        assertEquals("simulated",HardwareConfig.load(legacy).mode());
+        assertEquals(HardwareMode.SIMULATED,HardwareConfig.load(legacy).mode());
         Properties real=new Properties();real.setProperty("backend","lgpio");real.setProperty("hardware.confirmed","true");real.setProperty("buzzer.enabled","true");real.setProperty("buzzer.activeHigh","true");
         assertTrue(HardwareConfig.load(real).real());
         Properties bad=new Properties();bad.setProperty("hardware.mode","lgpio");

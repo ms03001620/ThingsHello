@@ -28,8 +28,8 @@ object CarMain {
             "doctor" -> {
                 val config = CarConfig.load(options["--config"]?.let { Path.of(it) })
                 val result = environment()
-                result["hardwareMode"] = config.hardware.mode()
-                result["physicalIOConfigured"] = config.hardware.real()
+                result["hardwareMode"] = config.hardware.mode.key
+                result["physicalIOConfigured"] = config.hardware.real
                 result["physicalIOVerified"] = false
                 report(options, result)
             }
@@ -46,7 +46,7 @@ object CarMain {
                     }
                 }, "car-shutdown"))
                 runtime.start()
-                println("READY tcp=${runtime.port()} hardware=${config.hardware.mode()}")
+                println("READY tcp=${runtime.port()} hardware=${config.hardware.mode.key}")
                 runtime.startupBeep()
                 stopped.await()
             }

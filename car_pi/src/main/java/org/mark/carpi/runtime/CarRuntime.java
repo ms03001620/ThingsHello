@@ -32,7 +32,7 @@ public final class CarRuntime implements AutoCloseable {
     }
     private static Hardware hardware(CarConfig config) throws IOException {
         if(!config.hardware().real())return new SimulatedHardware(config.actions());
-        ActionLogRecorder recorder=new JsonlActionLogRecorder(config.actions(),config.hardware().mode());
+        ActionLogRecorder recorder=new JsonlActionLogRecorder(config.actions(),config.hardware().mode().key());
         try { return new LinuxHardware(new LgpioClient(config.hardware()),config.hardware(),recorder); }
         catch(IOException | RuntimeException e) { recorder.close();throw e; }
     }
