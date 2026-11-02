@@ -35,9 +35,9 @@ object CarMain {
             "doctor" -> {
                 val config = CarConfig.load(options["--config"]?.let { Path.of(it) })
                 val result = environment()
-                result["hardwareMode"] = config.hardware().mode()
-                result["cameraMode"] = config.camera()
-                result["physicalIOConfigured"] = config.hardware().real()
+                result["hardwareMode"] = config.hardware.mode()
+                result["cameraMode"] = config.camera
+                result["physicalIOConfigured"] = config.hardware.real()
                 result["physicalIOVerified"] = false
                 result["realCameraVerified"] = false
                 report(options, result)
@@ -55,7 +55,7 @@ object CarMain {
                     }
                 }, "car-shutdown"))
                 runtime.start()
-                println("READY tcp=${runtime.port()} hardware=${config.hardware().mode()}")
+                println("READY tcp=${runtime.port()} hardware=${config.hardware.mode()}")
                 runtime.startupBeep()
                 stopped.await()
             }
@@ -83,8 +83,8 @@ object CarMain {
                     "camera" -> {
                         val config = CarConfig.load(options["--config"]?.let { Path.of(it) })
                         try {
-                            val source: FrameSource = if (config.camera() == "v4l2") {
-                                V4l2FrameSource(config.cameraDevice())
+                            val source: FrameSource = if (config.camera == "v4l2") {
+                                V4l2FrameSource(config.cameraDevice)
                             } else {
                                 RpicamFrameSource("rpicam-vid")
                             }
