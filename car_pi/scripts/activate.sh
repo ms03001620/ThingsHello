@@ -8,7 +8,10 @@ case "$root" in /*) ;; *) exit 2;; esac
 case "$root" in *[!a-zA-Z0-9_./-]*) exit 2;; esac
 case "$release" in ''|.|..|*[!a-zA-Z0-9_.-]*) exit 2;; esac
 [ -x "$root/releases/$release/bin/car-pi" ]
-(cd "$root/releases/$release" && bin/car-pi doctor --output results/preactivate-doctor.json >/dev/null)
+# 预检用线上服务同一份配置，并在新版本目录下执行（与 systemd 的 WorkingDirectory=current 一致）。
+config="$root/config/service.properties"
+[ -f "$config" ] || { echo "missing $config" >&2; exit 1; }
+(cd "$root/releases/$release" && bin/car-pi doctor --config "$config" --output results/preactivate-doctor.json >/dev/null)
 old=$(readlink "$root/current" || true)
 sudo -v
 [ ! -e "$root/current.next" ] && [ ! -L "$root/current.next" ]

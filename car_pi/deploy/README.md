@@ -222,7 +222,7 @@ cd car_pi
 - `<release-name>`（必填）：`releases/` 下的版本目录名，例如 `car-pi-0.1.1`。
 
 **内部自动执行的完整流程：**
-1. 进入新版本目录，执行 `doctor` 预检（配置与本机自检，结果写入 `results/preactivate-doctor.json`；失败立即中止，不影响当前线上服务）；
+1. 进入新版本目录，用 `<root>/config/service.properties`（不存在则中止）执行 `doctor` 预检（配置与本机自检，结果写入 `results/preactivate-doctor.json`；失败立即中止，不影响当前线上服务）；
 2. 创建临时软链接 `<root>/current.next` 指向新版本；
 3. 停止当前 `car-pi.service`，通过 `mv -Tf` 原子替换 `<root>/current` 软链接；
 4. 启动 `car-pi.service`，最多等待 15 秒，确认服务存活、日志出现 `READY tcp=<端口> ...`，且该端口处于监听状态：
