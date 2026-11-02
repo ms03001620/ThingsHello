@@ -69,14 +69,14 @@ sudo systemctl stop car-pi
 
 依赖只向内：`usecase/`、`viewmodel/`、`model/` 不依赖 gson、socket 或 `java.util.concurrent` 线程池。
 
-- `model/`：领域类型 `Command`（Wheel / Light / Beep / Servo / Rotate / Unsupported / Invalid）与 `ReceivedCommand`（原始 type、body + 解析结果）。
-- `repository/`：`CommandRepository`（把 socket 帧解析为 `Flow<ReceivedCommand>`，无缓冲，处理完一条才读下一帧）、
+- `model/`：领域类型 `Command`（Wheel / Light / Beep / Servo / Rotate / Unsupported / Invalid）、`ReceivedCommand`（原始 type、body + 解析结果）与控制端事件 `ControlEvent`（Connected / Received / Disconnected）。
+- `repository/`：`CommandRepository`（监听 TCP、只接受一个控制端，把帧解析为 `Flow<ControlEvent>`，无缓冲，上层收下一条才继续读帧）、
   硬件端口 `CarRepository` 与事件日志 `ActionLog`、日志装饰器 `LoggingCarRepository`（先写 actions.jsonl 再执行）、`JsonlActionLogRecorder`；
   实现位于 `repository/linux/`（lgpio 子进程）与 `repository/simulated/`；
   `repository/protocol/`：`FrameCodec`（4 字节小端长度 + 1 字节 type + UTF-8 JSON）与 `CommandParser`（帧 -> `Command`，gson 只在这里）。
 - `usecase/`：`DriveWheelUseCase`、`RotateUseCase`、`MoveServoUseCase`（500ms 自动释放）、`BeepUseCase`、`SetLightUseCase`，以及车轮/舵机独占锁 `MotionLock`。
 - `viewmodel/`：`CarViewModel`，所有指令与定时器在同一个单线程协程 dispatcher 上串行执行；定时器为 `delay` + `Job.cancel`。
-- `runtime/`：手工装配与启动（`CarRuntime` 单控制端 TCP 服务，收集 Flow 交给 `CarViewModel`，断开时在 `finally` 中释放运动部件）、`SelfCheck`（doctor 自检）。
+- `runtime/`：手工装配与启动（`CarRuntime` 收集 `CommandRepository` 的事件交给 `CarViewModel`，收到 Disconnected 时释放运动部件；不接触 socket）、`SelfCheck`（doctor 自检）。
 - 根包：`CarMain`（入口）与 `CarConfig`（启动配置）。
 
 ## 目录说明
