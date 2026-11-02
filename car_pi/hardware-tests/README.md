@@ -25,11 +25,10 @@
 
 | 脚本 | 验证内容 | 前提 / 风险 | 运行方式 | 结果文件 |
 |---|---|---|---|---|
-| `verify-control.py` | 左右车轮分别转动后，发送 0 指令能停下；TCP 断开后自动停车；SIGTERM 后电机断电（读取 BCM16、BCM13 引脚电平，应为低电平） | **车轮必须架空**，会真的转动。使用 `config/pi3-lgpio.properties`，端口 18012 | `python3 hardware-tests/verify-control.py --allow-motion` | `results/control-test.json` |
 | `lifecycle.py` | 服务连续 3 次“启动、SIGTERM 退出、端口可以重新绑定” | 使用模拟硬件（`hardware.mode=simulated`），不输出 GPIO。**会占用 8010 端口**，所以必须先停掉 `car-pi` | `python3 hardware-tests/lifecycle.py` | `results/lifecycle.json` |
 
 ## 建议什么时候跑
 
-- 改了车轮、PWM、`lgpio` 或停车逻辑：跑 `verify-control.py`。
+- 改了车轮、PWM、`lgpio` 或停车逻辑：跑单元测试和 `car-pi doctor` 自检。
 - 改了服务启动、退出、systemd 配置：跑 `lifecycle.py`。
 - 摄像头视频只走排线摄像头（MediaMTX/RTSP），目前没有自动化脚本，用手机 App 的 H.264 页面目测，参考 `doc/csi-h264-latency-optimization.md`。
