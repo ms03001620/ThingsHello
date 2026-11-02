@@ -7,16 +7,15 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 /**
- * Wire contract from lib_unit_socket/ConnectedThread (Mark, 2018).
+ * Wire contract from lib_unit_socket/ConnectedThread
  * 帧格式：4 字节小端 body 长度 + 1 字节 type + UTF-8 body。
  */
 object FrameCodec {
     const val MAX_BODY = 500 * 1024
 
-    /** 访问器名保持 type()/body()，Java 调用方无需改动。 */
     data class Frame(
-        @get:JvmName("type") val type: Int,
-        @get:JvmName("body") val body: String,
+        val type: Int,
+        val body: String,
     )
 
     /** 读一帧；在帧边界上干净 EOF 返回 null，截断或长度非法抛异常。 */
@@ -31,7 +30,7 @@ object FrameCodec {
             ((tail[0].toInt() and 0xFF) shl 8) or
             ((tail[1].toInt() and 0xFF) shl 16) or
             ((tail[2].toInt() and 0xFF) shl 24)
-        if (length < 1 || length > MAX_BODY) throw IOException("invalid body length: ${Integer.toUnsignedString(length)}")
+        if (length !in 1..MAX_BODY) throw IOException("invalid body length: ${Integer.toUnsignedString(length)}")
         val body = input.readNBytes(length)
         if (body.size != length) throw EOFException("truncated body")
         // type 按有符号字节解释，与旧 Java 实现一致（-1 编码后读回仍是 -1）。
