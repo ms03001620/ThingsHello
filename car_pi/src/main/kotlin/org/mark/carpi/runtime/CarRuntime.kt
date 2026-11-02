@@ -85,7 +85,7 @@ class CarRuntime @Throws(IOException::class) constructor(config: CarConfig) : Au
                     // Await dispatch to preserve order and bound queued commands.
                     dispatcher.submit(frame) { reply ->
                         try {
-                            socket.getOutputStream().write(FrameCodec.encode(reply.type(), reply.body()))
+                            socket.getOutputStream().write(FrameCodec.encode(reply.type, reply.body))
                         } catch (e: IOException) {
                             throw UncheckedIOException(e)
                         }
