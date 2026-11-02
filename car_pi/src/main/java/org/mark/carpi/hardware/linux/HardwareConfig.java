@@ -4,14 +4,18 @@ import java.util.*;
 
 /** hardware.mode=simulated（默认，只写动作日志）或 real（经 lgpio 驱动真实 GPIO）。 */
 public record HardwareConfig(String mode,Motor left,Motor right,
-        List<Integer> lights,Boolean lightHigh,Integer buzzer,Boolean buzzerHigh,Integer servo,int frequency,int maxError) {
+        List<Integer> lights,Boolean lightHigh,Integer buzzer,Boolean buzzerHigh,Integer servo,int frequency,int maxError,int startupBeepMs) {
     public record Motor(int in1,int in2,int pwm,boolean forwardHigh) {}
     public static final String SIMULATED="simulated",REAL="real";
     public boolean real() { return REAL.equals(mode); }
-    public static HardwareConfig simulated() { return new HardwareConfig(SIMULATED,null,null,List.of(),null,null,null,null,300,0); }
+    public static final int DEFAULT_STARTUP_BEEP_MS=1000;
+    public static HardwareConfig simulated() { return simulated(DEFAULT_STARTUP_BEEP_MS); }
+    public static HardwareConfig simulated(int startupBeepMs) { return new HardwareConfig(SIMULATED,null,null,List.of(),null,null,null,null,300,0,startupBeepMs); }
     public static HardwareConfig load(Properties p) {
         String mode=mode(p);
-        if(mode.equals(SIMULATED))return simulated();
+        // buzzer.startupMs：启动成功后蜂鸣时长，0 为关闭
+        int beep=number(p,"buzzer.startupMs",DEFAULT_STARTUP_BEEP_MS,0,10000);
+        if(mode.equals(SIMULATED))return simulated(beep);
         if(!flag(p,"hardware.confirmed",false))throw new IllegalArgumentException("Real hardware requires hardware.confirmed=true after wiring/polarity review");
         Motor left=null,right=null;List<Integer> lights=List.of();Integer buzzer=null,servo=null;Boolean lightHigh=null,buzzerHigh=null;
         if(flag(p,"wheel.enabled",false)) {
@@ -27,7 +31,7 @@ public record HardwareConfig(String mode,Motor left,Motor right,
         if(all.isEmpty())throw new IllegalArgumentException("No hardware device enabled");
         if(new HashSet<>(all).size()!=all.size())throw new IllegalArgumentException("Overlapping BCM pins");
         int hz=number(p,"pwm.frequencyHz",300,1,8000),error=number(p,"pwm.maxErrorHz",0,0,8000);
-        return new HardwareConfig(mode,left,right,lights,lightHigh,buzzer,buzzerHigh,servo,hz,error);
+        return new HardwareConfig(mode,left,right,lights,lightHigh,buzzer,buzzerHigh,servo,hz,error,beep);
     }
     private static String mode(Properties p) {
         String mode=p.getProperty("hardware.mode");

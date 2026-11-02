@@ -19,6 +19,7 @@ public final class CarRuntime implements AutoCloseable {
     private final ExecutorService workers = Executors.newCachedThreadPool();
     private final CommandDispatcher dispatcher;
     private final AtomicBoolean closed = new AtomicBoolean();
+    private final HardwareConfig hardwareConfig;
     public CarRuntime(CarConfig config) throws IOException {
         CommandDispatcher created = null;
         try {
@@ -27,12 +28,20 @@ public final class CarRuntime implements AutoCloseable {
             created = new CommandDispatcher(hardware(config), new org.mark.carpi.camera.CameraController(config.camera(),config.bind(),config.udpPort(),"rpicam-vid",config.cameraDevice()));
         } catch (IOException | RuntimeException e) { server.close(); if (created != null) created.close(); throw e; }
         dispatcher = created;
+        hardwareConfig = config.hardware();
     }
     private static Hardware hardware(CarConfig config) throws IOException {
         if(!config.hardware().real())return new SimulatedHardware(config.actions());
         ActionLogRecorder recorder=new JsonlActionLogRecorder(config.actions(),config.hardware().mode());
         try { return new LinuxHardware(new LgpioClient(config.hardware()),config.hardware(),recorder); }
         catch(IOException | RuntimeException e) { recorder.close();throw e; }
+    }
+    /** 启动成功（READY 之后）蜂鸣提示；buzzer.startupMs=0 关闭，real 模式未启用蜂鸣器则跳过，失败只告警。 */
+    public void startupBeep() {
+        int ms = hardwareConfig.startupBeepMs();
+        if (ms <= 0 || closed.get() || (hardwareConfig.real() && hardwareConfig.buzzer() == null)) return;
+        try { dispatcher.beep(ms); }
+        catch (RuntimeException e) { System.err.println("WARN startup beep failed: " + e); }
     }
     public int port() { return server.getLocalPort(); }
     public void start() { workers.submit(this::accept); }

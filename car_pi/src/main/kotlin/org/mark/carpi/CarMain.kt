@@ -56,6 +56,7 @@ object CarMain {
                 }, "car-shutdown"))
                 runtime.start()
                 println("READY tcp=${runtime.port()} hardware=${config.hardware().mode()}")
+                runtime.startupBeep()
                 stopped.await()
             }
 

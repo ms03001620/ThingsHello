@@ -23,6 +23,24 @@ class LinuxHardwareTest {
         Properties old=new Properties();old.setProperty("backend","pigpio");
         assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(old));
     }
+    @Test void startupBeepDurationIsConfigurable() {
+        assertEquals(1000,HardwareConfig.load(new Properties()).startupBeepMs());
+        Properties off=new Properties();off.setProperty("buzzer.startupMs","0");
+        assertEquals(0,HardwareConfig.load(off).startupBeepMs());
+        Properties bad=new Properties();bad.setProperty("buzzer.startupMs","-1");
+        assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(bad));
+    }
+    @Test void startupBeepTurnsBuzzerOnThenOffAndCloseSilencesIt() throws Exception {
+        var gpio=new Fake();
+        var dispatcher=new org.mark.carpi.control.CommandDispatcher(new LinuxHardware(gpio,config(),(id,action,value)->{}));
+        dispatcher.beep(50).get();
+        assertEquals("write:8:false",gpio.calls.get(gpio.calls.size()-1));
+        Thread.sleep(300);
+        assertEquals("write:8:true",gpio.calls.get(gpio.calls.size()-1));
+        dispatcher.beep(10000).get();gpio.calls.clear();
+        dispatcher.close();
+        assertTrue(gpio.calls.contains("write:8:true"));assertTrue(gpio.closed);
+    }
     @Test void rejectsUnconfirmedOverlappingPinsAndMissingServoMapping() {
         Properties p=new Properties();p.setProperty("hardware.mode","real");
         assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(p));

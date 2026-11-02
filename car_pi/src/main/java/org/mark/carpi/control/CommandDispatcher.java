@@ -55,11 +55,7 @@ public final class CommandDispatcher implements AutoCloseable {
                 hardware.action(id, "light.rgb", List.of(on ? 100 : 0, on ? 100 : 0, on ? 100 : 0));
             }
             case 2 -> {
-                if (o.has("di") && o.get("di").getAsBoolean()) {
-                    if (buzzerStop != null) buzzerStop.cancel(false);
-                    hardware.action(id, "buzzer.enabled", true);
-                    buzzerStop = queue.schedule(() -> hardware.action(id,"buzzer.enabled",false),500,TimeUnit.MILLISECONDS);
-                }
+                if (o.has("di") && o.get("di").getAsBoolean()) beepNow(id,500);
             }
             case 3 -> {
                 int action = integer(o,"action",0,0,1);
@@ -88,6 +84,18 @@ public final class CommandDispatcher implements AutoCloseable {
             }
             default -> hardware.action(id,"unsupported.type",frame.type());
         }
+    }
+    private void beepNow(long id, int ms) {
+        if (buzzerStop != null) buzzerStop.cancel(false);
+        hardware.action(id, "buzzer.enabled", true);
+        buzzerStop = queue.schedule(() -> hardware.action(id,"buzzer.enabled",false),ms,TimeUnit.MILLISECONDS);
+    }
+    /** 蜂鸣 ms 毫秒（如启动提示）；与手机指令同队列串行，close() 会取消并经 all.stop 关闭蜂鸣器。 */
+    public Future<?> beep(int ms) {
+        return queue.submit(() -> {
+            try { beepNow(0, ms); }
+            catch (RuntimeException e) { System.err.println("WARN startup beep failed: " + e); }
+        });
     }
     /** Release motion on control disconnect; do not leave a physical motor running without its client. */
     public Future<?> releaseControl() {
