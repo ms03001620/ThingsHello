@@ -18,7 +18,7 @@ import org.mark.carpi.repository.linux.LgpioClient
 import org.mark.carpi.repository.linux.LinuxCarRepository
 import org.mark.carpi.repository.ActionLogRecorder
 import org.mark.carpi.repository.LoggingCarRepository
-import org.mark.carpi.protocol.FrameCodec.Frame
+import org.mark.carpi.repository.protocol.FrameCodec.Frame
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path

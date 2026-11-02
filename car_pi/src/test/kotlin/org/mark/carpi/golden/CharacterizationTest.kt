@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.mark.carpi.protocol.FrameCodec
+import org.mark.carpi.repository.protocol.FrameCodec
 import org.mark.carpi.repository.JsonlActionLogRecorder
 import org.mark.carpi.repository.LoggingCarRepository
 import org.mark.carpi.repository.linux.GpioBackend

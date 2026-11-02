@@ -3,8 +3,8 @@ package org.mark.carpi.repository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.mark.carpi.model.ReceivedCommand
-import org.mark.carpi.protocol.CommandParser
-import org.mark.carpi.protocol.FrameCodec
+import org.mark.carpi.repository.protocol.CommandParser
+import org.mark.carpi.repository.protocol.FrameCodec
 import java.net.Socket
 
 /**

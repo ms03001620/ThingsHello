@@ -2,7 +2,7 @@ package org.mark.carpi.runtime
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import org.mark.carpi.protocol.FrameCodec
+import org.mark.carpi.repository.protocol.FrameCodec
 import java.io.ByteArrayOutputStream
 import java.net.InetSocketAddress
 import java.net.ServerSocket

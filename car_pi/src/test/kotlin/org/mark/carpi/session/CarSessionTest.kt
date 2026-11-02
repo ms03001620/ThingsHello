@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mark.carpi.session.CarSession
 import org.mark.carpi.runtime.carSession
-import org.mark.carpi.protocol.FrameCodec.Frame
+import org.mark.carpi.repository.protocol.FrameCodec.Frame
 import org.mark.carpi.FakeScheduler
 import org.mark.carpi.model.Command
 import org.mark.carpi.repository.CarRepository

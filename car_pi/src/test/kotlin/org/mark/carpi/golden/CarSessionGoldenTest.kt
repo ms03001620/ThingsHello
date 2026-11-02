@@ -11,7 +11,7 @@ import org.mark.carpi.session.CarSession
 import org.mark.carpi.runtime.carSession
 import org.mark.carpi.recordingRepository
 import org.mark.carpi.repository.simulated.SimulatedCarRepository
-import org.mark.carpi.protocol.FrameCodec.Frame
+import org.mark.carpi.repository.protocol.FrameCodec.Frame
 import java.nio.file.Files
 import java.nio.file.Path
 

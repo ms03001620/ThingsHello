@@ -1,4 +1,4 @@
-package org.mark.carpi.protocol
+package org.mark.carpi.repository.protocol
 
 import java.io.EOFException
 import java.io.IOException

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-import org.mark.carpi.protocol.FrameCodec
+import org.mark.carpi.repository.protocol.FrameCodec
 import org.mark.carpi.runtime.ProtocolScenario
 import java.io.ByteArrayInputStream
 import java.io.IOException
