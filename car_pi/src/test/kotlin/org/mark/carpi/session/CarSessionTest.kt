@@ -8,6 +8,10 @@ import org.junit.jupiter.api.Test
 import org.mark.carpi.session.CarSession
 import org.mark.carpi.runtime.carSession
 import org.mark.carpi.protocol.FrameCodec.Frame
+import org.mark.carpi.FakeScheduler
+import org.mark.carpi.model.Command
+import org.mark.carpi.repository.CarRepository
+import org.mark.carpi.repository.simulated.SimulatedCarRepository
 import java.util.concurrent.CopyOnWriteArrayList
 
 class CarSessionTest {
@@ -47,5 +51,58 @@ class CarSessionTest {
             assertTrue(release.time - pulse.time >= 480_000_000L)
             assertEquals(1.15, (pulse.value as Number).toDouble(), 0.00001)
         }
+    }
+
+    // ---- 以下用例迁自原 CarControllerTest：虚拟时钟，直接在测试线程调用 handle ----
+
+    private val log = mutableListOf<String>()
+    private val repo = recordingRepository { command, action, value -> log += "$command $action $value" }
+    private val sch = FakeScheduler()
+    private fun actions() = log.filterNot { it.contains(" command ") }
+    private fun fakeSession(r: org.mark.carpi.repository.LoggingCarRepository = repo) = CarSession(r, r, sch)
+
+    @Test
+    fun beepFalseIsNoopAndBeepTrueStopsAfter500ms() {
+        fakeSession().use { s ->
+            s.handle(2, "b", Command.Beep(true)); sch.advance(500)
+            s.handle(2, "b", Command.Beep(false)); sch.advance(500)
+            assertEquals(listOf("1 buzzer.enabled true", "1 buzzer.enabled false"), actions().take(2))
+        }
+    }
+
+    @Test
+    fun invalidAndUnsupportedStillIncrementSequence() {
+        val s = fakeSession()
+        s.handle(9, "x", Command.Invalid("boom"))
+        s.handle(3, "{}", Command.Unsupported(3))
+        assertEquals(listOf("1 command {type=9, body=x}", "1 rejected boom", "2 command {type=3, body={}}", "2 unsupported.type 3"), log)
+        s.close()
+    }
+
+    @Test
+    fun rotateAndReleaseControlAndShutdown() {
+        val s = fakeSession()
+        s.handle(6, "b", Command.Rotate(Command.Direction.LEFT, 40))
+        s.releaseControlNow(); s.releaseControlNow()
+        s.handle(4, "b", Command.Servo(100))
+        s.beep(10_000).get()
+        s.close(); sch.advance(20_000)
+        assertEquals(
+            listOf("1 wheel.bind true", "1 wheel.speed {left=-40, right=40}", "0 wheel.release true",
+                "2 servo.bind true", "2 servo.pulseMs 1.5", "0 buzzer.enabled true", "0 servo.release true", "0 all.stop true"),
+            actions(),
+        )
+    }
+
+    @Test
+    fun repositoryFailureIsRejectedWithToString() {
+        val badLog = mutableListOf<String>()
+        val failing = object : CarRepository by SimulatedCarRepository() {
+            override fun light(id: Long, on: Boolean) = throw IllegalStateException("faulted")
+        }
+        val bad = recordingRepository(failing) { command, action, value -> badLog += "$command $action $value" }
+        fakeSession(bad).use { it.handle(1, "b", Command.Light(true)) }
+        // 装饰器先记录再委托：失败的动作行仍在，随后是 rejected
+        assertEquals(listOf("1 light.rgb [100, 100, 100]", "1 rejected java.lang.IllegalStateException: faulted"), badLog.dropLast(1).takeLast(2))
     }
 }
