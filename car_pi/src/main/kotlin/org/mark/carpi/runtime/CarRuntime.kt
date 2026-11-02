@@ -14,6 +14,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import org.mark.carpi.viewmodel.CarViewModel
 import org.mark.carpi.model.ControlEvent
 import org.mark.carpi.repository.CommandRepository
+import org.mark.carpi.repository.datasource.TcpControlDataSource
 import org.mark.carpi.repository.linux.HardwareConfig
 import org.mark.carpi.repository.linux.LgpioClient
 import org.mark.carpi.repository.linux.LinuxCarRepository
@@ -24,8 +25,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /** 控制服务：收集 CommandRepository 的事件，逐条交给 CarViewModel；控制端断开时停车。 */
 class CarRuntime(config: CarConfig) : AutoCloseable {
-    private val commands = CommandRepository(config.bind, config.port)
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val source = TcpControlDataSource(config.bind, config.port)
+    private val commands = CommandRepository(source)
+    /** 收集在 IO 上：仓库读帧是阻塞的，指令处理由 CarViewModel 切到自己的线程。 */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val viewModel: CarViewModel
     private val closed = AtomicBoolean()
     private val hardwareConfig: HardwareConfig = config.hardware
@@ -34,7 +37,7 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
         viewModel = try {
             CarViewModel.of(hardware(config))
         } catch (e: Exception) {
-            commands.close()
+            source.close()
             throw e
         }
     }
@@ -50,7 +53,7 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
         }
     }
 
-    val port: Int get() = commands.port
+    val port: Int get() = source.port
 
     fun start() {
         scope.launch {
@@ -74,7 +77,7 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
 
     override fun close() {
         if (!closed.compareAndSet(false, true)) return
-        commands.close()
+        source.close()
         runBlocking {
             withTimeoutOrNull(5_000) { scope.coroutineContext.job.children.toList().joinAll() }
         }
