@@ -1,12 +1,10 @@
 package org.mark.carpi.domain
 
-import org.mark.carpi.hardware.Hardware
-
 /**
  * 业务规则：WheelAction, CameraServo, ExclusiveBind, ForwardLightAction, BuzzerAction。
  * 单线程使用（无锁）；调用者保证所有方法及 Scheduler 任务串行执行。
  */
-class CarController(private val hardware: Hardware, private val scheduler: Scheduler) {
+class CarController(private val hardware: CarHardware, private val log: ActionLog, private val scheduler: Scheduler) {
     private var servoRelease: Cancellable? = null
     private var buzzerStop: Cancellable? = null
     private var owner = NONE
@@ -15,15 +13,15 @@ class CarController(private val hardware: Hardware, private val scheduler: Sched
     /** 每帧：先分配 id 并记录原始帧，再执行；任何 RuntimeException 记为 rejected。 */
     fun handle(type: Int, body: String, command: Command) {
         val id = ++sequence
-        hardware.action(id, "command", mapOf("type" to type, "body" to body))
+        log.event(id, "command", mapOf("type" to type, "body" to body))
         if (command is Command.Invalid) {
-            hardware.action(id, "rejected", command.reason)
+            log.event(id, "rejected", command.reason)
             return
         }
         try {
             execute(id, command)
         } catch (e: RuntimeException) {
-            hardware.action(id, "rejected", e.toString())
+            log.event(id, "rejected", e.toString())
         }
     }
 
@@ -31,41 +29,40 @@ class CarController(private val hardware: Hardware, private val scheduler: Sched
         when (command) {
             is Command.Invalid -> Unit // 已在 handle 中处理
             is Command.Wheel -> {
-                activate(id, "wheel")
-                hardware.action(id, "wheel.speed", mapOf("left" to command.left, "right" to command.right))
+                activate(id, WHEEL)
+                hardware.wheelSpeed(id, command.left, command.right)
             }
             is Command.Light -> {
-                val level = if (command.on) 100 else 0
-                hardware.action(id, "light.rgb", listOf(level, level, level))
+                hardware.light(id, command.on)
             }
             is Command.Beep -> if (command.enabled) beepNow(id, 500)
             is Command.Servo -> {
-                activate(id, "servo")
+                activate(id, SERVO)
                 servoRelease?.cancel()
-                hardware.action(id, "servo.pulseMs", 0.8 + 0.007 * command.progress)
+                hardware.servoPulseMs(id, 0.8 + 0.007 * command.progress)
                 servoRelease = scheduler.schedule(SERVO_RELEASE_MS) {
-                    if (owner == "servo") {
-                        hardware.action(id, "servo.release", true)
+                    if (owner == SERVO) {
+                        hardware.servoRelease(id)
                         owner = NONE
                     }
                 }
             }
             is Command.Rotate -> {
-                activate(id, "wheel")
+                activate(id, WHEEL)
                 val left = command.direction == Command.Direction.LEFT
                 val s = command.speed
-                hardware.action(id, "wheel.speed", mapOf("left" to if (left) -s else s, "right" to if (left) s else -s))
+                hardware.wheelSpeed(id, if (left) -s else s, if (left) s else -s)
             }
-            is Command.Unsupported -> hardware.action(id, "unsupported.type", command.type)
+            is Command.Unsupported -> log.event(id, "unsupported.type", command.type)
         }
     }
 
     private fun activate(id: Long, next: String) {
         if (next == owner) return
         servoRelease?.cancel()
-        if (owner != NONE) hardware.action(id, "$owner.release", true)
+        if (owner != NONE) release(id, owner)
         owner = NONE
-        hardware.action(id, "$next.bind", true)
+        if (next == WHEEL) hardware.wheelBind(id) else hardware.servoBind(id)
         owner = next
     }
 
@@ -73,15 +70,15 @@ class CarController(private val hardware: Hardware, private val scheduler: Sched
 
     private fun beepNow(id: Long, ms: Int) {
         buzzerStop?.cancel()
-        hardware.action(id, "buzzer.enabled", true)
-        buzzerStop = scheduler.schedule(ms.toLong()) { hardware.action(id, "buzzer.enabled", false) }
+        hardware.buzzer(id, true)
+        buzzerStop = scheduler.schedule(ms.toLong()) { hardware.buzzer(id, false) }
     }
 
     /** 控制端断开：释放运动部件。 */
     fun releaseControl() {
         servoRelease?.cancel()
         try {
-            if (owner != NONE) hardware.action(0, "$owner.release", true)
+            if (owner != NONE) release(0, owner)
         } finally {
             owner = NONE
         }
@@ -92,14 +89,18 @@ class CarController(private val hardware: Hardware, private val scheduler: Sched
         servoRelease?.cancel()
         buzzerStop?.cancel()
         try {
-            if (owner != NONE) hardware.action(0, "$owner.release", true)
+            if (owner != NONE) release(0, owner)
         } finally {
-            hardware.action(0, "all.stop", true)
+            hardware.allStop(0)
         }
     }
 
+    private fun release(id: Long, device: String) = if (device == WHEEL) hardware.wheelRelease(id) else hardware.servoRelease(id)
+
     private companion object {
         const val NONE = "none"
+        const val WHEEL = "wheel"
+        const val SERVO = "servo"
         const val SERVO_RELEASE_MS = 500L
     }
 }

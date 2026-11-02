@@ -13,6 +13,7 @@ import org.mark.carpi.hardware.linux.HardwareConfig
 import org.mark.carpi.hardware.linux.HardwareMode
 import org.mark.carpi.hardware.linux.LinuxHardware
 import org.mark.carpi.hardware.logging.JsonlActionLogRecorder
+import org.mark.carpi.hardware.logging.LoggingCarHardware
 import java.io.UncheckedIOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -45,7 +46,7 @@ class LinuxHardwareTest {
     @Test
     fun startupBeepTurnsBuzzerOnThenOffAndCloseSilencesIt() {
         val gpio = Fake()
-        val dispatcher = CommandDispatcher(LinuxHardware(gpio, config()) { _, _, _ -> })
+        val dispatcher = CommandDispatcher(recordingHardware(LinuxHardware(gpio, config()) { _, _, _ -> }) { _, _, _ -> })
         dispatcher.beep(50).get()
         assertEquals("write:8:false", gpio.calls.last())
         Thread.sleep(300)
@@ -69,10 +70,10 @@ class LinuxHardwareTest {
     fun frequencyMismatchNeverEnablesMotorDuty() {
         val gpio = Fake().apply { hz = 320 }
         val hardware = LinuxHardware(gpio, config()) { _, _, _ -> }
-        assertThrows(UncheckedIOException::class.java) { hardware.action(1, "wheel.bind", true) }
+        assertThrows(UncheckedIOException::class.java) { hardware.wheelBind(1) }
         assertFalse(gpio.calls.any { it.startsWith("pwm") && !it.endsWith(":0") })
         assertTrue(gpio.closed)
-        assertThrows(IllegalStateException::class.java) { hardware.action(2, "wheel.speed", mapOf("left" to 40, "right" to 40)) }
+        assertThrows(IllegalStateException::class.java) { hardware.wheelSpeed(2, 40, 40) }
         hardware.close()
     }
 
@@ -80,11 +81,12 @@ class LinuxHardwareTest {
     fun reverseStopServoAndReleaseUseConfiguredPins() {
         val log = temporary.resolve("actions.jsonl")
         val gpio = Fake()
-        val hardware = LinuxHardware(gpio, config(), JsonlActionLogRecorder(log, "real"))
-        hardware.action(1, "wheel.bind", true); hardware.action(1, "wheel.speed", mapOf("left" to -35, "right" to 20))
+        val recorder = JsonlActionLogRecorder(log, "real")
+        val hardware = LoggingCarHardware(LinuxHardware(gpio, config(), recorder::record), recorder)
+        hardware.wheelBind(1); hardware.wheelSpeed(1, -35, 20)
         assertTrue(gpio.calls.contains("write:21:false")); assertTrue(gpio.calls.contains("write:20:true")); assertTrue(gpio.calls.contains("pwm:16:35"))
-        hardware.action(2, "servo.pulseMs", 1.5); assertTrue(gpio.calls.contains("servo:18:1500"))
-        hardware.action(3, "buzzer.enabled", true); assertTrue(gpio.calls.contains("write:8:false"))
+        hardware.servoPulseMs(2, 1.5); assertTrue(gpio.calls.contains("servo:18:1500"))
+        hardware.buzzer(3, true); assertTrue(gpio.calls.contains("write:8:false"))
         hardware.close(); assertTrue(gpio.calls.contains("servo:18:0")); assertTrue(gpio.calls.contains("mode:16:0")); assertTrue(gpio.closed)
         val events = Files.readAllLines(log).map { JsonParser.parseString(it).asJsonObject }
         assertTrue(events.all { it.get("mode").asString == "real" })
@@ -98,9 +100,9 @@ class LinuxHardwareTest {
     fun sameDirectionSpeedUpdatesDoNotPulseStopBetweenFrames() {
         val gpio = Fake()
         LinuxHardware(gpio, config()) { _, _, _ -> }.use { hardware ->
-            hardware.action(1, "wheel.bind", true)
-            hardware.action(2, "wheel.speed", mapOf("left" to 20, "right" to 20)); gpio.calls.clear()
-            hardware.action(3, "wheel.speed", mapOf("left" to 30, "right" to 30))
+            hardware.wheelBind(1)
+            hardware.wheelSpeed(2, 20, 20); gpio.calls.clear()
+            hardware.wheelSpeed(3, 30, 30)
             assertEquals(listOf("pwm:16:30", "pwm:13:30"), gpio.calls)
         }
     }

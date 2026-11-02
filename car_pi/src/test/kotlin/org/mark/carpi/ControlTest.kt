@@ -5,25 +5,21 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mark.carpi.control.CommandDispatcher
-import org.mark.carpi.hardware.Hardware
 import org.mark.carpi.protocol.FrameCodec.Frame
 import java.util.concurrent.CopyOnWriteArrayList
 
 class ControlTest {
     data class Event(val id: Long, val action: String, val value: Any?, val time: Long)
 
-    class Recorder : Hardware {
+    class Recorder {
         val events = CopyOnWriteArrayList<Event>()
-        override fun action(command: Long, action: String, value: Any?) {
-            events.add(Event(command, action, value, System.nanoTime()))
-        }
-        override fun close() {}
+        val hardware = recordingHardware { command, action, value -> events.add(Event(command, action, value, System.nanoTime())) }
     }
 
     @Test
     fun switchingToWheelsCancelsOldServoRelease() {
         val r = Recorder()
-        CommandDispatcher(r).use { d ->
+        CommandDispatcher(r.hardware).use { d ->
             d.submit(Frame(4, """{"progress":0}""")) {}.get()
             d.submit(Frame(0, """{"left":20,"right":20}""")) {}.get()
             Thread.sleep(650)
@@ -36,7 +32,7 @@ class ControlTest {
     @Test
     fun repeatedServoCommandResetsReleaseDeadline() {
         val r = Recorder()
-        CommandDispatcher(r).use { d ->
+        CommandDispatcher(r.hardware).use { d ->
             d.submit(Frame(4, """{"progress":0}""")) {}.get()
             Thread.sleep(200)
             d.submit(Frame(4, """{"progress":50}""")) {}.get()

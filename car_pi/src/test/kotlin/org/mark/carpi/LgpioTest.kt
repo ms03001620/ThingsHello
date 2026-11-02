@@ -9,11 +9,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.function.Executable
 import org.junit.jupiter.api.io.TempDir
 import org.mark.carpi.control.CommandDispatcher
-import org.mark.carpi.hardware.Hardware
 import org.mark.carpi.hardware.linux.HardwareConfig
 import org.mark.carpi.hardware.linux.LgpioClient
 import org.mark.carpi.hardware.linux.LinuxHardware
 import org.mark.carpi.hardware.logging.ActionLogRecorder
+import org.mark.carpi.hardware.logging.LoggingCarHardware
 import org.mark.carpi.protocol.FrameCodec.Frame
 import java.io.IOException
 import java.nio.file.Files
@@ -88,10 +88,7 @@ class LgpioTest {
     @Test
     fun disconnectReleasesMotorBeforeNextCommand() {
         val calls = Collections.synchronizedList(mutableListOf<String>())
-        val driver = object : Hardware {
-            override fun action(command: Long, action: String, value: Any?) { calls.add(action) }
-            override fun close() {}
-        }
+        val driver = recordingHardware { _, action, _ -> calls.add(action) }
         CommandDispatcher(driver).use { dispatcher ->
             dispatcher.submit(Frame(0, """{"left":40,"right":40}""")) {}.get()
             dispatcher.releaseControl().get()
@@ -108,7 +105,7 @@ class LgpioTest {
         val recorder = ActionLogRecorder { _, _, _ -> }
         LgpioClient(c, env).use { client ->
             assertThrows(IOException::class.java) { client.servo(18, 1501) }
-            CommandDispatcher(LinuxHardware(client, c, recorder)).use { dispatcher ->
+            CommandDispatcher(LoggingCarHardware(LinuxHardware(client, c, recorder::record), recorder)).use { dispatcher ->
                 dispatcher.submit(Frame(4, """{"progress":50}""")) {}.get()
                 dispatcher.submit(Frame(0, """{"left":40,"right":40}""")) {}.get()
             }
@@ -130,7 +127,7 @@ class LgpioTest {
         LgpioClient(c, env).use { client ->
             assertEquals("20000000", Files.readString(pwm.resolve("period")))
             assertThrows(IOException::class.java) { client.servo(18, 1501) }
-            CommandDispatcher(LinuxHardware(client, c, recorder)).use { dispatcher ->
+            CommandDispatcher(LoggingCarHardware(LinuxHardware(client, c, recorder::record), recorder)).use { dispatcher ->
                 dispatcher.submit(Frame(4, """{"progress":50}""")) {}.get()
                 assertEquals("1150000", Files.readString(pwm.resolve("duty_cycle")))
                 assertEquals("1", Files.readString(pwm.resolve("enable")))

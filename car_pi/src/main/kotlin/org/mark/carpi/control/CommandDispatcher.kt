@@ -1,9 +1,11 @@
 package org.mark.carpi.control
 
+import org.mark.carpi.domain.ActionLog
 import org.mark.carpi.domain.Cancellable
+import org.mark.carpi.domain.CarHardware
 import org.mark.carpi.domain.CarController
 import org.mark.carpi.domain.Scheduler
-import org.mark.carpi.hardware.Hardware
+import org.mark.carpi.hardware.logging.LoggingCarHardware
 import org.mark.carpi.protocol.CommandParser
 import org.mark.carpi.protocol.FrameCodec.Frame
 import java.util.concurrent.Executors
@@ -14,13 +16,16 @@ import java.util.concurrent.TimeUnit
 /**
  * 运行时薄封装：单线程 queue 串行执行指令与定时任务，业务规则全部委托给 CarController。
  */
-class CommandDispatcher(private val hardware: Hardware) : AutoCloseable {
+class CommandDispatcher(private val hardware: CarHardware, log: ActionLog) : AutoCloseable {
+    /** 常用：同一个日志装饰器既是硬件端口也是事件日志。 */
+    constructor(hardware: LoggingCarHardware) : this(hardware, hardware)
+
     private val queue: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     private val scheduler = Scheduler { delayMs, task ->
         val f = queue.schedule(Runnable { task() }, delayMs, TimeUnit.MILLISECONDS)
         Cancellable { f.cancel(false) }
     }
-    private val controller = CarController(hardware, scheduler)
+    private val controller = CarController(hardware, log, scheduler)
 
     @Suppress("UNUSED_PARAMETER") // 协议目前没有回包；保留回调以便将来回复手机
     fun submit(frame: Frame, response: (Frame) -> Unit): Future<*> = queue.submit(Runnable {

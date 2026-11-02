@@ -1,7 +1,7 @@
 package org.mark.carpi.hardware.linux
 
-import org.mark.carpi.hardware.Hardware
-import org.mark.carpi.hardware.logging.ActionLogRecorder
+import org.mark.carpi.domain.ActionLog
+import org.mark.carpi.domain.CarHardware
 import java.io.IOException
 import java.io.UncheckedIOException
 import kotlin.math.abs
@@ -11,55 +11,62 @@ import kotlin.math.sign
 class LinuxHardware(
     private val io: GpioBackend,
     private val config: HardwareConfig,
-    private val recorder: ActionLogRecorder,
-) : Hardware {
+    /** 内部事件（pwm.configuredHz）写入同一动作日志；recorder 的关闭由 LoggingCarHardware 负责。 */
+    private val events: ActionLog,
+) : CarHardware {
     private var faulted = false
     private var closed = false
     private val speeds = HashMap<HardwareConfig.Motor, Int>()
     /** left, right；wheel.enabled=false 时为空。 */
     private val motors = listOfNotNull(config.left, config.right)
 
+    override fun wheelBind(id: Long) = guarded {
+        requireDevice(motors.isNotEmpty(), "wheel")
+        motors.forEach { bind(it, id) }
+    }
+
+    override fun wheelSpeed(id: Long, left: Int, right: Int) = guarded {
+        requireDevice(motors.isNotEmpty(), "wheel")
+        drive(motors[0], left)
+        drive(motors[1], right)
+    }
+
+    override fun wheelRelease(id: Long) = guarded { motors.forEach { releaseMotor(it) } }
+
+    override fun servoBind(id: Long) = guarded { requireDevice(config.servo != null, "servo") }
+
+    override fun servoPulseMs(id: Long, pulseMs: Double) = guarded {
+        val servo = config.servo
+        requireDevice(servo != null, "servo")
+        io.servo(servo!!, Math.round(pulseMs * 1000).toInt())
+    }
+
+    override fun servoRelease(id: Long) = guarded {
+        config.servo?.let {
+            io.servo(it, 0)
+            io.mode(it, 0)
+        }
+    }
+
+    override fun light(id: Long, on: Boolean) = guarded {
+        requireDevice(config.lights.isNotEmpty(), "light")
+        for (i in 0 until 3) io.write(config.lights[i], on == config.lightHigh)
+    }
+
+    override fun buzzer(id: Long, enabled: Boolean) = guarded {
+        val buzzer = config.buzzer
+        requireDevice(buzzer != null, "buzzer")
+        io.write(buzzer!!, enabled == config.buzzerHigh)
+    }
+
+    override fun allStop(id: Long) = guarded { stopAll() }
+
+    /** 故障/关闭后拒绝一切调用；IOException 时进入 faulted：尽力停全部并关闭 io。 */
     @Synchronized
-    override fun action(command: Long, action: String, value: Any?) {
-        recorder.record(command, action, value)
-        if (action in setOf("command", "rejected", "unsupported.type")) return
+    private fun guarded(op: () -> Unit) {
         check(!faulted && !closed) { "Hardware faulted/closed; restart required" }
         try {
-            when (action) {
-                "wheel.bind" -> {
-                    requireDevice(motors.isNotEmpty(), "wheel")
-                    motors.forEach { bind(it, command) }
-                }
-                "wheel.speed" -> {
-                    requireDevice(motors.isNotEmpty(), "wheel")
-                    val wheel = value as Map<*, *>
-                    drive(motors[0], (wheel["left"] as Number).toInt())
-                    drive(motors[1], (wheel["right"] as Number).toInt())
-                }
-                "wheel.release" -> motors.forEach { releaseMotor(it) }
-                "servo.bind" -> requireDevice(config.servo != null, "servo")
-                "servo.pulseMs" -> {
-                    val servo = config.servo
-                    requireDevice(servo != null, "servo")
-                    io.servo(servo!!, Math.round((value as Number).toDouble() * 1000).toInt())
-                }
-                "servo.release" -> config.servo?.let {
-                    io.servo(it, 0)
-                    io.mode(it, 0)
-                }
-                "light.rgb" -> {
-                    requireDevice(config.lights.isNotEmpty(), "light")
-                    val rgb = value as List<*>
-                    for (i in 0 until 3) io.write(config.lights[i], ((rgb[i] as Number).toInt() > 0) == config.lightHigh)
-                }
-                "buzzer.enabled" -> {
-                    val buzzer = config.buzzer
-                    requireDevice(buzzer != null, "buzzer")
-                    io.write(buzzer!!, (value as Boolean) == config.buzzerHigh)
-                }
-                "all.stop" -> stopAll()
-                else -> throw IllegalArgumentException("Unknown hardware action: $action")
-            }
+            op()
         } catch (e: IOException) {
             faulted = true
             try { stopAll() } catch (stop: IOException) { e.addSuppressed(stop) }
@@ -77,7 +84,7 @@ class LinuxHardware(
         io.range(m.pwm, 100)
         speeds[m] = 0
         val actual = io.frequency(m.pwm, config.frequency)
-        recorder.record(command, "pwm.configuredHz", mapOf("pin" to m.pwm, "requested" to config.frequency, "actual" to actual))
+        events.event(command, "pwm.configuredHz", mapOf("pin" to m.pwm, "requested" to config.frequency, "actual" to actual))
         if (abs(actual - config.frequency) > config.maxError)
             throw IOException("PWM frequency mismatch: requested ${config.frequency}, actual $actual")
     }
@@ -144,7 +151,6 @@ class LinuxHardware(
             System.err.println("Hardware stop failed: $e")
         } finally {
             try { io.close() } catch (e: IOException) { System.err.println(e) }
-            recorder.close()
         }
     }
 }

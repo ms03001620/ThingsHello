@@ -1,11 +1,11 @@
 package org.mark.carpi.runtime
 
 import org.mark.carpi.control.CommandDispatcher
-import org.mark.carpi.hardware.Hardware
 import org.mark.carpi.hardware.linux.HardwareConfig
 import org.mark.carpi.hardware.linux.LgpioClient
 import org.mark.carpi.hardware.linux.LinuxHardware
 import org.mark.carpi.hardware.logging.JsonlActionLogRecorder
+import org.mark.carpi.hardware.logging.LoggingCarHardware
 import org.mark.carpi.hardware.simulated.SimulatedHardware
 import org.mark.carpi.protocol.FrameCodec
 import java.io.IOException
@@ -123,12 +123,12 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
     }
 
     private companion object {
-        fun hardware(config: CarConfig): Hardware {
+        fun hardware(config: CarConfig): LoggingCarHardware {
             val hw = config.hardware
-            if (!hw.real) return SimulatedHardware(config.actions)
+            if (!hw.real) return SimulatedHardware.logged(config.actions)
             val recorder = JsonlActionLogRecorder(config.actions, hw.mode.key)
             try {
-                return LinuxHardware(LgpioClient(hw), hw, recorder)
+                return LoggingCarHardware(LinuxHardware(LgpioClient(hw), hw, recorder::record), recorder)
             } catch (e: Exception) {
                 recorder.close()
                 throw e

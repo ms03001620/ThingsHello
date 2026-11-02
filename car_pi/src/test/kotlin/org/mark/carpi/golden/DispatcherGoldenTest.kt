@@ -1,10 +1,11 @@
 package org.mark.carpi.golden
 
+import com.google.gson.JsonParser
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.mark.carpi.control.CommandDispatcher
-import org.mark.carpi.hardware.Hardware
+import org.mark.carpi.recordingHardware
 import org.mark.carpi.hardware.simulated.SimulatedHardware
 import org.mark.carpi.protocol.FrameCodec.Frame
 import java.nio.file.Files
@@ -14,9 +15,9 @@ import java.nio.file.Path
 class DispatcherGoldenTest {
     private fun stripTime(line: String) = line.replace(Regex("\"time\":\"[^\"]*\","), "")
 
-    private fun run(dir: Path, script: (CommandDispatcher) -> Unit): List<String> {
+    private fun run(dir: Path, script: (CommandDispatcher, Path) -> Unit): List<String> {
         val log = dir.resolve("actions.jsonl")
-        CommandDispatcher(SimulatedHardware(log)).use(script)
+        CommandDispatcher(SimulatedHardware.logged(log)).use { script(it, log) }
         return Files.readAllLines(log).map(::stripTime)
     }
 
@@ -24,7 +25,7 @@ class DispatcherGoldenTest {
 
     @Test
     fun framesOfAllTypesAndErrors(@TempDir dir: Path) {
-        val lines = run(dir) { d ->
+        val lines = run(dir) { d, _ ->
             d.send(0, """{"left":10,"right":-20}""")
             d.send(0, """{}""")
             d.send(0, """{"left":101}""")
@@ -54,17 +55,17 @@ class DispatcherGoldenTest {
 
     @Test
     fun timersExclusivityReleaseAndClose(@TempDir dir: Path) {
-        val lines = run(dir) { d ->
+        val lines = run(dir) { d, log ->
             d.send(4, """{"progress":0}""")      // 1: servo bind + pulse
-            Thread.sleep(700)                     // servo.release id=1
+            awaitLine(log, 1, "servo.release")    // servo.release id=1
             d.send(4, """{"progress":100}""")    // 2
             d.send(0, """{"left":5,"right":5}""") // 3: servo.release(by 3) + wheel.bind; old timer cancelled
-            Thread.sleep(700)
+            Thread.sleep(700)                     // 负向检查：被取消的舵机定时器不得触发（需真实等待超过 500ms）
             d.send(4, """{"progress":50}""")     // 4: wheel.release + servo.bind
             d.releaseControl().get()              // servo.release id 0
-            Thread.sleep(700)                     // no timed release
+            Thread.sleep(700)                     // 负向检查：no timed release
             d.send(2, """{"di":true}""")         // 5: buzzer on
-            Thread.sleep(700)                     // buzzer off id 5
+            awaitLine(log, 5, "buzzer.enabled", "false") // buzzer off id 5
             d.beep(10000).get()                   // id 0 buzzer on
             d.send(6, """{"rotate":"LEFT","speed":0}""") // 6: wheel bind
             d.send(6, """{}""")                  // 7: already wheel, no bind
@@ -78,20 +79,32 @@ class DispatcherGoldenTest {
     @Test
     fun closeOrderIncludesHardwareCloseLast() {
         val events = mutableListOf<String>()
-        val hw = object : Hardware {
-            override fun action(command: Long, action: String, value: Any?) { synchronized(events) { events += "$command:$action:$value" } }
+        val closing = object : org.mark.carpi.domain.CarHardware by SimulatedHardware() {
             override fun close() { synchronized(events) { events += "close" } }
         }
+        val hw = recordingHardware(closing) { command, action, value -> synchronized(events) { events += "$command:$action:$value" } }
         val d = CommandDispatcher(hw)
         d.submit(Frame(0, """{"left":1,"right":1}""")) {}.get()
         d.beep(10000).get()
         d.close()
-        Thread.sleep(100)
         assertEquals(
             listOf("1:command:{type=0, body={\"left\":1,\"right\":1}}", "1:wheel.bind:true", "1:wheel.speed:{left=1, right=1}",
                 "0:buzzer.enabled:true", "0:wheel.release:true", "0:all.stop:true", "close"),
             events,
         )
+    }
+
+    /** 轮询（最多 3s）直到出现指定 command id / action（/ value）的行，替代固定 sleep。 */
+    private fun awaitLine(log: Path, id: Long, action: String, value: String? = null) {
+        val until = System.nanoTime() + 3_000_000_000L
+        while (System.nanoTime() < until) {
+            val found = Files.readAllLines(log).filter { it.isNotBlank() }.map { JsonParser.parseString(it).asJsonObject }.any {
+                it.get("command").asLong == id && it.get("action").asString == action && (value == null || it.get("value").toString() == value)
+            }
+            if (found) return
+            Thread.sleep(20)
+        }
+        throw AssertionError("$id $action $value not recorded within 3s")
     }
 
     private fun golden(name: String): List<String> =

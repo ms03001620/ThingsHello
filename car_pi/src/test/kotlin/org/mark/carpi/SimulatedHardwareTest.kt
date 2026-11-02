@@ -17,8 +17,8 @@ class SimulatedHardwareTest {
     @Test
     fun simulatedBackendAppendsActionsWithRecordingLabel() {
         val log = temporary.resolve("logs/actions.jsonl")
-        SimulatedHardware(log).use { it.action(1, "wheel.speed", mapOf("left" to 40, "right" to 40)) }
-        SimulatedHardware(log).use { it.action(2, "wheel.release", true) }
+        SimulatedHardware.logged(log).use { it.wheelSpeed(1, 40, 40) }
+        SimulatedHardware.logged(log).use { it.wheelRelease(2) }
         val events = Files.readAllLines(log).map { JsonParser.parseString(it).asJsonObject }
         assertEquals(2, events.size)
         assertTrue(events.all { it.get("mode").asString == "simulated" })

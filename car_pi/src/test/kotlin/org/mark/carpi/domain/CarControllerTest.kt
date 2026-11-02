@@ -2,7 +2,7 @@ package org.mark.carpi.domain
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.mark.carpi.hardware.Hardware
+import org.mark.carpi.recordingHardware
 
 class CarControllerTest {
     class FakeScheduler : Scheduler {
@@ -23,16 +23,11 @@ class CarControllerTest {
         }
     }
 
-    class Rec : Hardware {
-        val log = mutableListOf<String>()
-        override fun action(command: Long, action: String, value: Any?) { log += "$command $action $value" }
-        override fun close() {}
-    }
-
-    private val hw = Rec()
+    private val log = mutableListOf<String>()
+    private val hw = recordingHardware { command, action, value -> log += "$command $action $value" }
     private val sch = FakeScheduler()
-    private val c = CarController(hw, sch)
-    private fun actions() = hw.log.filterNot { it.contains(" command ") }
+    private val c = CarController(hw, hw, sch)
+    private fun actions() = log.filterNot { it.contains(" command ") }
 
     @Test
     fun servoReleasesAfter500msWithTriggeringId() {
@@ -74,7 +69,7 @@ class CarControllerTest {
     fun invalidAndUnsupportedStillIncrementSequence() {
         c.handle(9, "x", Command.Invalid("boom"))
         c.handle(3, "{}", Command.Unsupported(3))
-        assertEquals(listOf("1 command {type=9, body=x}", "1 rejected boom", "2 command {type=3, body={}}", "2 unsupported.type 3"), hw.log)
+        assertEquals(listOf("1 command {type=9, body=x}", "1 rejected boom", "2 command {type=3, body={}}", "2 unsupported.type 3"), log)
     }
 
     @Test
@@ -93,15 +88,13 @@ class CarControllerTest {
 
     @Test
     fun hardwareFailureIsRejectedWithToString() {
-        val bad = object : Hardware {
-            val log = mutableListOf<String>()
-            override fun action(command: Long, action: String, value: Any?) {
-                if (action == "light.rgb") throw IllegalStateException("faulted")
-                log += "$command $action $value"
-            }
-            override fun close() {}
+        val badLog = mutableListOf<String>()
+        val failing = object : CarHardware by org.mark.carpi.hardware.simulated.SimulatedHardware() {
+            override fun light(id: Long, on: Boolean) = throw IllegalStateException("faulted")
         }
-        CarController(bad, sch).handle(1, "b", Command.Light(true))
-        assertEquals("1 rejected java.lang.IllegalStateException: faulted", bad.log.last())
+        val bad = recordingHardware(failing) { command, action, value -> badLog += "$command $action $value" }
+        CarController(bad, bad, sch).handle(1, "b", Command.Light(true))
+        // 装饰器先记录再委托：失败的动作行仍在，随后是 rejected
+        assertEquals(listOf("1 light.rgb [100, 100, 100]", "1 rejected java.lang.IllegalStateException: faulted"), badLog.takeLast(2))
     }
 }
