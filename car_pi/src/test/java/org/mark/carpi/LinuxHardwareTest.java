@@ -12,8 +12,19 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class LinuxHardwareTest {
     @TempDir Path temporary;
+    @Test void hardwareModeDefaultsToSimulatedAndAcceptsLegacyBackendKey() {
+        assertEquals("simulated",HardwareConfig.load(new Properties()).mode());
+        Properties legacy=new Properties();legacy.setProperty("backend","recording");
+        assertEquals("simulated",HardwareConfig.load(legacy).mode());
+        Properties real=new Properties();real.setProperty("backend","lgpio");real.setProperty("hardware.confirmed","true");real.setProperty("buzzer.enabled","true");real.setProperty("buzzer.activeHigh","true");
+        assertTrue(HardwareConfig.load(real).real());
+        Properties bad=new Properties();bad.setProperty("hardware.mode","lgpio");
+        assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(bad));
+        Properties old=new Properties();old.setProperty("backend","pigpio");
+        assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(old));
+    }
     @Test void rejectsUnconfirmedOverlappingPinsAndMissingServoMapping() {
-        Properties p=new Properties();p.setProperty("backend","lgpio");
+        Properties p=new Properties();p.setProperty("hardware.mode","real");
         assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(p));
         p.setProperty("hardware.confirmed","true");p.setProperty("servo.enabled","true");
         assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(p));
@@ -29,14 +40,14 @@ class LinuxHardwareTest {
     }
     @Test void reverseStopServoAndReleaseUseConfiguredPins() throws Exception {
         Path log=temporary.resolve("actions.jsonl");
-        var gpio=new Fake();var hardware=new LinuxHardware(gpio,config(),new JsonlActionLogRecorder(log,"lgpio"));
+        var gpio=new Fake();var hardware=new LinuxHardware(gpio,config(),new JsonlActionLogRecorder(log,"real"));
         hardware.action(1,"wheel.bind",true);hardware.action(1,"wheel.speed",Map.of("left",-35,"right",20));
         assertTrue(gpio.calls.contains("write:21:false"));assertTrue(gpio.calls.contains("write:20:true"));assertTrue(gpio.calls.contains("pwm:16:35"));
         hardware.action(2,"servo.pulseMs",1.5);assertTrue(gpio.calls.contains("servo:18:1500"));
         hardware.action(3,"buzzer.enabled",true);assertTrue(gpio.calls.contains("write:8:false"));
         hardware.close();assertTrue(gpio.calls.contains("servo:18:0"));assertTrue(gpio.calls.contains("mode:16:0"));assertTrue(gpio.closed);
         var events=Files.readAllLines(log).stream().map(line->JsonParser.parseString(line).getAsJsonObject()).toList();
-        assertTrue(events.stream().allMatch(event->event.get("backend").getAsString().equals("lgpio")));
+        assertTrue(events.stream().allMatch(event->event.get("mode").getAsString().equals("real")));
         assertTrue(events.stream().anyMatch(event->event.get("action").getAsString().equals("pwm.configuredHz")));
         var speed=events.stream().filter(event->event.get("action").getAsString().equals("wheel.speed")).findFirst().orElseThrow();
         assertEquals(1,speed.get("command").getAsLong());
@@ -52,7 +63,7 @@ class LinuxHardwareTest {
         }
     }
     private HardwareConfig config() {
-        Properties p=new Properties();p.setProperty("backend","lgpio");p.setProperty("hardware.confirmed","true");p.setProperty("wheel.enabled","true");
+        Properties p=new Properties();p.setProperty("hardware.mode","real");p.setProperty("hardware.confirmed","true");p.setProperty("wheel.enabled","true");
         p.setProperty("left.forwardHigh","true");p.setProperty("right.forwardHigh","true");p.setProperty("servo.enabled","true");p.setProperty("servo.pin","18");
         p.setProperty("buzzer.enabled","true");p.setProperty("buzzer.activeHigh","false");return HardwareConfig.load(p);
     }

@@ -42,7 +42,7 @@
 # 树莓派真实硬件环境
 ./build/install/car-pi/bin/car-pi serve --config config/pi3-lgpio.properties
 
-# 本地无硬件模拟环境（不传 --config 默认以 recording 模式运行）
+# 本地无硬件模拟环境（不传 --config 默认以模拟硬件 `hardware.mode=simulated` 运行）
 ./build/install/car-pi/bin/car-pi serve
 ```
 

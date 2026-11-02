@@ -2,14 +2,16 @@ package org.mark.carpi.hardware.linux;
 
 import java.util.*;
 
-public record HardwareConfig(String backend,Motor left,Motor right,
+/** hardware.mode=simulated（默认，只写动作日志）或 real（经 lgpio 驱动真实 GPIO）。 */
+public record HardwareConfig(String mode,Motor left,Motor right,
         List<Integer> lights,Boolean lightHigh,Integer buzzer,Boolean buzzerHigh,Integer servo,int frequency,int maxError) {
     public record Motor(int in1,int in2,int pwm,boolean forwardHigh) {}
-    public static HardwareConfig recording() { return new HardwareConfig("recording",null,null,List.of(),null,null,null,null,300,0); }
+    public static final String SIMULATED="simulated",REAL="real";
+    public boolean real() { return REAL.equals(mode); }
+    public static HardwareConfig simulated() { return new HardwareConfig(SIMULATED,null,null,List.of(),null,null,null,null,300,0); }
     public static HardwareConfig load(Properties p) {
-        String backend=p.getProperty("backend","recording");
-        if(backend.equals("recording"))return recording();
-        if(!backend.equals("lgpio"))throw new IllegalArgumentException("Unknown backend: "+backend);
+        String mode=mode(p);
+        if(mode.equals(SIMULATED))return simulated();
         if(!flag(p,"hardware.confirmed",false))throw new IllegalArgumentException("Real hardware requires hardware.confirmed=true after wiring/polarity review");
         Motor left=null,right=null;List<Integer> lights=List.of();Integer buzzer=null,servo=null;Boolean lightHigh=null,buzzerHigh=null;
         if(flag(p,"wheel.enabled",false)) {
@@ -25,7 +27,19 @@ public record HardwareConfig(String backend,Motor left,Motor right,
         if(all.isEmpty())throw new IllegalArgumentException("No hardware device enabled");
         if(new HashSet<>(all).size()!=all.size())throw new IllegalArgumentException("Overlapping BCM pins");
         int hz=number(p,"pwm.frequencyHz",300,1,8000),error=number(p,"pwm.maxErrorHz",0,0,8000);
-        return new HardwareConfig(backend,left,right,lights,lightHigh,buzzer,buzzerHigh,servo,hz,error);
+        return new HardwareConfig(mode,left,right,lights,lightHigh,buzzer,buzzerHigh,servo,hz,error);
+    }
+    private static String mode(Properties p) {
+        String mode=p.getProperty("hardware.mode");
+        if(mode==null && p.containsKey("backend")) {
+            // 兼容旧配置 backend=recording|lgpio，过渡期后删除
+            String legacy=p.getProperty("backend");
+            mode=switch(legacy) { case "recording" -> SIMULATED; case "lgpio" -> REAL; default -> throw new IllegalArgumentException("Unknown backend: "+legacy); };
+            System.err.println("WARN config key 'backend="+legacy+"' is deprecated; use 'hardware.mode="+mode+"'");
+        }
+        if(mode==null)return SIMULATED;
+        if(!mode.equals(SIMULATED) && !mode.equals(REAL))throw new IllegalArgumentException("Unknown hardware.mode: "+mode+" (expected real|simulated)");
+        return mode;
     }
     private static Motor motor(Properties p,String name,int a,int b,int pwm) {
         return new Motor(pin(p,name+".in1",a),pin(p,name+".in2",b),pin(p,name+".pwm",pwm),requiredFlag(p,name+".forwardHigh"));

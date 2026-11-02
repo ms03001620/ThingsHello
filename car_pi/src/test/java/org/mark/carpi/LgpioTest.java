@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class LgpioTest {
     @TempDir Path temporary;
     private HardwareConfig config() {
-        var p=new Properties();p.setProperty("backend","lgpio");p.setProperty("hardware.confirmed","true");
+        var p=new Properties();p.setProperty("hardware.mode","real");p.setProperty("hardware.confirmed","true");
         p.setProperty("wheel.enabled","true");p.setProperty("left.forwardHigh","false");p.setProperty("right.forwardHigh","false");
         p.setProperty("buzzer.enabled","true");p.setProperty("buzzer.activeHigh","false");return HardwareConfig.load(p);
     }
@@ -77,7 +77,7 @@ class LgpioTest {
     }
     @Test void missingPwmDegradesServoOnlyWithoutBreakingWheels() throws Exception {
         var base=config();
-        var c=new HardwareConfig(base.backend(),base.left(),base.right(),
+        var c=new HardwareConfig(base.mode(),base.left(),base.right(),
             base.lights(),base.lightHigh(),base.buzzer(),base.buzzerHigh(),18,base.frequency(),base.maxError());
         var env=new HashMap<>(fakeLibrary());
         env.put("CAR_PI_PWM_PATH",temporary.resolve("missing-pwm").toString());
@@ -97,7 +97,7 @@ class LgpioTest {
     }
     @Test void hardwareServoUsesSysfsAndReleasesOnTimeoutAndDisconnect() throws Exception {
         var base=config();
-        var c=new HardwareConfig(base.backend(),base.left(),base.right(),
+        var c=new HardwareConfig(base.mode(),base.left(),base.right(),
             base.lights(),base.lightHigh(),base.buzzer(),base.buzzerHigh(),18,base.frequency(),base.maxError());
         var env=new HashMap<>(fakeLibrary());
         Path pwm=Files.createDirectory(temporary.resolve("pwm"));

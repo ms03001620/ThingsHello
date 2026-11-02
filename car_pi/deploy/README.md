@@ -163,13 +163,13 @@ bin/car-pi doctor --config config/pi3-lgpio.properties --output results/doctor.j
 # 树莓派真实硬件运行
 bin/car-pi serve --config config/pi3-lgpio.properties
 
-# 本地无硬件模拟运行（不传 --config 默认启用 recording 模式，将动作写入 results/actions.jsonl）
+# 本地无硬件模拟运行（不传 --config 默认 `hardware.mode=simulated`，将动作写入 results/actions.jsonl）
 bin/car-pi serve
 ```
 
-- **启动就绪标志**：标准输出打印 `READY tcp=8010 backend=lgpio`（默认录制模式为 `backend=recording`）。
+- **启动就绪标志**：标准输出打印 `READY tcp=8010 hardware=real`（模拟模式为 `hardware=simulated`）。
 - **优雅停止**：前台按 `Ctrl + C`（`SIGINT`）或后台执行 `kill <PID>`（`SIGTERM`）。Shutdown Hook 会自动关闭 Socket、停止摄像头采集、将车轮/灯/蜂鸣器复位并关闭舵机 PWM0。`SIGTERM` 退出码为 `143`（已在 `car-pi.service` 中配置 `SuccessExitStatus=143` 视为正常停止）。
-- **生产配置文件**：`config/pi3-lgpio.properties`（`backend=lgpio`、`camera=v4l2`，已配置车轮、RGB 灯、蜂鸣器、BCM18 硬件 PWM 舵机及 USB 摄像头路径）。
+- **生产配置文件**：`config/pi3-lgpio.properties`（`hardware.mode=real`、`camera=v4l2`，已配置车轮、RGB 灯、蜂鸣器、BCM18 硬件 PWM 舵机及 USB 摄像头路径）。
 
 ---
 

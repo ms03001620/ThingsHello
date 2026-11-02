@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Pi-only, real USB capture acceptance. Uses isolated recording service on 18010/18000."""
+"""Pi-only, real USB capture acceptance. Uses isolated simulated-hardware service on 18010/18000."""
 import argparse, hashlib, json, os, pathlib, socket, struct, subprocess, time
 p=argparse.ArgumentParser();p.add_argument('--duration',type=int,default=600);p.add_argument('--cycles',type=int,default=10);args=p.parse_args()
 root=pathlib.Path('results/usb-hardware');root.mkdir(parents=True,exist_ok=True)
-config=root/'service.properties';config.write_text('backend=recording\nbind=127.0.0.1\ntcp.port=18010\nudp.port=18000\ncamera=v4l2\ncamera.device=/dev/v4l/by-id/usb-lihappe8_Corp._USB_2.0_Camera-video-index0\nactions.path=results/usb-hardware/actions.jsonl\n')
+config=root/'service.properties';config.write_text('hardware.mode=simulated\nbind=127.0.0.1\ntcp.port=18010\nudp.port=18000\ncamera=v4l2\ncamera.device=/dev/v4l/by-id/usb-lihappe8_Corp._USB_2.0_Camera-video-index0\nactions.path=results/usb-hardware/actions.jsonl\n')
 def exact(s,n):
     b=b''
     while len(b)<n:

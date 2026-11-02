@@ -21,7 +21,7 @@ class SimulatedHardwareTest {
         }
         var events=Files.readAllLines(log).stream().map(line->JsonParser.parseString(line).getAsJsonObject()).toList();
         assertEquals(2,events.size());
-        assertTrue(events.stream().allMatch(event->event.get("backend").getAsString().equals("recording")));
+        assertTrue(events.stream().allMatch(event->event.get("mode").getAsString().equals("simulated")));
         assertEquals(40,events.getFirst().getAsJsonObject("value").get("left").getAsInt());
         assertEquals("wheel.release",events.getLast().get("action").getAsString());
         assertEquals(2,events.getLast().get("command").getAsLong());

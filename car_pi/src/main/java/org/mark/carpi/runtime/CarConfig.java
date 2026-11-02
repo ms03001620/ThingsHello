@@ -7,7 +7,7 @@ import java.util.Properties;
 
 public record CarConfig(String bind, int port, Path actions, String camera, int udpPort, HardwareConfig hardware, String cameraDevice) {
     public CarConfig(String bind,int port,Path actions,String camera,int udpPort,HardwareConfig hardware) { this(bind,port,actions,camera,udpPort,hardware,"/dev/video0"); }
-    public CarConfig(String bind, int port, Path actions, String camera, int udpPort) { this(bind,port,actions,camera,udpPort,HardwareConfig.recording()); }
+    public CarConfig(String bind, int port, Path actions, String camera, int udpPort) { this(bind,port,actions,camera,udpPort,HardwareConfig.simulated()); }
     public CarConfig(String bind, int port, Path actions) { this(bind,port,actions,"disabled",0); }
     public static CarConfig load(Path path) throws IOException {
         Properties p = new Properties();

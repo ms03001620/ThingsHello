@@ -3,7 +3,7 @@
 import json, pathlib, socket, struct, subprocess, time
 root=pathlib.Path('results'); root.mkdir(exist_ok=True)
 config=root/'missing-camera.properties'
-config.write_text('backend=recording\nbind=127.0.0.1\ntcp.port=0\nudp.port=0\ncamera=rpicam\nactions.path=results/missing-camera-actions.jsonl\n')
+config.write_text('hardware.mode=simulated\nbind=127.0.0.1\ntcp.port=0\nudp.port=0\ncamera=rpicam\nactions.path=results/missing-camera-actions.jsonl\n')
 def read_exact(s,n):
     result=b''
     while len(result)<n:

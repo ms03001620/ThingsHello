@@ -35,9 +35,9 @@ object CarMain {
             "doctor" -> {
                 val config = CarConfig.load(options["--config"]?.let { Path.of(it) })
                 val result = environment()
-                result["backend"] = config.hardware().backend()
+                result["hardwareMode"] = config.hardware().mode()
                 result["cameraMode"] = config.camera()
-                result["physicalIOConfigured"] = config.hardware().backend() != "recording"
+                result["physicalIOConfigured"] = config.hardware().real()
                 result["physicalIOVerified"] = false
                 result["realCameraVerified"] = false
                 report(options, result)
@@ -55,7 +55,7 @@ object CarMain {
                     }
                 }, "car-shutdown"))
                 runtime.start()
-                println("READY tcp=${runtime.port()} backend=${config.hardware().backend()}")
+                println("READY tcp=${runtime.port()} hardware=${config.hardware().mode()}")
                 stopped.await()
             }
 
