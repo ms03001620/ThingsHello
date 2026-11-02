@@ -126,24 +126,25 @@ cd car_pi
 ### 4.1 语法总览
 
 ```text
-car-pi <doctor | serve | verify> [--config <path>] [--suite <name>] [--output <path>]
+car-pi <doctor | serve> [--config <path>] [--output <path>]
 ```
 
 **通用参数规则：**
 - 所有选项必须以 `--key value` 成对传入（不支持 `--key=value` 单参数写法）。
-- 仅支持以下三个选项：`--config`、`--suite`、`--output`；传入其他选项会抛出 `IllegalArgumentException`。
+- 仅支持以下两个选项：`--config`、`--output`；传入其他选项会抛出 `IllegalArgumentException`。
 
 | 参数 | 适用子命令 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `--config <path>` | `doctor`、`serve`、`verify` | 内置录制模式默认配置 | 指定 `.properties` 运行配置文件路径 |
-| `--suite <name>` | `verify`（必填） | 空字符串 | 指定验证套件：目前只有 `protocol` |
-| `--output <path>` | `doctor`、`verify` | 不写文件（仅打印到标准输出） | 将格式化 JSON 结果同时写入指定文件（自动创建父目录） |
+| `--config <path>` | `doctor`、`serve` | 内置录制模式默认配置 | 指定 `.properties` 运行配置文件路径 |
+| `--output <path>` | `doctor` | 不写文件（仅打印到标准输出） | 将格式化 JSON 结果同时写入指定文件（自动创建父目录） |
 
 ---
 
 ### 4.2 `doctor`：运行环境与配置自检
 
-读取系统环境（OS、内核、CPU 架构、Java 版本、程序实现版本）并校验指定配置文件格式是否合法，输出 JSON 报告。不会实际驱动电机。
+读取系统环境（OS、内核、CPU 架构、Java 版本、程序实现版本），校验指定配置文件格式是否合法，并做一次本机自检（`selfCheck`）：用打好的包在 127.0.0.1 随机端口起真实 TCP 控制服务（模拟硬件，不输出任何硬件信号），发一帧停车指令确认被分发和记录，关闭后确认端口可重绑。以此证明依赖齐全、程序能启动、TCP 能收发。同时检查动作日志路径可写（`actionsLog`）。不检查配置端口是否空闲：部署时旧服务仍占用该端口，端口问题由 `activate.sh` 启动后的 READY 与监听检查兜底。输出 JSON 报告；配置非法或 `selfCheck` 或 `actionsLog` 不是 `PASS` 时进程以非 0 退出（自检失败为 `2`）。不会实际驱动电机。
+
+协议细节（拆包/粘包、各指令类型数值、500ms 释放、坏指令拒绝后连接不断等）由单元测试 `ProtocolTest` 覆盖，构建时 `gradle test` 自动运行。
 
 ```bash
 # 使用默认配置自检并打印到终端
@@ -170,19 +171,6 @@ bin/car-pi serve
 - **启动就绪标志**：标准输出打印 `READY tcp=8010 hardware=real`（模拟模式为 `hardware=simulated`）。
 - **优雅停止**：前台按 `Ctrl + C`（`SIGINT`）或后台执行 `kill <PID>`（`SIGTERM`）。Shutdown Hook 会自动关闭 Socket、将车轮/灯/蜂鸣器复位并关闭舵机 PWM0。`SIGTERM` 退出码为 `143`（已在 `car-pi.service` 中配置 `SuccessExitStatus=143` 视为正常停止）。
 - **生产配置文件**：`config/pi3-lgpio.properties`（`hardware.mode=real`，已配置车轮、RGB 灯、蜂鸣器及 BCM18 硬件 PWM 舵机）。
-
----
-
-### 4.4 `verify`：执行内置自动化验证套件
-
-用于在部署激活前或排障时验证 TCP 协议与指令分发。
-- 当结果 `status` 为 `"PASS"` 时，进程退出码为 `0`；
-- 当结果为 `"FAIL"` 或 `"BLOCKED"` 时，进程退出码为 **`2`**。
-
-```bash
-# 验证 TCP 协议编解码与指令分发逻辑（无须硬件）
-bin/car-pi verify --suite protocol --output results/verify-protocol.json
-```
 
 ---
 
@@ -234,10 +222,10 @@ cd car_pi
 - `<release-name>`（必填）：`releases/` 下的版本目录名，例如 `car-pi-0.1.1`。
 
 **内部自动执行的完整流程：**
-1. 进入新版本目录，依次执行 `doctor`、`verify --suite protocol` 预检（任一失败立即中止，不影响当前线上服务）；
+1. 进入新版本目录，执行 `doctor` 预检（配置与本机自检，结果写入 `results/preactivate-doctor.json`；失败立即中止，不影响当前线上服务）；
 2. 创建临时软链接 `<root>/current.next` 指向新版本；
 3. 停止当前 `car-pi.service`，通过 `mv -Tf` 原子替换 `<root>/current` 软链接；
-4. 启动 `car-pi.service`，等待 2 秒后通过 `systemctl is-active --quiet car-pi.service` 检查存活：
+4. 启动 `car-pi.service`，最多等待 15 秒，确认服务存活、日志出现 `READY tcp=<端口> ...`，且该端口处于监听状态：
    - **启动成功**：将旧版本记录到 `<root>/previous` 软链接；
    - **启动失败**：自动停止异常进程，将 `<root>/current` 切回旧版本并重新启动旧版服务，最后以状态码 `1` 退出。
 

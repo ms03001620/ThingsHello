@@ -3,7 +3,7 @@ package org.mark.carpi
 import com.google.gson.GsonBuilder
 import org.mark.carpi.runtime.CarConfig
 import org.mark.carpi.runtime.CarRuntime
-import org.mark.carpi.runtime.ProtocolVerification
+import org.mark.carpi.runtime.SelfCheck
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
@@ -15,11 +15,11 @@ object CarMain {
     @Throws(Exception::class)
     fun main(args: Array<String>) {
         require(args.isNotEmpty()) {
-            "doctor | serve [--config path] | verify --suite protocol [--output path]"
+            "doctor [--config path] [--output path] | serve [--config path]"
         }
         val options = mutableMapOf<String, String>()
         for (i in 1 until args.size step 2) {
-            require(i + 1 < args.size && args[i] in setOf("--config", "--output", "--suite")) {
+            require(i + 1 < args.size && args[i] in setOf("--config", "--output")) {
                 "Invalid option: ${args[i]}"
             }
             options[args[i]] = args[i + 1]
@@ -31,7 +31,12 @@ object CarMain {
                 result["hardwareMode"] = config.hardware.mode.key
                 result["physicalIOConfigured"] = config.hardware.real
                 result["physicalIOVerified"] = false
+                val selfCheck = SelfCheck.loopback()
+                result["selfCheck"] = selfCheck
+                val actionsLog = SelfCheck.actionsWritable(config.actions)
+                result["actionsLog"] = actionsLog
                 report(options, result)
+                if (selfCheck["status"] != "PASS" || actionsLog["status"] != "PASS") exitProcess(2)
             }
 
             "serve" -> {
@@ -49,33 +54,6 @@ object CarMain {
                 println("READY tcp=${runtime.port()} hardware=${config.hardware.mode.key}")
                 runtime.startupBeep()
                 stopped.await()
-            }
-
-            "verify" -> {
-                val suite = options["--suite"] ?: ""
-                val result = environment()
-                result["suite"] = suite
-                when (suite) {
-                    "protocol" -> {
-                        try {
-                            result.putAll(ProtocolVerification.run())
-                        } catch (e: Exception) {
-                            result["status"] = "FAIL"
-                            result["reason"] = e.toString()
-                        } catch (e: AssertionError) {
-                            result["status"] = "FAIL"
-                            result["reason"] = e.toString()
-                        }
-                    }
-
-
-                    else -> {
-                        result["status"] = "BLOCKED"
-                        result["reason"] = "Suite not implemented; real hardware unverified"
-                    }
-                }
-                report(options, result)
-                if (result["status"] != "PASS") exitProcess(2)
             }
 
             else -> throw IllegalArgumentException("Unknown command: ${args[0]}")

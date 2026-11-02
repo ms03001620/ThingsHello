@@ -10,15 +10,18 @@ import java.net.Socket
 import java.nio.file.Files
 import java.nio.file.Path
 
-/** Runs the real TCP server with a recording driver; never outputs hardware signals. */
-object ProtocolVerification {
+/**
+ * 协议端到端场景（单元测试用）：真实 TCP 服务 + 模拟硬件，像手机一样发送一串指令，
+ * 断言动作日志。覆盖拆包/粘包、类型 0/1/2/4/6、不支持类型 3、500ms 释放、坏指令拒绝后连接不断、关闭后端口可重绑。
+ */
+object ProtocolScenario {
     private fun check(condition: Boolean, message: String) {
         if (!condition) throw AssertionError(message)
     }
 
     @JvmStatic
     @Throws(Exception::class)
-    fun run(): Map<String, Any> {
+    fun run() {
         val log = Files.createTempFile("car-pi-protocol-", ".jsonl")
         try {
             val port: Int
@@ -58,14 +61,6 @@ object ProtocolVerification {
             expect(events, 10, "unsupported.type", "3")
             expect(events, 11, "wheel.speed", """{"left":10,"right":10}""")
             ServerSocket().use { it.reuseAddress = true; it.bind(InetSocketAddress("127.0.0.1", port)) }
-            return mapOf(
-                "status" to "PASS", "verification" to "已验证",
-                "scope" to "TCP loopback + recording, no physical output or old phone acceptance",
-                "checks" to listOf("fragmented header/body", "coalesced frames", "types 0,1,2,4,6", "unsupported type logged",
-                    "recorded action values", "servo/wheel exclusion", "500ms releases", "invalid JSON/range rejection",
-                    "connection survives rejected commands", "port rebind after shutdown"),
-                "events" to events,
-            )
         } finally {
             Files.deleteIfExists(log)
         }

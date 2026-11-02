@@ -2,7 +2,7 @@ package org.mark.carpi;
 
 import org.junit.jupiter.api.Test;
 import org.mark.carpi.protocol.FrameCodec;
-import org.mark.carpi.runtime.ProtocolVerification;
+import org.mark.carpi.runtime.ProtocolScenario;
 import java.io.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,5 +18,5 @@ class ProtocolTest {
             assertThrows(IOException.class,()->FrameCodec.read(new ByteArrayInputStream(invalid)));
     }
     @Test void cleanEof() throws Exception { assertNull(FrameCodec.read(new ByteArrayInputStream(new byte[0]))); }
-    @Test void realTcpAndRecordedBehavior() throws Exception { assertEquals("PASS",ProtocolVerification.run().get("status")); }
+    @Test void realTcpAndRecordedBehavior() throws Exception { ProtocolScenario.run(); }
 }
