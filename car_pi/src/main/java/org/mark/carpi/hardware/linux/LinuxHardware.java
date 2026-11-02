@@ -1,17 +1,18 @@
 package org.mark.carpi.hardware.linux;
 
 import org.mark.carpi.hardware.Hardware;
+import org.mark.carpi.hardware.logging.ActionLogRecorder;
 import java.io.*;
 import java.util.*;
 
 /** Shared Linux action driver; transport owns native GPIO/PWM timing and resource release. */
 public final class LinuxHardware implements Hardware {
-    private final GpioBackend io;private final HardwareConfig config;private final Hardware audit;
+    private final GpioBackend io;private final HardwareConfig config;private final ActionLogRecorder recorder;
     private boolean faulted,closed;
     private final Map<HardwareConfig.Motor,Integer> speeds=new HashMap<>();
-    public LinuxHardware(GpioBackend io,HardwareConfig config,Hardware audit) { this.io=io;this.config=config;this.audit=audit; }
+    public LinuxHardware(GpioBackend io,HardwareConfig config,ActionLogRecorder recorder) { this.io=io;this.config=config;this.recorder=recorder; }
     public synchronized void action(long command,String action,Object value) {
-        audit.action(command,action,value);
+        recorder.record(command,action,value);
         if(Set.of("command","rejected","camera.request","unsupported.type").contains(action)) return;
         if(faulted || closed)throw new IllegalStateException("Hardware faulted/closed; restart required");
         try {
@@ -45,7 +46,7 @@ public final class LinuxHardware implements Hardware {
         io.pwm(m.pwm(),0);io.write(m.in1(),false);io.write(m.in2(),false);io.range(m.pwm(),100);
         speeds.put(m,0);
         int actual=io.frequency(m.pwm(),config.frequency());
-        audit.action(command,config.backend().equals("lgpio")?"pwm.configuredHz":"pwm.actualHz",Map.of("pin",m.pwm(),"requested",config.frequency(),"actual",actual));
+        recorder.record(command,config.backend().equals("lgpio")?"pwm.configuredHz":"pwm.actualHz",Map.of("pin",m.pwm(),"requested",config.frequency(),"actual",actual));
         if(Math.abs(actual-config.frequency())>config.maxError())throw new IOException("PWM frequency mismatch: requested "+config.frequency()+", actual "+actual);
     }
     private void drive(HardwareConfig.Motor m,int speed)throws IOException {
@@ -82,6 +83,6 @@ public final class LinuxHardware implements Hardware {
         if(closed)return;closed=true;
         try { if(!faulted)stopAll(); }
         catch(IOException e) { System.err.println("Hardware stop failed: "+e); }
-        finally { try { io.close(); } catch(IOException e) { System.err.println(e); } audit.close(); }
+        finally { try { io.close(); } catch(IOException e) { System.err.println(e); } recorder.close(); }
     }
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mark.carpi.hardware.linux.*;
 import org.mark.carpi.control.CommandDispatcher;
 import org.mark.carpi.hardware.Hardware;
+import org.mark.carpi.hardware.logging.ActionLogRecorder;
 import org.mark.carpi.protocol.FrameCodec.Frame;
 import java.nio.file.*;
 import java.util.*;
@@ -80,10 +81,10 @@ class LgpioTest {
             base.lights(),base.lightHigh(),base.buzzer(),base.buzzerHigh(),18,base.frequency(),base.maxError());
         var env=new HashMap<>(fakeLibrary());
         env.put("CAR_PI_PWM_PATH",temporary.resolve("missing-pwm").toString());
-        Hardware audit=new Hardware(){public void action(long id,String action,Object value){}public void close(){}};
+        ActionLogRecorder recorder=(id,action,value)->{};
         try(var client=new LgpioClient(c,env)) {
             assertThrows(java.io.IOException.class,()->client.servo(18,1501));
-            try(var dispatcher=new CommandDispatcher(new LinuxHardware(client,c,audit))) {
+            try(var dispatcher=new CommandDispatcher(new LinuxHardware(client,c,recorder))) {
                 dispatcher.submit(new Frame(4,"{\"progress\":50}"),f->{}).get();
                 dispatcher.submit(new Frame(0,"{\"left\":40,\"right\":40}"),f->{}).get();
             }
@@ -102,11 +103,11 @@ class LgpioTest {
         Path pwm=Files.createDirectory(temporary.resolve("pwm"));
         for(String name:List.of("enable","duty_cycle","period"))Files.writeString(pwm.resolve(name),"0");
         env.put("CAR_PI_PWM_PATH",pwm.toString());
-        Hardware audit=new Hardware(){public void action(long id,String action,Object value){}public void close(){}};
+        ActionLogRecorder recorder=(id,action,value)->{};
         try(var client=new LgpioClient(c,env)) {
             assertEquals("20000000",Files.readString(pwm.resolve("period")));
             assertThrows(java.io.IOException.class,()->client.servo(18,1501));
-            try(var dispatcher=new CommandDispatcher(new LinuxHardware(client,c,audit))) {
+            try(var dispatcher=new CommandDispatcher(new LinuxHardware(client,c,recorder))) {
                 dispatcher.submit(new Frame(4,"{\"progress\":50}"),f->{}).get();
                 assertEquals("1150000",Files.readString(pwm.resolve("duty_cycle")));
                 assertEquals("1",Files.readString(pwm.resolve("enable")));

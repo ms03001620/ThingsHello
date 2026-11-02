@@ -1,30 +1,28 @@
-package org.mark.carpi.hardware.recording;
+package org.mark.carpi.hardware.logging;
 
 import com.google.gson.Gson;
-import org.mark.carpi.hardware.Hardware;
 import java.io.*;
 import java.nio.file.*;
 import java.time.Instant;
 import java.util.Map;
 
-/** Records intended actions only; never claims physical output. */
-public final class RecordingHardware implements Hardware {
+/** Writes the action log for either a simulated or physical hardware backend. */
+public final class JsonlActionLogRecorder implements ActionLogRecorder {
     private final BufferedWriter writer;
     private final String backend;
-    public RecordingHardware(Path path) throws IOException { this(path,"recording"); }
-    public RecordingHardware(Path path,String backend) throws IOException {
-        this.backend=backend;
+    public JsonlActionLogRecorder(Path path, String backend) throws IOException {
+        this.backend = backend;
         Files.createDirectories(path.toAbsolutePath().getParent());
         writer = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
-    public synchronized void action(long command, String action, Object value) {
+    @Override public synchronized void record(long command, String action, Object value) {
         try {
             writer.write(new Gson().toJson(Map.of("time", Instant.now().toString(), "command", command,
                 "action", action, "value", value, "backend", backend)));
             writer.newLine(); writer.flush();
         } catch (IOException e) { throw new UncheckedIOException(e); }
     }
-    public synchronized void close() {
+    @Override public synchronized void close() {
         try { writer.close(); } catch (IOException e) { throw new UncheckedIOException(e); }
     }
 }

@@ -1,16 +1,20 @@
 package org.mark.carpi;
 
+import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
-import org.mark.carpi.hardware.*;
+import org.junit.jupiter.api.io.TempDir;
+import org.mark.carpi.hardware.logging.JsonlActionLogRecorder;
 import org.mark.carpi.hardware.linux.*;
 import java.io.*;
 import java.net.*;
 import java.nio.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PigpioTest {
+    @TempDir Path temporary;
     @Test void wireFormatFragmentedResponseAndNegativeResult() throws Exception {
         try(var server=new ServerSocket(0);var workers=Executors.newSingleThreadExecutor()) {
             Future<?> peer=workers.submit(()->{
@@ -42,23 +46,30 @@ class PigpioTest {
         assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(p));
     }
     @Test void frequencyMismatchNeverEnablesMotorDuty() {
-        var gpio=new Fake();gpio.hz=320;var hardware=new LinuxHardware(gpio,config(),new Audit());
+        var gpio=new Fake();gpio.hz=320;var hardware=new LinuxHardware(gpio,config(),(id,action,value)->{});
         assertThrows(UncheckedIOException.class,()->hardware.action(1,"wheel.bind",true));
         assertFalse(gpio.calls.stream().anyMatch(s->s.startsWith("pwm") && !s.endsWith(":0")));
         assertTrue(gpio.closed);assertThrows(IllegalStateException.class,()->hardware.action(2,"wheel.speed",Map.of("left",40,"right",40)));
         hardware.close();
     }
-    @Test void reverseStopServoAndReleaseUseConfiguredPins() {
-        var gpio=new Fake();var hardware=new LinuxHardware(gpio,config(),new Audit());
+    @Test void reverseStopServoAndReleaseUseConfiguredPins() throws Exception {
+        Path log=temporary.resolve("actions.jsonl");
+        var gpio=new Fake();var hardware=new LinuxHardware(gpio,config(),new JsonlActionLogRecorder(log,"pigpio"));
         hardware.action(1,"wheel.bind",true);hardware.action(1,"wheel.speed",Map.of("left",-35,"right",20));
         assertTrue(gpio.calls.contains("write:21:false"));assertTrue(gpio.calls.contains("write:20:true"));assertTrue(gpio.calls.contains("pwm:16:35"));
         hardware.action(2,"servo.pulseMs",1.5);assertTrue(gpio.calls.contains("servo:18:1500"));
         hardware.action(3,"buzzer.enabled",true);assertTrue(gpio.calls.contains("write:8:false"));
         hardware.close();assertTrue(gpio.calls.contains("servo:18:0"));assertTrue(gpio.calls.contains("mode:16:0"));assertTrue(gpio.closed);
+        var events=Files.readAllLines(log).stream().map(line->JsonParser.parseString(line).getAsJsonObject()).toList();
+        assertTrue(events.stream().allMatch(event->event.get("backend").getAsString().equals("pigpio")));
+        assertTrue(events.stream().anyMatch(event->event.get("action").getAsString().equals("pwm.actualHz")));
+        var speed=events.stream().filter(event->event.get("action").getAsString().equals("wheel.speed")).findFirst().orElseThrow();
+        assertEquals(1,speed.get("command").getAsLong());
+        assertEquals(-35,speed.getAsJsonObject("value").get("left").getAsInt());
     }
     @Test void sameDirectionSpeedUpdatesDoNotPulseStopBetweenFrames() {
         var gpio=new Fake();
-        try(var hardware=new LinuxHardware(gpio,config(),new Audit())) {
+        try(var hardware=new LinuxHardware(gpio,config(),(id,action,value)->{})) {
             hardware.action(1,"wheel.bind",true);
             hardware.action(2,"wheel.speed",Map.of("left",20,"right",20));gpio.calls.clear();
             hardware.action(3,"wheel.speed",Map.of("left",30,"right",30));
@@ -70,7 +81,6 @@ class PigpioTest {
         p.setProperty("left.forwardHigh","true");p.setProperty("right.forwardHigh","true");p.setProperty("servo.enabled","true");p.setProperty("servo.pin","18");
         p.setProperty("buzzer.enabled","true");p.setProperty("buzzer.activeHigh","false");return HardwareConfig.load(p);
     }
-    static class Audit implements Hardware { public void action(long id,String action,Object value){} public void close(){} }
     static class Fake implements GpioBackend {
         List<String> calls=new ArrayList<>();int hz=300;boolean closed;
         public void mode(int p,int m){calls.add("mode:"+p+":"+m);}

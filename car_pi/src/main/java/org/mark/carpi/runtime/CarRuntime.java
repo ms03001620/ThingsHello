@@ -1,7 +1,9 @@
 package org.mark.carpi.runtime;
 
 import org.mark.carpi.control.CommandDispatcher;
-import org.mark.carpi.hardware.recording.RecordingHardware;
+import org.mark.carpi.hardware.simulated.SimulatedHardware;
+import org.mark.carpi.hardware.logging.ActionLogRecorder;
+import org.mark.carpi.hardware.logging.JsonlActionLogRecorder;
 import org.mark.carpi.protocol.FrameCodec;
 import java.io.*;
 import org.mark.carpi.hardware.Hardware;
@@ -27,10 +29,10 @@ public final class CarRuntime implements AutoCloseable {
         dispatcher = created;
     }
     private static Hardware hardware(CarConfig config) throws IOException {
-        Hardware audit=new RecordingHardware(config.actions(),config.hardware().backend());
-        if(config.hardware().backend().equals("recording"))return audit;
-        try { return new LinuxHardware(config.hardware().backend().equals("lgpio") ? new LgpioClient(config.hardware()) : new PigpioClient(config.hardware().host(),config.hardware().port()),config.hardware(),audit); }
-        catch(IOException | RuntimeException e) { audit.close();throw e; }
+        if(config.hardware().backend().equals("recording"))return new SimulatedHardware(config.actions());
+        ActionLogRecorder recorder=new JsonlActionLogRecorder(config.actions(),config.hardware().backend());
+        try { return new LinuxHardware(config.hardware().backend().equals("lgpio") ? new LgpioClient(config.hardware()) : new PigpioClient(config.hardware().host(),config.hardware().port()),config.hardware(),recorder); }
+        catch(IOException | RuntimeException e) { recorder.close();throw e; }
     }
     public int port() { return server.getLocalPort(); }
     public void start() { workers.submit(this::accept); }
