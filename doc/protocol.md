@@ -7,7 +7,7 @@ TCP 头为正文 UTF-8 字节数（4 字节小端）+ 类型（1 字节）+ 正�
 类型和字段：
 
 - `0`：`left` / `right`（左右轮速度）
-- `1`：`red` / `green` / `blue`（RGB 灯光）
+- `1`：`red` / `green` / `blue`（RGB 灯光，各 0..255）。整体开关语义（沿用原 `ForwardLightAction`）：任一分量 > 0 → 三路灯全亮，全 0 → 全灭；具体数值不影响颜色或亮度。动作日志 `light.rgb` 记为 `[100,100,100]` / `[0,0,0]`（每路点亮百分比，非颜色值）
 - `2`：`di`（蜂鸣器，触发后 500ms 自动关闭）
 - `3`：`action` / `width` / `height` / `transferVideo` / `tfCmd`（旧摄像头开关；**car_pi 已不再支持**，收到只记 `unsupported.type` 日志，不回复）
 - `4`：`progress`（云台舵机 `0..100`）

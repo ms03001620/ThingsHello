@@ -13,6 +13,7 @@ interface CarRepository : AutoCloseable {
     fun servoPulseMs(id: Long, pulseMs: Double)
     /** 停止舵机脉冲并把引脚设回输入（mode 0）。 */
     fun servoRelease(id: Long)
+    /** 前灯整体开关：on=true 三路（R/G/B）全部置有效电平，false 全部置无效电平；不支持单色/调光。 */
     fun light(id: Long, on: Boolean)
     fun buzzer(id: Long, enabled: Boolean)
     fun allStop(id: Long)

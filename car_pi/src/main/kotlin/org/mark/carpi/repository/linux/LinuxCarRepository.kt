@@ -48,6 +48,7 @@ class LinuxCarRepository(
         }
     }
 
+    /** 数字输出：三路 (red, green, blue) 同时写 on==activeHigh，没有 PWM 调光。 */
     override fun light(id: Long, on: Boolean) = guarded {
         requireDevice(config.lights.isNotEmpty(), "light")
         for (i in 0 until 3) io.write(config.lights[i], on == config.lightHigh)

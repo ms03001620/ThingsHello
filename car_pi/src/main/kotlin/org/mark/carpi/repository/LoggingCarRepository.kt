@@ -18,6 +18,10 @@ class LoggingCarRepository(private val delegate: CarRepository, private val reco
     override fun servoBind(id: Long) { event(id, "servo.bind", true); delegate.servoBind(id) }
     override fun servoPulseMs(id: Long, pulseMs: Double) { event(id, "servo.pulseMs", pulseMs); delegate.servoPulseMs(id, pulseMs) }
     override fun servoRelease(id: Long) { event(id, "servo.release", true); delegate.servoRelease(id) }
+    /**
+     * light.rgb 的值是 [R,G,B] 三路的「点亮百分比」（沿用原实现 setPwmDutyCycle(100/0)），不是 0..255 颜色值：
+     * 100 = 该引脚置有效电平（全亮），0 = 熄灭。三路始终同开同关，与真实硬件写引脚一致。
+     */
     override fun light(id: Long, on: Boolean) {
         val level = if (on) 100 else 0
         event(id, "light.rgb", listOf(level, level, level)); delegate.light(id, on)
