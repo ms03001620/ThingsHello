@@ -1,0 +1,48 @@
+{"command":1,"action":"command","value":{"type":0,"body":"{\"left\":10,\"right\":-20}"},"mode":"simulated"}
+{"command":1,"action":"wheel.bind","value":true,"mode":"simulated"}
+{"command":1,"action":"wheel.speed","value":{"left":10,"right":-20},"mode":"simulated"}
+{"command":2,"action":"command","value":{"type":0,"body":"{}"},"mode":"simulated"}
+{"command":2,"action":"wheel.speed","value":{"left":0,"right":0},"mode":"simulated"}
+{"command":3,"action":"command","value":{"type":0,"body":"{\"left\":101}"},"mode":"simulated"}
+{"command":3,"action":"rejected","value":"java.lang.IllegalArgumentException: left out of range","mode":"simulated"}
+{"command":4,"action":"command","value":{"type":0,"body":"{\"left\":1.5}"},"mode":"simulated"}
+{"command":4,"action":"rejected","value":"java.lang.ArithmeticException: Rounding necessary","mode":"simulated"}
+{"command":5,"action":"command","value":{"type":0,"body":"{\"left\":1.0,\"right\":\"x\"}"},"mode":"simulated"}
+{"command":5,"action":"rejected","value":"java.lang.IllegalArgumentException: right","mode":"simulated"}
+{"command":6,"action":"command","value":{"type":1,"body":"{\"red\":1}"},"mode":"simulated"}
+{"command":6,"action":"light.rgb","value":[100,100,100],"mode":"simulated"}
+{"command":7,"action":"command","value":{"type":1,"body":"{\"red\":0,\"green\":0,\"blue\":0}"},"mode":"simulated"}
+{"command":7,"action":"light.rgb","value":[0,0,0],"mode":"simulated"}
+{"command":8,"action":"command","value":{"type":1,"body":"{\"red\":5,\"green\":300}"},"mode":"simulated"}
+{"command":8,"action":"rejected","value":"java.lang.IllegalArgumentException: green out of range","mode":"simulated"}
+{"command":9,"action":"command","value":{"type":1,"body":"{\"red\":5,\"blue\":-1}"},"mode":"simulated"}
+{"command":9,"action":"rejected","value":"java.lang.IllegalArgumentException: blue out of range","mode":"simulated"}
+{"command":10,"action":"command","value":{"type":2,"body":"{\"di\":false}"},"mode":"simulated"}
+{"command":11,"action":"command","value":{"type":3,"body":"{}"},"mode":"simulated"}
+{"command":11,"action":"unsupported.type","value":3,"mode":"simulated"}
+{"command":12,"action":"command","value":{"type":5,"body":"{\"x\":1}"},"mode":"simulated"}
+{"command":12,"action":"unsupported.type","value":5,"mode":"simulated"}
+{"command":13,"action":"command","value":{"type":7,"body":"not json"},"mode":"simulated"}
+{"command":13,"action":"rejected","value":"com.google.gson.JsonSyntaxException: com.google.gson.stream.MalformedJsonException: Use JsonReader.setStrictness(Strictness.LENIENT) to accept malformed JSON at line 1 column 6 path $\nSee https://github.com/google/gson/blob/main/Troubleshooting.md#malformed-json","mode":"simulated"}
+{"command":14,"action":"command","value":{"type":3,"body":"[1]"},"mode":"simulated"}
+{"command":14,"action":"rejected","value":"java.lang.IllegalStateException: Not a JSON Object: [1]","mode":"simulated"}
+{"command":15,"action":"command","value":{"type":0,"body":"{\"left\":"},"mode":"simulated"}
+{"command":15,"action":"rejected","value":"com.google.gson.JsonSyntaxException: java.io.EOFException: End of input at line 1 column 9 path $.left","mode":"simulated"}
+{"command":16,"action":"command","value":{"type":6,"body":"{}"},"mode":"simulated"}
+{"command":16,"action":"wheel.speed","value":{"left":-40,"right":40},"mode":"simulated"}
+{"command":17,"action":"command","value":{"type":6,"body":"{\"rotate\":\"RIGHT\",\"speed\":30}"},"mode":"simulated"}
+{"command":17,"action":"wheel.speed","value":{"left":30,"right":-30},"mode":"simulated"}
+{"command":18,"action":"command","value":{"type":6,"body":"{\"rotate\":\"UP\"}"},"mode":"simulated"}
+{"command":18,"action":"rejected","value":"java.lang.IllegalArgumentException: rotate","mode":"simulated"}
+{"command":19,"action":"command","value":{"type":6,"body":"{\"speed\":101}"},"mode":"simulated"}
+{"command":19,"action":"rejected","value":"java.lang.IllegalArgumentException: speed out of range","mode":"simulated"}
+{"command":20,"action":"command","value":{"type":4,"body":"{\"progress\":101}"},"mode":"simulated"}
+{"command":20,"action":"rejected","value":"java.lang.IllegalArgumentException: progress out of range","mode":"simulated"}
+{"command":21,"action":"command","value":{"type":4,"body":"{\"progress\":2.5}"},"mode":"simulated"}
+{"command":21,"action":"rejected","value":"java.lang.ArithmeticException: Rounding necessary","mode":"simulated"}
+{"command":22,"action":"command","value":{"type":-1,"body":"{}"},"mode":"simulated"}
+{"command":22,"action":"unsupported.type","value":-1,"mode":"simulated"}
+{"command":23,"action":"command","value":{"type":0,"body":"{\"left\":99999999999}"},"mode":"simulated"}
+{"command":23,"action":"rejected","value":"java.lang.ArithmeticException: Overflow","mode":"simulated"}
+{"command":0,"action":"wheel.release","value":true,"mode":"simulated"}
+{"command":0,"action":"all.stop","value":true,"mode":"simulated"}
