@@ -8,7 +8,6 @@ import org.mark.carpi.hardware.linux.*;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class LinuxHardwareTest {
@@ -18,7 +17,7 @@ class LinuxHardwareTest {
         assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(p));
         p.setProperty("hardware.confirmed","true");p.setProperty("servo.enabled","true");
         assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(p));
-        p.setProperty("servo.pin","8");p.setProperty("buzzer.enabled","true");p.setProperty("buzzer.activeHigh","false");
+        p.setProperty("servo.pin","18");p.setProperty("buzzer.enabled","true");p.setProperty("buzzer.pin","18");p.setProperty("buzzer.activeHigh","false");
         assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(p));
     }
     @Test void frequencyMismatchNeverEnablesMotorDuty() {
