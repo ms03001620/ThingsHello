@@ -17,12 +17,19 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+import org.mark.carpi.CarConfig
 import org.mark.carpi.model.Command
 import org.mark.carpi.model.ControlEvent
 import org.mark.carpi.model.ReceivedCommand
 import org.mark.carpi.repository.ActionLog
 import org.mark.carpi.repository.CarRepository
 import org.mark.carpi.repository.CommandRepository
+import org.mark.carpi.repository.JsonlActionLogRecorder
+import org.mark.carpi.repository.LoggingCarRepository
+import org.mark.carpi.repository.datasource.TcpControlDataSource
+import org.mark.carpi.repository.linux.LgpioClient
+import org.mark.carpi.repository.linux.LinuxCarRepository
+import org.mark.carpi.repository.simulated.SimulatedCarRepository
 import org.mark.carpi.usecase.BeepUseCase
 import org.mark.carpi.usecase.DriveWheelUseCase
 import org.mark.carpi.usecase.MotionLock
@@ -34,7 +41,7 @@ import org.mark.carpi.usecase.SetLightUseCase
  * 控制会话：所有指令与定时器（delay + Job.cancel）都在同一个单线程 [dispatcher] 上串行执行；
  * 分配指令 id、记录 command / rejected / unsupported.type，并把每个 Command 分发给对应 UseCase。
  * 持有 [CommandRepository] 时由 [start] 收集控制端事件（类似 Android ViewModel 收集 Repository 的 Flow）。
- * 只依赖 model / repository / usecase 与 kotlinx.coroutines（装配见 runtime）。
+ * 装配见 [of]（config 版本相当于 ViewModelProvider.Factory）。
  *
  * 测试可传入 TestDispatcher：此时不创建任何线程，定时器由虚拟时钟驱动，可直接在测试线程调用 [handle]。
  */
@@ -146,8 +153,12 @@ class CarViewModel internal constructor(
         }
     }
 
-    /** 调用方应先关闭数据源（让阻塞读结束），这里等收集协程收尾后再停硬件。 */
+    /** 控制端监听端口（自检与测试用）；没有 CommandRepository 时为 0。 */
+    val port: Int get() = commands?.port ?: 0
+
+    /** 先关仓库（结束阻塞读），等收集协程收尾，再停硬件。 */
     override fun close() {
+        try { commands?.close() } catch (e: Exception) { System.err.println("close commands: $e") }
         runBlocking { withTimeoutOrNull(5_000) { collector.coroutineContext.job.children.toList().joinAll() } }
         collector.cancel()
         try {
@@ -168,5 +179,28 @@ class CarViewModel internal constructor(
         /** 同上，并由 ViewModel 收集 [commands] 的控制端事件（见 [start]）。 */
         fun <T> of(repository: T, commands: CommandRepository): CarViewModel where T : CarRepository, T : ActionLog =
             CarViewModel(repository, repository, commands)
+
+        /** 按启动配置装配（类似 ViewModelProvider.Factory）：TCP 数据源 + CommandRepository + 真实或模拟硬件。 */
+        fun of(config: CarConfig): CarViewModel {
+            val commands = CommandRepository(TcpControlDataSource(config.bind, config.port))
+            try {
+                return of(hardware(config), commands)
+            } catch (e: Exception) {
+                commands.close()
+                throw e
+            }
+        }
+
+        private fun hardware(config: CarConfig): LoggingCarRepository {
+            val hw = config.hardware
+            if (!hw.real) return SimulatedCarRepository.logged(config.actions)
+            val recorder = JsonlActionLogRecorder(config.actions, hw.mode.key)
+            try {
+                return LoggingCarRepository(LinuxCarRepository(LgpioClient(hw), hw, recorder::record), recorder)
+            } catch (e: Exception) {
+                recorder.close()
+                throw e
+            }
+        }
     }
 }

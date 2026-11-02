@@ -13,7 +13,10 @@ import java.io.IOException
  * 一次只处理一个连接；无缓冲，上层处理完一条（emit 返回）才读下一帧。干净 EOF 或截断/非法帧都视为断开。
  * 读帧是阻塞 IO，收集方应在 IO dispatcher 上收集。
  */
-class CommandRepository(private val source: ControlDataSource) {
+class CommandRepository(private val source: ControlDataSource) : AutoCloseable {
+    /** 数据源实际监听的端口。 */
+    val port: Int get() = source.port
+
     fun events(): Flow<ControlEvent> = flow {
         source.connections().collect { connection ->
             emit(ControlEvent.Connected)
@@ -30,4 +33,7 @@ class CommandRepository(private val source: ControlDataSource) {
             emit(ControlEvent.Disconnected)
         }
     }
+
+    /** 关闭数据源：结束阻塞读，events() 随之结束。 */
+    override fun close() = source.close()
 }

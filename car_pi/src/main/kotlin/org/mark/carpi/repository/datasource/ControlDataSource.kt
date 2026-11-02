@@ -11,4 +11,7 @@ interface ControlConnection : AutoCloseable {
 /** 控制端字节数据源：每连上一个控制端发出一个 [ControlConnection]。真实实现是 TCP，测试可换成假的。 */
 interface ControlDataSource : AutoCloseable {
     fun connections(): Flow<ControlConnection>
+
+    /** 实际监听的端口（自检与测试用）；不是网络数据源时为 0。 */
+    val port: Int get() = 0
 }

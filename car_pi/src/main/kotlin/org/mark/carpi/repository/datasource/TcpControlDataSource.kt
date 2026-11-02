@@ -32,7 +32,7 @@ class TcpControlDataSource(bind: String, port: Int) : ControlDataSource {
         }
     }
 
-    val port: Int get() = server.localPort
+    override val port: Int get() = server.localPort
 
     override fun connections(): Flow<ControlConnection> = channelFlow {
         // accept 一直在跑，这样控制端连着时也能立刻拒绝多余的连接。

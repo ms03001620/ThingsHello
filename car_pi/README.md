@@ -67,7 +67,7 @@ sudo systemctl stop car-pi
 
 ## 代码结构（`src/main/kotlin/org/mark/carpi/`）
 
-依赖只向内：`usecase/`、`viewmodel/`、`model/` 不依赖 gson、socket 或 `java.util.concurrent` 线程池。
+依赖只向内：`usecase/`、`viewmodel/`、`model/` 不直接使用 gson、socket 或 `java.util.concurrent` 线程池（`CarViewModel.of(config)` 工厂只负责创建 repository 实现）。
 
 - `model/`：领域类型 `Command`（Wheel / Light / Beep / Servo / Rotate / Unsupported / Invalid）、`ReceivedCommand`（原始 type、body + 解析结果）与控制端事件 `ControlEvent`（Connected / Received / Disconnected）。
 - `repository/`：`CommandRepository`（从数据源读字节，解析为 `Flow<ControlEvent>`，无缓冲，上层处理完一条才读下一帧）、
@@ -76,8 +76,8 @@ sudo systemctl stop car-pi
   `repository/datasource/`：数据源接口 `ControlDataSource` 与 TCP 实现 `TcpControlDataSource`（只接受一个控制端），测试可换成假数据源；
   `repository/protocol/`：`FrameCodec`（4 字节小端长度 + 1 字节 type + UTF-8 JSON）与 `CommandParser`（帧 -> `Command`，gson 只在这里）。
 - `usecase/`：`DriveWheelUseCase`、`RotateUseCase`、`MoveServoUseCase`（500ms 自动释放）、`BeepUseCase`、`SetLightUseCase`，以及车轮/舵机独占锁 `MotionLock`。
-- `viewmodel/`：`CarViewModel`，持有 `CommandRepository` 并收集它的事件（断开时释放运动部件），所有指令与定时器在同一个单线程协程 dispatcher 上串行执行；定时器为 `delay` + `Job.cancel`。
-- `runtime/`：手工装配与启动（`CarRuntime` 类似 Activity，创建数据源和仓库交给 `CarViewModel`，只管 start/close，不接触 socket 和数据流）、`SelfCheck`（doctor 自检）。
+- `viewmodel/`：`CarViewModel`，持有 `CommandRepository` 并收集它的事件（断开时释放运动部件），工厂 `CarViewModel.of(config)` 负责装配 TCP 数据源、`CommandRepository` 和真实或模拟硬件（类似 `ViewModelProvider.Factory`）；所有指令与定时器在同一个单线程协程 dispatcher 上串行执行；定时器为 `delay` + `Job.cancel`。
+- `runtime/`：启动入口（`CarRuntime` 类似 Activity，通过 `CarViewModel.of(config)` 拿到 ViewModel，只管 start/close 和启动蜂鸣，不 import 任何 repository）、`SelfCheck`（doctor 自检）。
 - 根包：`CarMain`（入口）与 `CarConfig`（启动配置）。
 
 ## 目录说明
