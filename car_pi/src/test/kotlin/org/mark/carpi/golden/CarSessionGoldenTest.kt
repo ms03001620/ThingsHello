@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.mark.carpi.session.CarSession
-import org.mark.carpi.runtime.carSession
 import org.mark.carpi.recordingRepository
 import org.mark.carpi.repository.simulated.SimulatedCarRepository
 import org.mark.carpi.repository.protocol.FrameCodec.Frame
@@ -21,7 +20,7 @@ class CarSessionGoldenTest {
 
     private fun run(dir: Path, script: (CarSession, Path) -> Unit): List<String> {
         val log = dir.resolve("actions.jsonl")
-        carSession(SimulatedCarRepository.logged(log)).use { script(it, log) }
+        CarSession.of(SimulatedCarRepository.logged(log)).use { script(it, log) }
         return Files.readAllLines(log).map(::stripTime)
     }
 
@@ -85,7 +84,7 @@ class CarSessionGoldenTest {
             override fun close() { synchronized(events) { events += "close" } }
         }
         val hw = recordingRepository(closing) { command, action, value -> synchronized(events) { events += "$command:$action:$value" } }
-        val d = carSession(hw)
+        val d = CarSession.of(hw)
         d.send(0, """{"left":1,"right":1}""")
         d.beepBlocking(10000)
         d.close()

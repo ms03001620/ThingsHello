@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.function.Executable
 import org.junit.jupiter.api.io.TempDir
 import org.mark.carpi.session.CarSession
-import org.mark.carpi.runtime.carSession
 import org.mark.carpi.repository.linux.HardwareConfig
 import org.mark.carpi.repository.linux.LgpioClient
 import org.mark.carpi.repository.linux.LinuxCarRepository
@@ -93,7 +92,7 @@ class LgpioTest {
     fun disconnectReleasesMotorBeforeNextCommand() {
         val calls = Collections.synchronizedList(mutableListOf<String>())
         val driver = recordingRepository { _, action, _ -> calls.add(action) }
-        carSession(driver).use { session ->
+        CarSession.of(driver).use { session ->
             session.send(0, """{"left":40,"right":40}""")
             session.releaseBlocking()
             assertEquals("wheel.release", calls.last())
@@ -109,7 +108,7 @@ class LgpioTest {
         val recorder = ActionLogRecorder { _, _, _ -> }
         LgpioClient(c, env).use { client ->
             assertThrows(IOException::class.java) { client.servo(18, 1501) }
-            carSession(LoggingCarRepository(LinuxCarRepository(client, c, recorder::record), recorder)).use { session ->
+            CarSession.of(LoggingCarRepository(LinuxCarRepository(client, c, recorder::record), recorder)).use { session ->
                 session.send(4, """{"progress":50}""")
                 session.send(0, """{"left":40,"right":40}""")
             }
@@ -131,7 +130,7 @@ class LgpioTest {
         LgpioClient(c, env).use { client ->
             assertEquals("20000000", Files.readString(pwm.resolve("period")))
             assertThrows(IOException::class.java) { client.servo(18, 1501) }
-            carSession(LoggingCarRepository(LinuxCarRepository(client, c, recorder::record), recorder)).use { session ->
+            CarSession.of(LoggingCarRepository(LinuxCarRepository(client, c, recorder::record), recorder)).use { session ->
                 session.send(4, """{"progress":50}""")
                 assertEquals("1150000", Files.readString(pwm.resolve("duty_cycle")))
                 assertEquals("1", Files.readString(pwm.resolve("enable")))

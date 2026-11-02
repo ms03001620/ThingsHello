@@ -41,7 +41,7 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
         try {
             server.reuseAddress = true
             server.bind(InetSocketAddress(config.bind, config.port))
-            created = carSession(hardware(config))
+            created = CarSession.of(hardware(config))
         } catch (e: Exception) {
             server.close()
             created?.close()

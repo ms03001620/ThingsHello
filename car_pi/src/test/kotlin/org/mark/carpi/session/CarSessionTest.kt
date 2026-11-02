@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mark.carpi.session.CarSession
-import org.mark.carpi.runtime.carSession
 import org.mark.carpi.repository.protocol.FrameCodec.Frame
 import org.mark.carpi.FakeScheduler
 import org.mark.carpi.model.Command
@@ -27,7 +26,7 @@ class CarSessionTest {
     @Test
     fun switchingToWheelsCancelsOldServoRelease() {
         val r = Recorder()
-        carSession(r.hardware).use { d ->
+        CarSession.of(r.hardware).use { d ->
             d.send(4, """{"progress":0}""")
             d.send(0, """{"left":20,"right":20}""")
             Thread.sleep(650)
@@ -40,7 +39,7 @@ class CarSessionTest {
     @Test
     fun repeatedServoCommandResetsReleaseDeadline() {
         val r = Recorder()
-        carSession(r.hardware).use { d ->
+        CarSession.of(r.hardware).use { d ->
             d.send(4, """{"progress":0}""")
             Thread.sleep(200)
             d.send(4, """{"progress":50}""")

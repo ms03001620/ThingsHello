@@ -123,4 +123,9 @@ class CarSession internal constructor(
             repository.close()
         }
     }
+
+    companion object {
+        /** 同一个对象既控制硬件又写动作日志（如 LoggingCarRepository）时，用它创建会话。 */
+        fun <T> of(repository: T): CarSession where T : CarRepository, T : ActionLog = CarSession(repository, repository)
+    }
 }
