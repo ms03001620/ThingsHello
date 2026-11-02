@@ -1,4 +1,7 @@
-plugins { id 'application' }
+plugins {
+    id 'application'
+    id 'org.jetbrains.kotlin.jvm' version '2.4.21'
+}
 repositories { mavenCentral() }
 // 默认版本号 = 当前 git 短提交号（工作区有未提交改动时加 -dirty）；可用 -PreleaseVersion=xxx 手动覆盖
 def gitVersion = {
@@ -11,6 +14,7 @@ def gitVersion = {
 }
 version = providers.gradleProperty('releaseVersion').getOrElse(gitVersion())
 java { sourceCompatibility = JavaVersion.VERSION_21; targetCompatibility = JavaVersion.VERSION_21 }
+kotlin { compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21 } }
 tasks.withType(JavaCompile).configureEach { options.release = 21; options.encoding = 'UTF-8' }
 application { mainClass = 'org.mark.carpi.CarMain' }
 dependencies {
