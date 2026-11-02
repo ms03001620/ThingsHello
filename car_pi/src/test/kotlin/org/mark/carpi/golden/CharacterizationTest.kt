@@ -11,7 +11,7 @@ import org.mark.carpi.repository.LoggingCarRepository
 import org.mark.carpi.repository.linux.GpioBackend
 import org.mark.carpi.repository.linux.HardwareConfig
 import org.mark.carpi.repository.linux.LinuxCarRepository
-import org.mark.carpi.runtime.CarConfig
+import org.mark.carpi.CarConfig
 import org.mark.carpi.runtime.CarRuntime
 import java.io.IOException
 import java.net.Socket

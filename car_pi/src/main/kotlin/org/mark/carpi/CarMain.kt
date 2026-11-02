@@ -1,7 +1,7 @@
 package org.mark.carpi
 
 import com.google.gson.GsonBuilder
-import org.mark.carpi.runtime.CarConfig
+import org.mark.carpi.CarConfig
 import org.mark.carpi.runtime.CarRuntime
 import org.mark.carpi.runtime.SelfCheck
 import java.nio.file.Files

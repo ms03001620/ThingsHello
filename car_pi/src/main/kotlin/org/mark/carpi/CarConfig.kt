@@ -1,4 +1,4 @@
-package org.mark.carpi.runtime
+package org.mark.carpi
 
 import org.mark.carpi.repository.linux.HardwareConfig
 import java.nio.file.Files

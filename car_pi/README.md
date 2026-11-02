@@ -76,7 +76,8 @@ sudo systemctl stop car-pi
   `repository/protocol/`：`FrameCodec`（4 字节小端长度 + 1 字节 type + UTF-8 JSON）与 `CommandParser`（帧 -> `Command`，gson 只在这里）。
 - `usecase/`：`DriveWheelUseCase`、`RotateUseCase`、`MoveServoUseCase`（500ms 自动释放）、`BeepUseCase`、`SetLightUseCase`，以及车轮/舵机独占锁 `MotionLock`。
 - `session/`：`CarSession`，所有指令与定时器在同一个单线程协程 dispatcher 上串行执行；定时器为 `delay` + `Job.cancel`。
-- `runtime/`：手工装配与启动（`CarRuntime` 单控制端 TCP 服务，收集 Flow 交给 `CarSession`，断开时在 `finally` 中释放运动部件）、`CarConfig`、`SelfCheck`（doctor 自检）。
+- `runtime/`：手工装配与启动（`CarRuntime` 单控制端 TCP 服务，收集 Flow 交给 `CarSession`，断开时在 `finally` 中释放运动部件）、`SelfCheck`（doctor 自检）。
+- 根包：`CarMain`（入口）与 `CarConfig`（启动配置）。
 
 ## 目录说明
 

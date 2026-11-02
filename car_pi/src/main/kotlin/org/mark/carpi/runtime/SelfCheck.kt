@@ -1,5 +1,6 @@
 package org.mark.carpi.runtime
 
+import org.mark.carpi.CarConfig
 import com.google.gson.JsonParser
 import org.mark.carpi.repository.protocol.FrameCodec
 import java.net.InetSocketAddress
