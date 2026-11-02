@@ -12,23 +12,25 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class LinuxHardwareTest {
     @TempDir Path temporary;
-    @Test void hardwareModeDefaultsToSimulatedAndAcceptsLegacyBackendKey() {
-        assertEquals(HardwareMode.SIMULATED,HardwareConfig.load(new Properties()).mode());
-        Properties legacy=new Properties();legacy.setProperty("backend","recording");
-        assertEquals(HardwareMode.SIMULATED,HardwareConfig.load(legacy).mode());
-        Properties real=new Properties();real.setProperty("backend","lgpio");real.setProperty("hardware.confirmed","true");real.setProperty("buzzer.enabled","true");real.setProperty("buzzer.activeHigh","true");
-        assertTrue(HardwareConfig.load(real).real());
+    @Test void hardwareModeDefaultsToSimulatedAndRejectsRemovedBackendKey() {
+        assertEquals(HardwareMode.SIMULATED,HardwareConfig.Companion.load(new Properties()).getMode());
+        Properties simulated=new Properties();simulated.setProperty("hardware.mode","simulated");
+        assertEquals(HardwareMode.SIMULATED,HardwareConfig.Companion.load(simulated).getMode());
+        Properties real=new Properties();real.setProperty("hardware.mode","real");real.setProperty("hardware.confirmed","true");real.setProperty("buzzer.enabled","true");real.setProperty("buzzer.activeHigh","true");
+        assertTrue(HardwareConfig.Companion.load(real).getReal());
         Properties bad=new Properties();bad.setProperty("hardware.mode","lgpio");
-        assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(bad));
-        Properties old=new Properties();old.setProperty("backend","pigpio");
-        assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(old));
+        assertThrows(IllegalArgumentException.class,()->HardwareConfig.Companion.load(bad));
+        for(String removed:new String[]{"recording","lgpio","pigpio"}) {
+            Properties old=new Properties();old.setProperty("backend",removed);
+            assertThrows(IllegalArgumentException.class,()->HardwareConfig.Companion.load(old));
+        }
     }
     @Test void startupBeepDurationIsConfigurable() {
-        assertEquals(1000,HardwareConfig.load(new Properties()).startupBeepMs());
+        assertEquals(1000,HardwareConfig.Companion.load(new Properties()).getStartupBeepMs());
         Properties off=new Properties();off.setProperty("buzzer.startupMs","0");
-        assertEquals(0,HardwareConfig.load(off).startupBeepMs());
+        assertEquals(0,HardwareConfig.Companion.load(off).getStartupBeepMs());
         Properties bad=new Properties();bad.setProperty("buzzer.startupMs","-1");
-        assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(bad));
+        assertThrows(IllegalArgumentException.class,()->HardwareConfig.Companion.load(bad));
     }
     @Test void startupBeepTurnsBuzzerOnThenOffAndCloseSilencesIt() throws Exception {
         var gpio=new Fake();
@@ -43,11 +45,11 @@ class LinuxHardwareTest {
     }
     @Test void rejectsUnconfirmedOverlappingPinsAndMissingServoMapping() {
         Properties p=new Properties();p.setProperty("hardware.mode","real");
-        assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(p));
+        assertThrows(IllegalArgumentException.class,()->HardwareConfig.Companion.load(p));
         p.setProperty("hardware.confirmed","true");p.setProperty("servo.enabled","true");
-        assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(p));
+        assertThrows(IllegalArgumentException.class,()->HardwareConfig.Companion.load(p));
         p.setProperty("servo.pin","18");p.setProperty("buzzer.enabled","true");p.setProperty("buzzer.pin","18");p.setProperty("buzzer.activeHigh","false");
-        assertThrows(IllegalArgumentException.class,()->HardwareConfig.load(p));
+        assertThrows(IllegalArgumentException.class,()->HardwareConfig.Companion.load(p));
     }
     @Test void frequencyMismatchNeverEnablesMotorDuty() {
         var gpio=new Fake();gpio.hz=320;var hardware=new LinuxHardware(gpio,config(),(id,action,value)->{});
@@ -83,7 +85,7 @@ class LinuxHardwareTest {
     private HardwareConfig config() {
         Properties p=new Properties();p.setProperty("hardware.mode","real");p.setProperty("hardware.confirmed","true");p.setProperty("wheel.enabled","true");
         p.setProperty("left.forwardHigh","true");p.setProperty("right.forwardHigh","true");p.setProperty("servo.enabled","true");p.setProperty("servo.pin","18");
-        p.setProperty("buzzer.enabled","true");p.setProperty("buzzer.activeHigh","false");return HardwareConfig.load(p);
+        p.setProperty("buzzer.enabled","true");p.setProperty("buzzer.activeHigh","false");return HardwareConfig.Companion.load(p);
     }
     static class Fake implements GpioBackend {
         List<String> calls=new ArrayList<>();int hz=300;boolean closed;

@@ -19,8 +19,6 @@ object FrameCodec {
     )
 
     /** 读一帧；在帧边界上干净 EOF 返回 null，截断或长度非法抛异常。 */
-    @JvmStatic
-    @Throws(IOException::class)
     fun read(input: InputStream): Frame? {
         val first = input.read()
         if (first < 0) return null
@@ -33,11 +31,10 @@ object FrameCodec {
         if (length !in 1..MAX_BODY) throw IOException("invalid body length: ${Integer.toUnsignedString(length)}")
         val body = input.readNBytes(length)
         if (body.size != length) throw EOFException("truncated body")
-        // type 按有符号字节解释，与旧 Java 实现一致（-1 编码后读回仍是 -1）。
+        // type 按有符号字节解释，与原实现一致（-1 编码后读回仍是 -1）。
         return Frame(tail[3].toInt(), String(body, Charsets.UTF_8))
     }
 
-    @JvmStatic
     fun encode(type: Int, body: String): ByteArray {
         val bytes = body.toByteArray(Charsets.UTF_8)
         require(bytes.size in 1..MAX_BODY) { "body size" }

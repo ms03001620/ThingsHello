@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /** TCP 控制服务：单控制端连接，按序把帧交给 CommandDispatcher。 */
-class CarRuntime @Throws(IOException::class) constructor(config: CarConfig) : AutoCloseable {
+class CarRuntime(config: CarConfig) : AutoCloseable {
     private val server = ServerSocket()
     private val clients: MutableSet<Socket> = ConcurrentHashMap.newKeySet()
     private val workers: ExecutorService = Executors.newCachedThreadPool()
@@ -53,7 +53,7 @@ class CarRuntime @Throws(IOException::class) constructor(config: CarConfig) : Au
         }
     }
 
-    fun port(): Int = server.localPort
+    val port: Int get() = server.localPort
 
     fun start() {
         workers.submit(::accept)
@@ -123,7 +123,6 @@ class CarRuntime @Throws(IOException::class) constructor(config: CarConfig) : Au
     }
 
     private companion object {
-        @Throws(IOException::class)
         fun hardware(config: CarConfig): Hardware {
             val hw = config.hardware
             if (!hw.real) return SimulatedHardware(config.actions)

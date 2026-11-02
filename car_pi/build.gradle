@@ -16,7 +16,7 @@ version = providers.gradleProperty('releaseVersion').getOrElse(gitVersion())
 java { sourceCompatibility = JavaVersion.VERSION_21; targetCompatibility = JavaVersion.VERSION_21 }
 kotlin { compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21 } }
 tasks.withType(JavaCompile).configureEach { options.release = 21; options.encoding = 'UTF-8' }
-application { mainClass = 'org.mark.carpi.CarMain' }
+application { mainClass = 'org.mark.carpi.CarMainKt' }
 dependencies {
     implementation 'com.google.code.gson:gson:2.11.0'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'

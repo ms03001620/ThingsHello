@@ -16,8 +16,8 @@ class ControlTest {
     @Test void switchingToWheelsCancelsOldServoRelease() throws Exception {
         var r=new Recorder();
         try(var d=new CommandDispatcher(r)) {
-            d.submit(new Frame(4,"{\"progress\":0}"),f->{}).get();
-            d.submit(new Frame(0,"{\"left\":20,\"right\":20}"),f->{}).get();
+            d.submit(new Frame(4,"{\"progress\":0}"),f->kotlin.Unit.INSTANCE).get();
+            d.submit(new Frame(0,"{\"left\":20,\"right\":20}"),f->kotlin.Unit.INSTANCE).get();
             Thread.sleep(650);
             assertEquals(1,r.events.stream().filter(e->e.action.equals("servo.release")).count());
             assertTrue(r.events.stream().anyMatch(e->e.action.equals("servo.release") && e.id==2));
@@ -27,9 +27,9 @@ class ControlTest {
     @Test void repeatedServoCommandResetsReleaseDeadline() throws Exception {
         var r=new Recorder();
         try(var d=new CommandDispatcher(r)) {
-            d.submit(new Frame(4,"{\"progress\":0}"),f->{}).get();
+            d.submit(new Frame(4,"{\"progress\":0}"),f->kotlin.Unit.INSTANCE).get();
             Thread.sleep(200);
-            d.submit(new Frame(4,"{\"progress\":50}"),f->{}).get();
+            d.submit(new Frame(4,"{\"progress\":50}"),f->kotlin.Unit.INSTANCE).get();
             Thread.sleep(350);
             assertFalse(r.events.stream().anyMatch(e->e.action.equals("servo.release")));
             Thread.sleep(350);

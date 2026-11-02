@@ -22,8 +22,8 @@
 ## Kotlin 开发
 
 - Kotlin 业务代码放在 `src/main/kotlin/`，Kotlin 测试放在 `src/test/kotlin/`，按包名建立子目录。
-- 现有 Java 源码和测试继续放在 `src/main/java/`、`src/test/java/`，可与 Kotlin 相互调用。
-- Java 与 Kotlin 均编译为 JVM 21 字节码；Kotlin 标准库由插件自动引入并包含在分发包中。
+- 项目已全部为 Kotlin，不再有 Java 源码；不保留 Java 互操作注解（`@JvmStatic`/`@JvmName` 等）。
+- 编译为 JVM 21 字节码，入口为 `org.mark.carpi.CarMainKt`（`CarMain.kt` 顶层 `main`）；Kotlin 标准库由插件自动引入并包含在分发包中。
 - 测试沿用 JUnit 5，执行 `./gradlew test installDist` 完成测试和分发包构建。
 
 ## 启动与关闭

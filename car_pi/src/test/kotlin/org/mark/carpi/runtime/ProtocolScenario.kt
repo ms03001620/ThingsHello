@@ -19,15 +19,13 @@ object ProtocolScenario {
         if (!condition) throw AssertionError(message)
     }
 
-    @JvmStatic
-    @Throws(Exception::class)
     fun run() {
         val log = Files.createTempFile("car-pi-protocol-", ".jsonl")
         try {
             val port: Int
             CarRuntime(CarConfig("127.0.0.1", 0, log)).use { runtime ->
                 runtime.start()
-                port = runtime.port()
+                port = runtime.port
                 Socket("127.0.0.1", port).use { socket ->
                     socket.soTimeout = 3000
                     val out = socket.getOutputStream()

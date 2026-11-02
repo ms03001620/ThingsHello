@@ -14,14 +14,13 @@ import java.nio.file.Path
  * 证明依赖齐全、协议栈与分发链路可用、TCP 能收发；协议细节由单元测试 ProtocolTest 覆盖。
  */
 object SelfCheck {
-    @JvmStatic
     fun loopback(): Map<String, Any> = try {
         val log = Files.createTempFile("car-pi-selfcheck-", ".jsonl")
         try {
             val port: Int
             CarRuntime(CarConfig("127.0.0.1", 0, log)).use { runtime ->
                 runtime.start()
-                port = runtime.port()
+                port = runtime.port
                 Socket("127.0.0.1", port).use { socket ->
                     socket.soTimeout = 3000
                     socket.getOutputStream().apply {
@@ -41,7 +40,6 @@ object SelfCheck {
     }
 
     /** 动作日志可写：父目录不存在则创建，再确认目录可写（不改动已有日志）。 */
-    @JvmStatic
     fun actionsWritable(actions: Path): Map<String, Any> = try {
         val dir = actions.toAbsolutePath().parent
         Files.createDirectories(dir)

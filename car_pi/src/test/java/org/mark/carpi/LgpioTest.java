@@ -16,7 +16,7 @@ class LgpioTest {
     private HardwareConfig config() {
         var p=new Properties();p.setProperty("hardware.mode","real");p.setProperty("hardware.confirmed","true");
         p.setProperty("wheel.enabled","true");p.setProperty("left.forwardHigh","false");p.setProperty("right.forwardHigh","false");
-        p.setProperty("buzzer.enabled","true");p.setProperty("buzzer.activeHigh","false");return HardwareConfig.load(p);
+        p.setProperty("buzzer.enabled","true");p.setProperty("buzzer.activeHigh","false");return HardwareConfig.Companion.load(p);
     }
     private Map<String,String> fakeLibrary() throws Exception {
         Files.writeString(temporary.resolve("lgpio.py"),"""
@@ -68,25 +68,25 @@ class LgpioTest {
         List<String> calls=Collections.synchronizedList(new ArrayList<>());
         Hardware driver=new Hardware() { public void action(long id,String action,Object value){calls.add(action);}public void close(){} };
         try(var dispatcher=new CommandDispatcher(driver)) {
-            dispatcher.submit(new Frame(0,"{\"left\":40,\"right\":40}"),f->{}).get();
+            dispatcher.submit(new Frame(0,"{\"left\":40,\"right\":40}"),f->kotlin.Unit.INSTANCE).get();
             dispatcher.releaseControl().get();
             assertEquals("wheel.release",calls.get(calls.size()-1));
-            dispatcher.submit(new Frame(0,"{\"left\":0,\"right\":0}"),f->{}).get();
+            dispatcher.submit(new Frame(0,"{\"left\":0,\"right\":0}"),f->kotlin.Unit.INSTANCE).get();
             assertEquals(2,calls.stream().filter("wheel.bind"::equals).count());
         }
     }
     @Test void missingPwmDegradesServoOnlyWithoutBreakingWheels() throws Exception {
         var base=config();
-        var c=new HardwareConfig(base.mode(),base.left(),base.right(),
-            base.lights(),base.lightHigh(),base.buzzer(),base.buzzerHigh(),18,base.frequency(),base.maxError(),base.startupBeepMs());
+        var c=new HardwareConfig(base.getMode(),base.getLeft(),base.getRight(),
+            base.getLights(),base.getLightHigh(),base.getBuzzer(),base.getBuzzerHigh(),18,base.getFrequency(),base.getMaxError(),base.getStartupBeepMs());
         var env=new HashMap<>(fakeLibrary());
         env.put("CAR_PI_PWM_PATH",temporary.resolve("missing-pwm").toString());
         ActionLogRecorder recorder=(id,action,value)->{};
         try(var client=new LgpioClient(c,env)) {
             assertThrows(java.io.IOException.class,()->client.servo(18,1501));
             try(var dispatcher=new CommandDispatcher(new LinuxHardware(client,c,recorder))) {
-                dispatcher.submit(new Frame(4,"{\"progress\":50}"),f->{}).get();
-                dispatcher.submit(new Frame(0,"{\"left\":40,\"right\":40}"),f->{}).get();
+                dispatcher.submit(new Frame(4,"{\"progress\":50}"),f->kotlin.Unit.INSTANCE).get();
+                dispatcher.submit(new Frame(0,"{\"left\":40,\"right\":40}"),f->kotlin.Unit.INSTANCE).get();
             }
         }
         String calls=Files.readString(temporary.resolve("calls"));
@@ -97,8 +97,8 @@ class LgpioTest {
     }
     @Test void hardwareServoUsesSysfsAndReleasesOnTimeoutAndDisconnect() throws Exception {
         var base=config();
-        var c=new HardwareConfig(base.mode(),base.left(),base.right(),
-            base.lights(),base.lightHigh(),base.buzzer(),base.buzzerHigh(),18,base.frequency(),base.maxError(),base.startupBeepMs());
+        var c=new HardwareConfig(base.getMode(),base.getLeft(),base.getRight(),
+            base.getLights(),base.getLightHigh(),base.getBuzzer(),base.getBuzzerHigh(),18,base.getFrequency(),base.getMaxError(),base.getStartupBeepMs());
         var env=new HashMap<>(fakeLibrary());
         Path pwm=Files.createDirectory(temporary.resolve("pwm"));
         for(String name:List.of("enable","duty_cycle","period"))Files.writeString(pwm.resolve(name),"0");
@@ -108,17 +108,17 @@ class LgpioTest {
             assertEquals("20000000",Files.readString(pwm.resolve("period")));
             assertThrows(java.io.IOException.class,()->client.servo(18,1501));
             try(var dispatcher=new CommandDispatcher(new LinuxHardware(client,c,recorder))) {
-                dispatcher.submit(new Frame(4,"{\"progress\":50}"),f->{}).get();
+                dispatcher.submit(new Frame(4,"{\"progress\":50}"),f->kotlin.Unit.INSTANCE).get();
                 assertEquals("1150000",Files.readString(pwm.resolve("duty_cycle")));
                 assertEquals("1",Files.readString(pwm.resolve("enable")));
                 long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(2);
                 while(!Files.readString(pwm.resolve("enable")).equals("0") && System.nanoTime()<deadline)Thread.sleep(20);
                 assertEquals("0",Files.readString(pwm.resolve("enable")));
-                dispatcher.submit(new Frame(4,"{\"progress\":100}"),f->{}).get();
+                dispatcher.submit(new Frame(4,"{\"progress\":100}"),f->kotlin.Unit.INSTANCE).get();
                 assertEquals("1500000",Files.readString(pwm.resolve("duty_cycle")));
                 dispatcher.releaseControl().get();
                 assertEquals("0",Files.readString(pwm.resolve("enable")));
-                dispatcher.submit(new Frame(4,"{\"progress\":0}"),f->{}).get();
+                dispatcher.submit(new Frame(4,"{\"progress\":0}"),f->kotlin.Unit.INSTANCE).get();
             }
             assertEquals("0",Files.readString(pwm.resolve("enable")));
         }

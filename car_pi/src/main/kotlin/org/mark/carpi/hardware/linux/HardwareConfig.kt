@@ -4,40 +4,35 @@ import java.util.Properties
 
 /**
  * GPIO 硬件配置（service.properties 中 hardware.* / wheel.* / light.* / buzzer.* / servo.* / pwm.*）。
- * 属性用 @get:JvmName 保留原 Java record 的访问器名（config.left() 等），Java 调用方无需改动。
  */
 data class HardwareConfig(
-    @get:JvmName("mode") val mode: HardwareMode,
-    @get:JvmName("left") val left: Motor?,
-    @get:JvmName("right") val right: Motor?,
-    @get:JvmName("lights") val lights: List<Int>,
-    @get:JvmName("lightHigh") val lightHigh: Boolean?,
-    @get:JvmName("buzzer") val buzzer: Int?,
-    @get:JvmName("buzzerHigh") val buzzerHigh: Boolean?,
-    @get:JvmName("servo") val servo: Int?,
-    @get:JvmName("frequency") val frequency: Int,
-    @get:JvmName("maxError") val maxError: Int,
-    @get:JvmName("startupBeepMs") val startupBeepMs: Int,
+    val mode: HardwareMode,
+    val left: Motor?,
+    val right: Motor?,
+    val lights: List<Int>,
+    val lightHigh: Boolean?,
+    val buzzer: Int?,
+    val buzzerHigh: Boolean?,
+    val servo: Int?,
+    val frequency: Int,
+    val maxError: Int,
+    val startupBeepMs: Int,
 ) {
     data class Motor(
-        @get:JvmName("in1") val in1: Int,
-        @get:JvmName("in2") val in2: Int,
-        @get:JvmName("pwm") val pwm: Int,
-        @get:JvmName("forwardHigh") val forwardHigh: Boolean,
+        val in1: Int,
+        val in2: Int,
+        val pwm: Int,
+        val forwardHigh: Boolean,
     )
 
-    @get:JvmName("real")
     val real: Boolean get() = mode == HardwareMode.REAL
 
     companion object {
         const val DEFAULT_STARTUP_BEEP_MS = 1000
 
-        @JvmStatic
-        @JvmOverloads
         fun simulated(startupBeepMs: Int = DEFAULT_STARTUP_BEEP_MS) =
             HardwareConfig(HardwareMode.SIMULATED, null, null, listOf(), null, null, null, null, 300, 0, startupBeepMs)
 
-        @JvmStatic
         fun load(p: Properties): HardwareConfig {
             val mode = mode(p)
             // buzzer.startupMs：启动成功后蜂鸣时长，0 为关闭
@@ -82,16 +77,9 @@ data class HardwareConfig(
         }
 
         private fun mode(p: Properties): HardwareMode {
-            p.getProperty("hardware.mode")?.let { return HardwareMode.of(it) }
-            val legacy = p.getProperty("backend") ?: return HardwareMode.SIMULATED
-            // 兼容旧配置 backend=recording|lgpio，过渡期后删除
-            val mode = when (legacy) {
-                "recording" -> HardwareMode.SIMULATED
-                "lgpio" -> HardwareMode.REAL
-                else -> throw IllegalArgumentException("Unknown backend: $legacy")
-            }
-            System.err.println("WARN config key 'backend=$legacy' is deprecated; use 'hardware.mode=$mode'")
-            return mode
+            // 旧键 backend= 已移除：显式拒绝，避免旧配置被静默当成 simulated
+            require(!p.containsKey("backend")) { "Config key 'backend' was removed; use hardware.mode=real|simulated" }
+            return p.getProperty("hardware.mode")?.let(HardwareMode::of) ?: HardwareMode.SIMULATED
         }
 
         private fun motor(p: Properties, name: String, a: Int, b: Int, pwm: Int) =
