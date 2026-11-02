@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
-import org.mark.carpi.session.CarSession
+import org.mark.carpi.viewmodel.CarViewModel
 import org.mark.carpi.repository.CommandRepository
 import org.mark.carpi.repository.linux.HardwareConfig
 import org.mark.carpi.repository.linux.LgpioClient
@@ -26,28 +26,28 @@ import java.net.Socket
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** TCP 控制服务：单控制端连接，收集 CommandRepository 的 Flow，逐条交给 CarSession（处理完再读下一帧）。 */
+/** TCP 控制服务：单控制端连接，收集 CommandRepository 的 Flow，逐条交给 CarViewModel（处理完再读下一帧）。 */
 class CarRuntime(config: CarConfig) : AutoCloseable {
     private val server = ServerSocket()
     private val clients: MutableSet<Socket> = ConcurrentHashMap.newKeySet()
     /** accept 与客户端读循环（阻塞 socket IO，跑在 Dispatchers.IO 上）。 */
     private val workers = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val session: CarSession
+    private val viewModel: CarViewModel
     private val closed = AtomicBoolean()
     private val hardwareConfig: HardwareConfig = config.hardware
 
     init {
-        var created: CarSession? = null
+        var created: CarViewModel? = null
         try {
             server.reuseAddress = true
             server.bind(InetSocketAddress(config.bind, config.port))
-            created = CarSession.of(hardware(config))
+            created = CarViewModel.of(hardware(config))
         } catch (e: Exception) {
             server.close()
             created?.close()
             throw e
         }
-        session = created
+        viewModel = created
     }
 
     /** 启动成功（READY 之后）蜂鸣提示；buzzer.startupMs=0 关闭，real 模式未启用蜂鸣器则跳过，失败只告警。 */
@@ -55,7 +55,7 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
         val ms = hardwareConfig.startupBeepMs
         if (ms <= 0 || closed.get() || (hardwareConfig.real && hardwareConfig.buzzer == null)) return
         try {
-            runBlocking { session.beep(ms) }
+            runBlocking { viewModel.beep(ms) }
         } catch (e: RuntimeException) {
             System.err.println("WARN startup beep failed: $e")
         }
@@ -89,14 +89,14 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
             socket.use {
                 socket.tcpNoDelay = true
                 // 无 buffer：handle 返回后才读下一帧，保持顺序并限制排队。
-                CommandRepository(socket).commands().collect { session.handle(it) }
+                CommandRepository(socket).commands().collect { viewModel.handle(it) }
             }
         } catch (e: Exception) {
             if (!closed.get()) System.err.println("client: $e")
         } finally {
             if (!closed.get()) {
                 try {
-                    withTimeout(3_000) { session.releaseControl() }
+                    withTimeout(3_000) { viewModel.releaseControl() }
                 } catch (e: Exception) {
                     System.err.println("disconnect stop: $e")
                 }
@@ -115,7 +115,7 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
             withTimeoutOrNull(5_000) { workers.coroutineContext.job.children.toList().joinAll() }
         }
         workers.cancel()
-        session.close()
+        viewModel.close()
     }
 
     private companion object {

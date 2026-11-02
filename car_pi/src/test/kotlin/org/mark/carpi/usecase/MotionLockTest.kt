@@ -31,7 +31,7 @@ class MotionLockTest {
         val repo = recordingRepository(failing) { command, action, value -> failLog += "$command $action $value" }
         val lock = MotionLock(repo)
         MoveServoUseCase(lock, repo, sch.scope)(1, 0)
-        sch.advance(500) // 定时释放抛异常（由 CarSession 的 CoroutineExceptionHandler 告警）
+        sch.advance(500) // 定时释放抛异常（由 CarViewModel 的 CoroutineExceptionHandler 告警）
         assertEquals(null, lock.owner)
         lock.releaseOwner(0) // owner 已清空：断开/关闭时不再重复释放舵机
         assertEquals(listOf("1 servo.bind true", "1 servo.pulseMs 0.8", "1 servo.release true"), failLog)

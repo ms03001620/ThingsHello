@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.function.Executable
 import org.junit.jupiter.api.io.TempDir
-import org.mark.carpi.session.CarSession
+import org.mark.carpi.viewmodel.CarViewModel
 import org.mark.carpi.repository.linux.HardwareConfig
 import org.mark.carpi.repository.linux.LgpioClient
 import org.mark.carpi.repository.linux.LinuxCarRepository
@@ -92,11 +92,11 @@ class LgpioTest {
     fun disconnectReleasesMotorBeforeNextCommand() {
         val calls = Collections.synchronizedList(mutableListOf<String>())
         val driver = recordingRepository { _, action, _ -> calls.add(action) }
-        CarSession.of(driver).use { session ->
-            session.send(0, """{"left":40,"right":40}""")
-            session.releaseBlocking()
+        CarViewModel.of(driver).use { viewModel ->
+            viewModel.send(0, """{"left":40,"right":40}""")
+            viewModel.releaseBlocking()
             assertEquals("wheel.release", calls.last())
-            session.send(0, """{"left":0,"right":0}""")
+            viewModel.send(0, """{"left":0,"right":0}""")
             assertEquals(2, calls.count { it == "wheel.bind" })
         }
     }
@@ -108,9 +108,9 @@ class LgpioTest {
         val recorder = ActionLogRecorder { _, _, _ -> }
         LgpioClient(c, env).use { client ->
             assertThrows(IOException::class.java) { client.servo(18, 1501) }
-            CarSession.of(LoggingCarRepository(LinuxCarRepository(client, c, recorder::record), recorder)).use { session ->
-                session.send(4, """{"progress":50}""")
-                session.send(0, """{"left":40,"right":40}""")
+            CarViewModel.of(LoggingCarRepository(LinuxCarRepository(client, c, recorder::record), recorder)).use { viewModel ->
+                viewModel.send(4, """{"progress":50}""")
+                viewModel.send(0, """{"left":40,"right":40}""")
             }
         }
         val calls = Files.readString(temporary.resolve("calls"))
@@ -130,18 +130,18 @@ class LgpioTest {
         LgpioClient(c, env).use { client ->
             assertEquals("20000000", Files.readString(pwm.resolve("period")))
             assertThrows(IOException::class.java) { client.servo(18, 1501) }
-            CarSession.of(LoggingCarRepository(LinuxCarRepository(client, c, recorder::record), recorder)).use { session ->
-                session.send(4, """{"progress":50}""")
+            CarViewModel.of(LoggingCarRepository(LinuxCarRepository(client, c, recorder::record), recorder)).use { viewModel ->
+                viewModel.send(4, """{"progress":50}""")
                 assertEquals("1150000", Files.readString(pwm.resolve("duty_cycle")))
                 assertEquals("1", Files.readString(pwm.resolve("enable")))
                 val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2)
                 while (Files.readString(pwm.resolve("enable")) != "0" && System.nanoTime() < deadline) Thread.sleep(20)
                 assertEquals("0", Files.readString(pwm.resolve("enable")))
-                session.send(4, """{"progress":100}""")
+                viewModel.send(4, """{"progress":100}""")
                 assertEquals("1500000", Files.readString(pwm.resolve("duty_cycle")))
-                session.releaseBlocking()
+                viewModel.releaseBlocking()
                 assertEquals("0", Files.readString(pwm.resolve("enable")))
-                session.send(4, """{"progress":0}""")
+                viewModel.send(4, """{"progress":0}""")
             }
             assertEquals("0", Files.readString(pwm.resolve("enable")))
         }

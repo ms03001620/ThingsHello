@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.mark.carpi.session.CarSession
+import org.mark.carpi.viewmodel.CarViewModel
 import org.mark.carpi.repository.linux.GpioBackend
 import org.mark.carpi.repository.linux.HardwareConfig
 import org.mark.carpi.repository.linux.HardwareMode
@@ -48,13 +48,13 @@ class LinuxCarRepositoryTest {
     @Test
     fun startupBeepTurnsBuzzerOnThenOffAndCloseSilencesIt() {
         val gpio = Fake()
-        val session = CarSession.of(recordingRepository(LinuxCarRepository(gpio, config()) { _, _, _ -> }) { _, _, _ -> })
-        session.beepBlocking(50)
+        val viewModel = CarViewModel.of(recordingRepository(LinuxCarRepository(gpio, config()) { _, _, _ -> }) { _, _, _ -> })
+        viewModel.beepBlocking(50)
         assertEquals("write:8:false", gpio.calls.last())
         Thread.sleep(300)
         assertEquals("write:8:true", gpio.calls.last())
-        session.beepBlocking(10000); gpio.calls.clear()
-        session.close()
+        viewModel.beepBlocking(10000); gpio.calls.clear()
+        viewModel.close()
         assertTrue(gpio.calls.contains("write:8:true")); assertTrue(gpio.closed)
     }
 

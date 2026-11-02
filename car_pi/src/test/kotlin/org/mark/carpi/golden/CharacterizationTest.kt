@@ -20,7 +20,7 @@ import java.nio.file.Path
 import java.util.Properties
 
 /**
- * 特征测试（补充 CarSessionGoldenTest）：真实 TCP 运行时的断开释放 / 单控制端，以及 Linux 硬件 IOException 故障后的 actions.jsonl。
+ * 特征测试（补充 CarViewModelGoldenTest）：真实 TCP 运行时的断开释放 / 单控制端，以及 Linux 硬件 IOException 故障后的 actions.jsonl。
  * 期望值取自重构前实现（bd60aa4 / a310ab9）的实际输出。
  */
 class CharacterizationTest {
@@ -63,14 +63,14 @@ class CharacterizationTest {
         val log = dir.resolve("actions.jsonl")
         val gpio = FailingGpio(failPin = 22)
         val recorder = JsonlActionLogRecorder(log, "real")
-        val session = SessionDriver(LoggingCarRepository(LinuxCarRepository(gpio, config(), recorder::record), recorder))
-        session.send(0, """{"left":10,"right":10}""")
-        session.send(4, """{"progress":0}""")
-        session.send(1, """{"red":1}""")          // light 写 GPIO 22 失败 -> faulted
-        session.send(0, """{"left":1}""")         // 切换 owner 时 servo.release 被拒绝
-        session.send(2, """{"di":true}""")
+        val viewModel = ViewModelDriver(LoggingCarRepository(LinuxCarRepository(gpio, config(), recorder::record), recorder))
+        viewModel.send(0, """{"left":10,"right":10}""")
+        viewModel.send(4, """{"progress":0}""")
+        viewModel.send(1, """{"red":1}""")          // light 写 GPIO 22 失败 -> faulted
+        viewModel.send(0, """{"left":1}""")         // 切换 owner 时 servo.release 被拒绝
+        viewModel.send(2, """{"di":true}""")
         // 关闭：servo.release / all.stop 都被拒绝，仍按顺序全部尝试，close 以 IllegalStateException 报告，硬件照常关闭
-        val error = assertThrows(IllegalStateException::class.java) { session.close() }
+        val error = assertThrows(IllegalStateException::class.java) { viewModel.close() }
         assertEquals("control shutdown", error.message)
         val faulted = "\"java.lang.IllegalStateException: Hardware faulted/closed; restart required\""
         assertEquals(

@@ -8,7 +8,7 @@ import org.mark.carpi.repository.CarRepository
 
 /**
  * 摄像头舵机：progress 0..100 -> 0.8..1.5ms 脉冲；最后一次指令后 500ms 以触发指令 id 自动释放。
- * 定时器 = [timers] 中的 delay 协程（应是 CarSession 的单线程作用域），取消 = Job.cancel。
+ * 定时器 = [timers] 中的 delay 协程（应是 CarViewModel 的单线程作用域），取消 = Job.cancel。
  */
 class MoveServoUseCase(private val lock: MotionLock, private val repository: CarRepository, private val timers: CoroutineScope) {
     operator fun invoke(id: Long, progress: Int) {

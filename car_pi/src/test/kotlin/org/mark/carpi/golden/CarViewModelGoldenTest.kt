@@ -7,20 +7,20 @@ import com.google.gson.JsonParser
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.mark.carpi.session.CarSession
+import org.mark.carpi.viewmodel.CarViewModel
 import org.mark.carpi.recordingRepository
 import org.mark.carpi.repository.simulated.SimulatedCarRepository
 import org.mark.carpi.repository.protocol.FrameCodec.Frame
 import java.nio.file.Files
 import java.nio.file.Path
 
-/** 特征测试：锁定 CarSession 现有行为产出的 actions.jsonl（去掉 time 字段）逐行一致。 */
-class CarSessionGoldenTest {
+/** 特征测试：锁定 CarViewModel 现有行为产出的 actions.jsonl（去掉 time 字段）逐行一致。 */
+class CarViewModelGoldenTest {
     private fun stripTime(line: String) = line.replace(Regex("\"time\":\"[^\"]*\","), "")
 
-    private fun run(dir: Path, script: (CarSession, Path) -> Unit): List<String> {
+    private fun run(dir: Path, script: (CarViewModel, Path) -> Unit): List<String> {
         val log = dir.resolve("actions.jsonl")
-        CarSession.of(SimulatedCarRepository.logged(log)).use { script(it, log) }
+        CarViewModel.of(SimulatedCarRepository.logged(log)).use { script(it, log) }
         return Files.readAllLines(log).map(::stripTime)
     }
 
@@ -84,7 +84,7 @@ class CarSessionGoldenTest {
             override fun close() { synchronized(events) { events += "close" } }
         }
         val hw = recordingRepository(closing) { command, action, value -> synchronized(events) { events += "$command:$action:$value" } }
-        val d = CarSession.of(hw)
+        val d = CarViewModel.of(hw)
         d.send(0, """{"left":1,"right":1}""")
         d.beepBlocking(10000)
         d.close()

@@ -5,7 +5,7 @@ import org.mark.carpi.repository.CarRepository
 
 /**
  * 运动部件独占（车轮 / 舵机同一时刻只有一个 owner）。切换 owner 时先取消待执行的舵机自动释放，
- * 再释放旧 owner、绑定新 owner；所有动作都经 CarRepository 记录。只在 CarSession 的单线程 dispatcher 上使用（无锁）。
+ * 再释放旧 owner、绑定新 owner；所有动作都经 CarRepository 记录。只在 CarViewModel 的单线程 dispatcher 上使用（无锁）。
  */
 class MotionLock(private val repository: CarRepository) {
     enum class Device { WHEEL, SERVO }

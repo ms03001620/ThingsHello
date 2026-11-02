@@ -2,7 +2,7 @@ package org.mark.carpi.repository
 
 /**
  * 硬件端口（领域层定义，适配器实现）。每个方法带触发它的指令 id（定时释放 = 触发指令 id，启动蜂鸣/断开/关闭 = 0），
- * 实现方可用于日志；实现失败抛 RuntimeException，由 CarSession 记为 rejected。
+ * 实现方可用于日志；实现失败抛 RuntimeException，由 CarViewModel 记为 rejected。
  */
 interface CarRepository : AutoCloseable {
     /** 绑定车轮（真实硬件：配置 PWM 并校验频率）。 */

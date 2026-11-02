@@ -1,4 +1,4 @@
-package org.mark.carpi.session
+package org.mark.carpi.viewmodel
 
 import kotlinx.coroutines.CloseableCoroutineDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
@@ -30,7 +30,7 @@ import org.mark.carpi.usecase.SetLightUseCase
  *
  * 测试可传入 TestDispatcher：此时不创建任何线程，定时器由虚拟时钟驱动，可直接在测试线程调用 [handle]。
  */
-class CarSession internal constructor(
+class CarViewModel internal constructor(
     private val repository: CarRepository,
     private val log: ActionLog,
     dispatcher: CoroutineDispatcher?,
@@ -39,7 +39,7 @@ class CarSession internal constructor(
 
     /** 仅在未注入 dispatcher 时创建并由本会话关闭的专用线程。 */
     @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
-    private val ownedThread: CloseableCoroutineDispatcher? = if (dispatcher == null) newSingleThreadContext("car-session") else null
+    private val ownedThread: CloseableCoroutineDispatcher? = if (dispatcher == null) newSingleThreadContext("car-viewmodel") else null
     private val dispatcher: CoroutineDispatcher = dispatcher ?: ownedThread!!
     private val timers = CoroutineScope(
         SupervisorJob() + this.dispatcher + CoroutineExceptionHandler { _, e -> System.err.println("WARN timer: $e") }
@@ -126,6 +126,6 @@ class CarSession internal constructor(
 
     companion object {
         /** 同一个对象既控制硬件又写动作日志（如 LoggingCarRepository）时，用它创建会话。 */
-        fun <T> of(repository: T): CarSession where T : CarRepository, T : ActionLog = CarSession(repository, repository)
+        fun <T> of(repository: T): CarViewModel where T : CarRepository, T : ActionLog = CarViewModel(repository, repository)
     }
 }

@@ -1,4 +1,4 @@
-package org.mark.carpi.session
+package org.mark.carpi.viewmodel
 
 import org.mark.carpi.send
 import org.mark.carpi.beepBlocking
@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.mark.carpi.session.CarSession
+import org.mark.carpi.viewmodel.CarViewModel
 import org.mark.carpi.repository.protocol.FrameCodec.Frame
 import org.mark.carpi.FakeScheduler
 import org.mark.carpi.model.Command
@@ -15,7 +15,7 @@ import org.mark.carpi.repository.CarRepository
 import org.mark.carpi.repository.simulated.SimulatedCarRepository
 import java.util.concurrent.CopyOnWriteArrayList
 
-class CarSessionTest {
+class CarViewModelTest {
     data class Event(val id: Long, val action: String, val value: Any?, val time: Long)
 
     class Recorder {
@@ -26,7 +26,7 @@ class CarSessionTest {
     @Test
     fun switchingToWheelsCancelsOldServoRelease() {
         val r = Recorder()
-        CarSession.of(r.hardware).use { d ->
+        CarViewModel.of(r.hardware).use { d ->
             d.send(4, """{"progress":0}""")
             d.send(0, """{"left":20,"right":20}""")
             Thread.sleep(650)
@@ -39,7 +39,7 @@ class CarSessionTest {
     @Test
     fun repeatedServoCommandResetsReleaseDeadline() {
         val r = Recorder()
-        CarSession.of(r.hardware).use { d ->
+        CarViewModel.of(r.hardware).use { d ->
             d.send(4, """{"progress":0}""")
             Thread.sleep(200)
             d.send(4, """{"progress":50}""")
@@ -60,11 +60,11 @@ class CarSessionTest {
     private val repo = recordingRepository { command, action, value -> log += "$command $action $value" }
     private val sch = FakeScheduler()
     private fun actions() = log.filterNot { it.contains(" command ") }
-    private fun fakeSession(r: org.mark.carpi.repository.LoggingCarRepository = repo) = CarSession(r, r, sch.dispatcher)
+    private fun fakeViewModel(r: org.mark.carpi.repository.LoggingCarRepository = repo) = CarViewModel(r, r, sch.dispatcher)
 
     @Test
     fun beepFalseIsNoopAndBeepTrueStopsAfter500ms() {
-        fakeSession().use { s ->
+        fakeViewModel().use { s ->
             s.handle(2, "b", Command.Beep(true)); sch.advance(500)
             s.handle(2, "b", Command.Beep(false)); sch.advance(500)
             assertEquals(listOf("1 buzzer.enabled true", "1 buzzer.enabled false"), actions().take(2))
@@ -73,7 +73,7 @@ class CarSessionTest {
 
     @Test
     fun invalidAndUnsupportedStillIncrementSequence() {
-        val s = fakeSession()
+        val s = fakeViewModel()
         s.handle(9, "x", Command.Invalid("boom"))
         s.handle(3, "{}", Command.Unsupported(3))
         assertEquals(listOf("1 command {type=9, body=x}", "1 rejected boom", "2 command {type=3, body={}}", "2 unsupported.type 3"), log)
@@ -82,7 +82,7 @@ class CarSessionTest {
 
     @Test
     fun rotateAndReleaseControlAndShutdown() {
-        val s = fakeSession()
+        val s = fakeViewModel()
         s.handle(6, "b", Command.Rotate(Command.Direction.LEFT, 40))
         s.releaseControlNow(); s.releaseControlNow()
         s.handle(4, "b", Command.Servo(100))
@@ -102,19 +102,19 @@ class CarSessionTest {
             override fun light(id: Long, on: Boolean) = throw IllegalStateException("faulted")
         }
         val bad = recordingRepository(failing) { command, action, value -> badLog += "$command $action $value" }
-        fakeSession(bad).use { it.handle(1, "b", Command.Light(true)) }
+        fakeViewModel(bad).use { it.handle(1, "b", Command.Light(true)) }
         // 装饰器先记录再委托：失败的动作行仍在，随后是 rejected
         assertEquals(listOf("1 light.rgb [100, 100, 100]", "1 rejected java.lang.IllegalStateException: faulted"), badLog.dropLast(1).takeLast(2))
     }
 
     @Test
-    fun testDispatcherCreatesNoSessionThread() {
-        fun sessionThreads() = Thread.getAllStackTraces().keys.count { it.name.startsWith("car-session") }
-        val before = sessionThreads()
-        fakeSession().use { s ->
+    fun testDispatcherCreatesNoViewModelThread() {
+        fun viewModelThreads() = Thread.getAllStackTraces().keys.count { it.name.startsWith("car-viewmodel") }
+        val before = viewModelThreads()
+        fakeViewModel().use { s ->
             s.handle(4, "b", Command.Servo(0))
-            assertEquals(before, sessionThreads())
+            assertEquals(before, viewModelThreads())
         }
-        assertEquals(before, sessionThreads())
+        assertEquals(before, viewModelThreads())
     }
 }
