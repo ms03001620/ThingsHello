@@ -1,6 +1,6 @@
 package org.mark.carpi.runtime
 
-import org.mark.carpi.hardware.linux.HardwareConfig
+import org.mark.carpi.repository.linux.HardwareConfig
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Properties

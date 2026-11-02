@@ -4,24 +4,25 @@ import com.google.gson.JsonParser
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.mark.carpi.control.CommandDispatcher
-import org.mark.carpi.recordingHardware
-import org.mark.carpi.hardware.simulated.SimulatedHardware
+import org.mark.carpi.session.CarSession
+import org.mark.carpi.runtime.carSession
+import org.mark.carpi.recordingRepository
+import org.mark.carpi.repository.simulated.SimulatedCarRepository
 import org.mark.carpi.protocol.FrameCodec.Frame
 import java.nio.file.Files
 import java.nio.file.Path
 
-/** 特征测试：锁定 CommandDispatcher 现有行为产出的 actions.jsonl（去掉 time 字段）逐行一致。 */
-class DispatcherGoldenTest {
+/** 特征测试：锁定 CarSession 现有行为产出的 actions.jsonl（去掉 time 字段）逐行一致。 */
+class CarSessionGoldenTest {
     private fun stripTime(line: String) = line.replace(Regex("\"time\":\"[^\"]*\","), "")
 
-    private fun run(dir: Path, script: (CommandDispatcher, Path) -> Unit): List<String> {
+    private fun run(dir: Path, script: (CarSession, Path) -> Unit): List<String> {
         val log = dir.resolve("actions.jsonl")
-        CommandDispatcher(SimulatedHardware.logged(log)).use { script(it, log) }
+        carSession(SimulatedCarRepository.logged(log)).use { script(it, log) }
         return Files.readAllLines(log).map(::stripTime)
     }
 
-    private fun CommandDispatcher.send(type: Int, body: String) = submit(Frame(type, body)) {}.get()
+    private fun CarSession.send(type: Int, body: String) = submit(Frame(type, body)) {}.get()
 
     @Test
     fun framesOfAllTypesAndErrors(@TempDir dir: Path) {
@@ -79,11 +80,11 @@ class DispatcherGoldenTest {
     @Test
     fun closeOrderIncludesHardwareCloseLast() {
         val events = mutableListOf<String>()
-        val closing = object : org.mark.carpi.domain.CarHardware by SimulatedHardware() {
+        val closing = object : org.mark.carpi.repository.CarRepository by SimulatedCarRepository() {
             override fun close() { synchronized(events) { events += "close" } }
         }
-        val hw = recordingHardware(closing) { command, action, value -> synchronized(events) { events += "$command:$action:$value" } }
-        val d = CommandDispatcher(hw)
+        val hw = recordingRepository(closing) { command, action, value -> synchronized(events) { events += "$command:$action:$value" } }
+        val d = carSession(hw)
         d.submit(Frame(0, """{"left":1,"right":1}""")) {}.get()
         d.beep(10000).get()
         d.close()

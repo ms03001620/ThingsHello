@@ -1,4 +1,4 @@
-package org.mark.carpi.hardware.logging
+package org.mark.carpi.repository
 
 import com.google.gson.Gson
 import java.io.BufferedWriter

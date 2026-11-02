@@ -1,4 +1,4 @@
-package org.mark.carpi.hardware.linux
+package org.mark.carpi.repository.linux
 
 /** 配置项 hardware.mode 的取值：real 经 lgpio 驱动真实 GPIO；simulated 只写动作日志（默认）。 */
 enum class HardwareMode(val key: String) {

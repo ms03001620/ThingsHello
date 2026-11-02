@@ -1,19 +1,19 @@
-package org.mark.carpi.hardware.linux
+package org.mark.carpi.repository.linux
 
-import org.mark.carpi.domain.ActionLog
-import org.mark.carpi.domain.CarHardware
+import org.mark.carpi.repository.ActionLog
+import org.mark.carpi.repository.CarRepository
 import java.io.IOException
 import java.io.UncheckedIOException
 import kotlin.math.abs
 import kotlin.math.sign
 
 /** Shared Linux action driver; transport owns native GPIO/PWM timing and resource release. */
-class LinuxHardware(
+class LinuxCarRepository(
     private val io: GpioBackend,
     private val config: HardwareConfig,
-    /** 内部事件（pwm.configuredHz）写入同一动作日志；recorder 的关闭由 LoggingCarHardware 负责。 */
+    /** 内部事件（pwm.configuredHz）写入同一动作日志；recorder 的关闭由 LoggingCarRepository 负责。 */
     private val events: ActionLog,
-) : CarHardware {
+) : CarRepository {
     private var faulted = false
     private var closed = false
     private val speeds = HashMap<HardwareConfig.Motor, Int>()

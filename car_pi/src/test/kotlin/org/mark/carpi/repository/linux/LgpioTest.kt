@@ -1,5 +1,6 @@
-package org.mark.carpi
+package org.mark.carpi.repository.linux
 
+import org.mark.carpi.recordingRepository
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -8,12 +9,13 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.function.Executable
 import org.junit.jupiter.api.io.TempDir
-import org.mark.carpi.control.CommandDispatcher
-import org.mark.carpi.hardware.linux.HardwareConfig
-import org.mark.carpi.hardware.linux.LgpioClient
-import org.mark.carpi.hardware.linux.LinuxHardware
-import org.mark.carpi.hardware.logging.ActionLogRecorder
-import org.mark.carpi.hardware.logging.LoggingCarHardware
+import org.mark.carpi.session.CarSession
+import org.mark.carpi.runtime.carSession
+import org.mark.carpi.repository.linux.HardwareConfig
+import org.mark.carpi.repository.linux.LgpioClient
+import org.mark.carpi.repository.linux.LinuxCarRepository
+import org.mark.carpi.repository.ActionLogRecorder
+import org.mark.carpi.repository.LoggingCarRepository
 import org.mark.carpi.protocol.FrameCodec.Frame
 import java.io.IOException
 import java.nio.file.Files
@@ -88,12 +90,12 @@ class LgpioTest {
     @Test
     fun disconnectReleasesMotorBeforeNextCommand() {
         val calls = Collections.synchronizedList(mutableListOf<String>())
-        val driver = recordingHardware { _, action, _ -> calls.add(action) }
-        CommandDispatcher(driver).use { dispatcher ->
-            dispatcher.submit(Frame(0, """{"left":40,"right":40}""")) {}.get()
-            dispatcher.releaseControl().get()
+        val driver = recordingRepository { _, action, _ -> calls.add(action) }
+        carSession(driver).use { session ->
+            session.submit(Frame(0, """{"left":40,"right":40}""")) {}.get()
+            session.releaseControl().get()
             assertEquals("wheel.release", calls.last())
-            dispatcher.submit(Frame(0, """{"left":0,"right":0}""")) {}.get()
+            session.submit(Frame(0, """{"left":0,"right":0}""")) {}.get()
             assertEquals(2, calls.count { it == "wheel.bind" })
         }
     }
@@ -105,9 +107,9 @@ class LgpioTest {
         val recorder = ActionLogRecorder { _, _, _ -> }
         LgpioClient(c, env).use { client ->
             assertThrows(IOException::class.java) { client.servo(18, 1501) }
-            CommandDispatcher(LoggingCarHardware(LinuxHardware(client, c, recorder::record), recorder)).use { dispatcher ->
-                dispatcher.submit(Frame(4, """{"progress":50}""")) {}.get()
-                dispatcher.submit(Frame(0, """{"left":40,"right":40}""")) {}.get()
+            carSession(LoggingCarRepository(LinuxCarRepository(client, c, recorder::record), recorder)).use { session ->
+                session.submit(Frame(4, """{"progress":50}""")) {}.get()
+                session.submit(Frame(0, """{"left":40,"right":40}""")) {}.get()
             }
         }
         val calls = Files.readString(temporary.resolve("calls"))
@@ -127,18 +129,18 @@ class LgpioTest {
         LgpioClient(c, env).use { client ->
             assertEquals("20000000", Files.readString(pwm.resolve("period")))
             assertThrows(IOException::class.java) { client.servo(18, 1501) }
-            CommandDispatcher(LoggingCarHardware(LinuxHardware(client, c, recorder::record), recorder)).use { dispatcher ->
-                dispatcher.submit(Frame(4, """{"progress":50}""")) {}.get()
+            carSession(LoggingCarRepository(LinuxCarRepository(client, c, recorder::record), recorder)).use { session ->
+                session.submit(Frame(4, """{"progress":50}""")) {}.get()
                 assertEquals("1150000", Files.readString(pwm.resolve("duty_cycle")))
                 assertEquals("1", Files.readString(pwm.resolve("enable")))
                 val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2)
                 while (Files.readString(pwm.resolve("enable")) != "0" && System.nanoTime() < deadline) Thread.sleep(20)
                 assertEquals("0", Files.readString(pwm.resolve("enable")))
-                dispatcher.submit(Frame(4, """{"progress":100}""")) {}.get()
+                session.submit(Frame(4, """{"progress":100}""")) {}.get()
                 assertEquals("1500000", Files.readString(pwm.resolve("duty_cycle")))
-                dispatcher.releaseControl().get()
+                session.releaseControl().get()
                 assertEquals("0", Files.readString(pwm.resolve("enable")))
-                dispatcher.submit(Frame(4, """{"progress":0}""")) {}.get()
+                session.submit(Frame(4, """{"progress":0}""")) {}.get()
             }
             assertEquals("0", Files.readString(pwm.resolve("enable")))
         }

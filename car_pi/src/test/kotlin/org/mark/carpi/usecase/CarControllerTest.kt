@@ -1,8 +1,12 @@
-package org.mark.carpi.domain
+package org.mark.carpi.usecase
 
+import org.mark.carpi.model.Cancellable
+import org.mark.carpi.model.Command
+import org.mark.carpi.model.Scheduler
+import org.mark.carpi.repository.CarRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.mark.carpi.recordingHardware
+import org.mark.carpi.recordingRepository
 
 class CarControllerTest {
     class FakeScheduler : Scheduler {
@@ -24,7 +28,7 @@ class CarControllerTest {
     }
 
     private val log = mutableListOf<String>()
-    private val hw = recordingHardware { command, action, value -> log += "$command $action $value" }
+    private val hw = recordingRepository { command, action, value -> log += "$command $action $value" }
     private val sch = FakeScheduler()
     private val c = CarController(hw, hw, sch)
     private fun actions() = log.filterNot { it.contains(" command ") }
@@ -89,10 +93,10 @@ class CarControllerTest {
     @Test
     fun hardwareFailureIsRejectedWithToString() {
         val badLog = mutableListOf<String>()
-        val failing = object : CarHardware by org.mark.carpi.hardware.simulated.SimulatedHardware() {
+        val failing = object : CarRepository by org.mark.carpi.repository.simulated.SimulatedCarRepository() {
             override fun light(id: Long, on: Boolean) = throw IllegalStateException("faulted")
         }
-        val bad = recordingHardware(failing) { command, action, value -> badLog += "$command $action $value" }
+        val bad = recordingRepository(failing) { command, action, value -> badLog += "$command $action $value" }
         CarController(bad, bad, sch).handle(1, "b", Command.Light(true))
         // 装饰器先记录再委托：失败的动作行仍在，随后是 rejected
         assertEquals(listOf("1 light.rgb [100, 100, 100]", "1 rejected java.lang.IllegalStateException: faulted"), badLog.takeLast(2))

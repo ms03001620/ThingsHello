@@ -1,5 +1,6 @@
-package org.mark.carpi
+package org.mark.carpi.repository.linux
 
+import org.mark.carpi.recordingRepository
 import com.google.gson.JsonParser
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -7,19 +8,20 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.mark.carpi.control.CommandDispatcher
-import org.mark.carpi.hardware.linux.GpioBackend
-import org.mark.carpi.hardware.linux.HardwareConfig
-import org.mark.carpi.hardware.linux.HardwareMode
-import org.mark.carpi.hardware.linux.LinuxHardware
-import org.mark.carpi.hardware.logging.JsonlActionLogRecorder
-import org.mark.carpi.hardware.logging.LoggingCarHardware
+import org.mark.carpi.session.CarSession
+import org.mark.carpi.runtime.carSession
+import org.mark.carpi.repository.linux.GpioBackend
+import org.mark.carpi.repository.linux.HardwareConfig
+import org.mark.carpi.repository.linux.HardwareMode
+import org.mark.carpi.repository.linux.LinuxCarRepository
+import org.mark.carpi.repository.JsonlActionLogRecorder
+import org.mark.carpi.repository.LoggingCarRepository
 import java.io.UncheckedIOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Properties
 
-class LinuxHardwareTest {
+class LinuxCarRepositoryTest {
     @TempDir
     lateinit var temporary: Path
 
@@ -46,13 +48,13 @@ class LinuxHardwareTest {
     @Test
     fun startupBeepTurnsBuzzerOnThenOffAndCloseSilencesIt() {
         val gpio = Fake()
-        val dispatcher = CommandDispatcher(recordingHardware(LinuxHardware(gpio, config()) { _, _, _ -> }) { _, _, _ -> })
-        dispatcher.beep(50).get()
+        val session = carSession(recordingRepository(LinuxCarRepository(gpio, config()) { _, _, _ -> }) { _, _, _ -> })
+        session.beep(50).get()
         assertEquals("write:8:false", gpio.calls.last())
         Thread.sleep(300)
         assertEquals("write:8:true", gpio.calls.last())
-        dispatcher.beep(10000).get(); gpio.calls.clear()
-        dispatcher.close()
+        session.beep(10000).get(); gpio.calls.clear()
+        session.close()
         assertTrue(gpio.calls.contains("write:8:true")); assertTrue(gpio.closed)
     }
 
@@ -69,7 +71,7 @@ class LinuxHardwareTest {
     @Test
     fun frequencyMismatchNeverEnablesMotorDuty() {
         val gpio = Fake().apply { hz = 320 }
-        val hardware = LinuxHardware(gpio, config()) { _, _, _ -> }
+        val hardware = LinuxCarRepository(gpio, config()) { _, _, _ -> }
         assertThrows(UncheckedIOException::class.java) { hardware.wheelBind(1) }
         assertFalse(gpio.calls.any { it.startsWith("pwm") && !it.endsWith(":0") })
         assertTrue(gpio.closed)
@@ -82,7 +84,7 @@ class LinuxHardwareTest {
         val log = temporary.resolve("actions.jsonl")
         val gpio = Fake()
         val recorder = JsonlActionLogRecorder(log, "real")
-        val hardware = LoggingCarHardware(LinuxHardware(gpio, config(), recorder::record), recorder)
+        val hardware = LoggingCarRepository(LinuxCarRepository(gpio, config(), recorder::record), recorder)
         hardware.wheelBind(1); hardware.wheelSpeed(1, -35, 20)
         assertTrue(gpio.calls.contains("write:21:false")); assertTrue(gpio.calls.contains("write:20:true")); assertTrue(gpio.calls.contains("pwm:16:35"))
         hardware.servoPulseMs(2, 1.5); assertTrue(gpio.calls.contains("servo:18:1500"))
@@ -99,7 +101,7 @@ class LinuxHardwareTest {
     @Test
     fun sameDirectionSpeedUpdatesDoNotPulseStopBetweenFrames() {
         val gpio = Fake()
-        LinuxHardware(gpio, config()) { _, _, _ -> }.use { hardware ->
+        LinuxCarRepository(gpio, config()) { _, _, _ -> }.use { hardware ->
             hardware.wheelBind(1)
             hardware.wheelSpeed(2, 20, 20); gpio.calls.clear()
             hardware.wheelSpeed(3, 30, 30)

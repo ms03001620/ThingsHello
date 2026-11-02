@@ -1,4 +1,4 @@
-package org.mark.carpi.hardware.linux
+package org.mark.carpi.repository.linux
 
 import java.util.Properties
 

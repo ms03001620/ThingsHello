@@ -1,11 +1,10 @@
-package org.mark.carpi.control
+package org.mark.carpi.session
 
-import org.mark.carpi.domain.ActionLog
-import org.mark.carpi.domain.Cancellable
-import org.mark.carpi.domain.CarHardware
-import org.mark.carpi.domain.CarController
-import org.mark.carpi.domain.Scheduler
-import org.mark.carpi.hardware.logging.LoggingCarHardware
+import org.mark.carpi.repository.ActionLog
+import org.mark.carpi.model.Cancellable
+import org.mark.carpi.repository.CarRepository
+import org.mark.carpi.usecase.CarController
+import org.mark.carpi.model.Scheduler
 import org.mark.carpi.protocol.CommandParser
 import org.mark.carpi.protocol.FrameCodec.Frame
 import java.util.concurrent.Executors
@@ -14,18 +13,15 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 /**
- * 运行时薄封装：单线程 queue 串行执行指令与定时任务，业务规则全部委托给 CarController。
+ * 会话（表现层）：单线程 queue 串行执行指令与定时任务，业务规则全部委托给 CarController。
  */
-class CommandDispatcher(private val hardware: CarHardware, log: ActionLog) : AutoCloseable {
-    /** 常用：同一个日志装饰器既是硬件端口也是事件日志。 */
-    constructor(hardware: LoggingCarHardware) : this(hardware, hardware)
-
+class CarSession(private val repository: CarRepository, log: ActionLog) : AutoCloseable {
     private val queue: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     private val scheduler = Scheduler { delayMs, task ->
         val f = queue.schedule(Runnable { task() }, delayMs, TimeUnit.MILLISECONDS)
         Cancellable { f.cancel(false) }
     }
-    private val controller = CarController(hardware, log, scheduler)
+    private val controller = CarController(repository, log, scheduler)
 
     @Suppress("UNUSED_PARAMETER") // 协议目前没有回包；保留回调以便将来回复手机
     fun submit(frame: Frame, response: (Frame) -> Unit): Future<*> = queue.submit(Runnable {
@@ -56,7 +52,7 @@ class CommandDispatcher(private val hardware: CarHardware, log: ActionLog) : Aut
             } catch (e: InterruptedException) {
                 Thread.currentThread().interrupt()
             }
-            hardware.close()
+            repository.close()
         }
     }
 }

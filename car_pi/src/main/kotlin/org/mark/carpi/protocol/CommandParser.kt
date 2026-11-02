@@ -2,7 +2,7 @@ package org.mark.carpi.protocol
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import org.mark.carpi.domain.Command
+import org.mark.carpi.model.Command
 import org.mark.carpi.protocol.FrameCodec.Frame
 
 /** 协议适配：Frame(type, JSON body) -> Command。gson 只出现在这里。 */

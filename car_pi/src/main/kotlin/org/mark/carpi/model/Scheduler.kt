@@ -1,4 +1,4 @@
-package org.mark.carpi.domain
+package org.mark.carpi.model
 
 fun interface Cancellable {
     fun cancel()

@@ -1,13 +1,13 @@
-package org.mark.carpi.hardware.logging
+package org.mark.carpi.repository
 
-import org.mark.carpi.domain.ActionLog
-import org.mark.carpi.domain.CarHardware
+import org.mark.carpi.repository.ActionLog
+import org.mark.carpi.repository.CarRepository
 
 /**
  * 动作日志装饰器：每个硬件调用先写一行 actions.jsonl 再委托（硬件失败时该行仍在），
  * 动作名/值与旧的字符串协议完全一致。同时作为领域 ActionLog 记录非硬件事件。close：先关硬件，再关 recorder。
  */
-class LoggingCarHardware(private val delegate: CarHardware, private val recorder: ActionLogRecorder) : CarHardware, ActionLog {
+class LoggingCarRepository(private val delegate: CarRepository, private val recorder: ActionLogRecorder) : CarRepository, ActionLog {
     override fun event(id: Long, action: String, value: Any?) = recorder.record(id, action, value)
 
     override fun wheelBind(id: Long) { event(id, "wheel.bind", true); delegate.wheelBind(id) }

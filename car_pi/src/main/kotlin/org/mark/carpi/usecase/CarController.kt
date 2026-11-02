@@ -1,10 +1,16 @@
-package org.mark.carpi.domain
+package org.mark.carpi.usecase
+
+import org.mark.carpi.model.Cancellable
+import org.mark.carpi.model.Command
+import org.mark.carpi.model.Scheduler
+import org.mark.carpi.repository.ActionLog
+import org.mark.carpi.repository.CarRepository
 
 /**
  * 业务规则：WheelAction, CameraServo, ExclusiveBind, ForwardLightAction, BuzzerAction。
  * 单线程使用（无锁）；调用者保证所有方法及 Scheduler 任务串行执行。
  */
-class CarController(private val hardware: CarHardware, private val log: ActionLog, private val scheduler: Scheduler) {
+class CarController(private val hardware: CarRepository, private val log: ActionLog, private val scheduler: Scheduler) {
     private var servoRelease: Cancellable? = null
     private var buzzerStop: Cancellable? = null
     private var owner = NONE

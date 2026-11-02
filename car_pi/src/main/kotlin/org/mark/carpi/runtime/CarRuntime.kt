@@ -1,12 +1,12 @@
 package org.mark.carpi.runtime
 
-import org.mark.carpi.control.CommandDispatcher
-import org.mark.carpi.hardware.linux.HardwareConfig
-import org.mark.carpi.hardware.linux.LgpioClient
-import org.mark.carpi.hardware.linux.LinuxHardware
-import org.mark.carpi.hardware.logging.JsonlActionLogRecorder
-import org.mark.carpi.hardware.logging.LoggingCarHardware
-import org.mark.carpi.hardware.simulated.SimulatedHardware
+import org.mark.carpi.session.CarSession
+import org.mark.carpi.repository.linux.HardwareConfig
+import org.mark.carpi.repository.linux.LgpioClient
+import org.mark.carpi.repository.linux.LinuxCarRepository
+import org.mark.carpi.repository.JsonlActionLogRecorder
+import org.mark.carpi.repository.LoggingCarRepository
+import org.mark.carpi.repository.simulated.SimulatedCarRepository
 import org.mark.carpi.protocol.FrameCodec
 import java.io.IOException
 import java.io.UncheckedIOException
@@ -19,27 +19,27 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** TCP 控制服务：单控制端连接，按序把帧交给 CommandDispatcher。 */
+/** TCP 控制服务：单控制端连接，按序把帧交给 CarSession。 */
 class CarRuntime(config: CarConfig) : AutoCloseable {
     private val server = ServerSocket()
     private val clients: MutableSet<Socket> = ConcurrentHashMap.newKeySet()
     private val workers: ExecutorService = Executors.newCachedThreadPool()
-    private val dispatcher: CommandDispatcher
+    private val session: CarSession
     private val closed = AtomicBoolean()
     private val hardwareConfig: HardwareConfig = config.hardware
 
     init {
-        var created: CommandDispatcher? = null
+        var created: CarSession? = null
         try {
             server.reuseAddress = true
             server.bind(InetSocketAddress(config.bind, config.port))
-            created = CommandDispatcher(hardware(config))
+            created = carSession(hardware(config))
         } catch (e: Exception) {
             server.close()
             created?.close()
             throw e
         }
-        dispatcher = created
+        session = created
     }
 
     /** 启动成功（READY 之后）蜂鸣提示；buzzer.startupMs=0 关闭，real 模式未启用蜂鸣器则跳过，失败只告警。 */
@@ -47,7 +47,7 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
         val ms = hardwareConfig.startupBeepMs
         if (ms <= 0 || closed.get() || (hardwareConfig.real && hardwareConfig.buzzer == null)) return
         try {
-            dispatcher.beep(ms)
+            session.beep(ms)
         } catch (e: RuntimeException) {
             System.err.println("WARN startup beep failed: $e")
         }
@@ -83,7 +83,7 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
                 while (!closed.get()) {
                     val frame = FrameCodec.read(socket.getInputStream()) ?: break
                     // Await dispatch to preserve order and bound queued commands.
-                    dispatcher.submit(frame) { reply ->
+                    session.submit(frame) { reply ->
                         try {
                             socket.getOutputStream().write(FrameCodec.encode(reply.type, reply.body))
                         } catch (e: IOException) {
@@ -97,7 +97,7 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
         } finally {
             if (!closed.get()) {
                 try {
-                    dispatcher.releaseControl().get(3, TimeUnit.SECONDS)
+                    session.releaseControl().get(3, TimeUnit.SECONDS)
                 } catch (e: Exception) {
                     System.err.println("disconnect stop: $e")
                 }
@@ -119,16 +119,16 @@ class CarRuntime(config: CarConfig) : AutoCloseable {
             workers.shutdownNow()
             Thread.currentThread().interrupt()
         }
-        dispatcher.close()
+        session.close()
     }
 
     private companion object {
-        fun hardware(config: CarConfig): LoggingCarHardware {
+        fun hardware(config: CarConfig): LoggingCarRepository {
             val hw = config.hardware
-            if (!hw.real) return SimulatedHardware.logged(config.actions)
+            if (!hw.real) return SimulatedCarRepository.logged(config.actions)
             val recorder = JsonlActionLogRecorder(config.actions, hw.mode.key)
             try {
-                return LoggingCarHardware(LinuxHardware(LgpioClient(hw), hw, recorder::record), recorder)
+                return LoggingCarRepository(LinuxCarRepository(LgpioClient(hw), hw, recorder::record), recorder)
             } catch (e: Exception) {
                 recorder.close()
                 throw e

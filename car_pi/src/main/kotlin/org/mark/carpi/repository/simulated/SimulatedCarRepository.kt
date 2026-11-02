@@ -1,12 +1,12 @@
-package org.mark.carpi.hardware.simulated
+package org.mark.carpi.repository.simulated
 
-import org.mark.carpi.domain.CarHardware
-import org.mark.carpi.hardware.logging.JsonlActionLogRecorder
-import org.mark.carpi.hardware.logging.LoggingCarHardware
+import org.mark.carpi.repository.CarRepository
+import org.mark.carpi.repository.JsonlActionLogRecorder
+import org.mark.carpi.repository.LoggingCarRepository
 import java.nio.file.Path
 
-/** 模拟硬件：不输出任何物理信号；意图由 LoggingCarHardware 记录。 */
-class SimulatedHardware : CarHardware {
+/** 模拟硬件：不输出任何物理信号；意图由 LoggingCarRepository 记录。 */
+class SimulatedCarRepository : CarRepository {
     override fun wheelBind(id: Long) {}
     override fun wheelSpeed(id: Long, left: Int, right: Int) {}
     override fun wheelRelease(id: Long) {}
@@ -20,6 +20,6 @@ class SimulatedHardware : CarHardware {
 
     companion object {
         /** 模拟模式：no-op 硬件 + mode=simulated 的 jsonl 日志。 */
-        fun logged(path: Path) = LoggingCarHardware(SimulatedHardware(), JsonlActionLogRecorder(path, "simulated"))
+        fun logged(path: Path) = LoggingCarRepository(SimulatedCarRepository(), JsonlActionLogRecorder(path, "simulated"))
     }
 }

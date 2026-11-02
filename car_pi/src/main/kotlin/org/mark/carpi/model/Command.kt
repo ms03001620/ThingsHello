@@ -1,4 +1,4 @@
-package org.mark.carpi.domain
+package org.mark.carpi.model
 
 /** 手机指令的领域表示；由协议适配层从帧解析得到，不依赖任何 JSON 库。 */
 sealed class Command {

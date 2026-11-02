@@ -1,4 +1,4 @@
-package org.mark.carpi.hardware.linux
+package org.mark.carpi.repository.linux
 
 /** BCM numbering. PWM timing is provided by native hardware/daemon, never JVM sleep. Failures are IOException. */
 interface GpioBackend : AutoCloseable {
