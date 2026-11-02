@@ -1,8 +1,6 @@
 package org.mark.carpi.control;
 
 import com.google.gson.*;
-import org.mark.carpi.camera.CameraController;
-import java.io.IOException;
 import org.mark.carpi.hardware.Hardware;
 import org.mark.carpi.protocol.FrameCodec.Frame;
 import java.util.*;
@@ -12,13 +10,11 @@ import java.util.function.Consumer;
 /** Behavioral mapping: WheelAction, CameraServo, ExclusiveBind, ForwardLightAction, BuzzerAction. */
 public final class CommandDispatcher implements AutoCloseable {
     private final Hardware hardware;
-    private final CameraController camera;
     private final ScheduledExecutorService queue = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> servoRelease, buzzerStop;
     private String owner = "none";
     private long sequence;
-    public CommandDispatcher(Hardware hardware) { this(hardware,CameraController.disabled()); }
-    public CommandDispatcher(Hardware hardware, CameraController camera) { this.hardware=hardware; this.camera=camera; }
+    public CommandDispatcher(Hardware hardware) { this.hardware=hardware; }
     public Future<?> submit(Frame frame, Consumer<Frame> response) {
         return queue.submit(() -> {
             long id = ++sequence;
@@ -57,13 +53,6 @@ public final class CommandDispatcher implements AutoCloseable {
             case 2 -> {
                 if (o.has("di") && o.get("di").getAsBoolean()) beepNow(id,500);
             }
-            case 3 -> {
-                int action = integer(o,"action",0,0,1);
-                hardware.action(id, "camera.request", o);
-                response.accept(new Frame(5, camera.info()));
-                try { camera.command(o); } catch(IOException e) { response.accept(new Frame(-1,e.getMessage())); }
-                if (o.has("tfCmd") && !o.get("tfCmd").isJsonNull()) response.accept(new Frame(-1,"TensorFlow unsupported"));
-            }
             case 4 -> {
                 int progress = integer(o,"progress",0,0,100);
                 activate(id,"servo");
@@ -73,7 +62,6 @@ public final class CommandDispatcher implements AutoCloseable {
                     if (owner.equals("servo")) { hardware.action(id,"servo.release",true); owner="none"; }
                 },500,TimeUnit.MILLISECONDS);
             }
-            case 5 -> response.accept(new Frame(5,camera.info()));
             case 6 -> {
                 int speed = integer(o,"speed",40,0,100);
                 String rotate = o.has("rotate") ? o.get("rotate").getAsString() : "LEFT";
@@ -111,10 +99,7 @@ public final class CommandDispatcher implements AutoCloseable {
                 if (servoRelease != null) servoRelease.cancel(false);
                 if (buzzerStop != null) buzzerStop.cancel(false);
                 try { if (!owner.equals("none")) hardware.action(0,owner+".release",true); }
-                finally {
-                    try { camera.close(); }
-                    finally { hardware.action(0,"all.stop",true); }
-                }
+                finally { hardware.action(0,"all.stop",true); }
             }).get(5,TimeUnit.SECONDS);
         } catch (Exception e) { throw new IllegalStateException("control shutdown",e); }
         finally {

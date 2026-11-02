@@ -118,13 +118,12 @@ sudo nmcli connection modify "<WIFI_CONN_NAME>" 802-11-wireless.powersave 2
 
 ---
 
-## 4. 附：旧 USB 摄像头链路（320×240 MJPEG/UDP）已知延迟点备忘
+## 4. 附：手机端旧 UDP 预览链路已知延迟点备忘
 
-按仓库约定，旧 USB 链路保持原样未修改；若后续单独排查 USB 模式延迟，可关注以下三处：
+车端 `car_pi` 已移除旧的 USB 摄像头 JPEG/UDP 视频通路；手机端旧预览页若仍保留，可关注以下两处：
 
-1. `car_pi/.../camera/CameraController.java`：发送循环固定 `Thread.sleep(200)`，主动限制在约 `5 fps`（单帧采样间隔最高 `200 ms`）。
-2. `app_mobile/.../connect/udp/UdpReceiver.java`：`start()` 后固定 `Thread.sleep(1000)` 再发送 `"hello"` 握手包，增加首屏等待 `1 s`。
-3. `app_mobile/.../preview/PreviewPresenter.java`：每收到一包 UDP 都向 `WorkThreadHandler` 串行队列 `post` 解码绘制任务，若主界面/画布锁竞争变慢时未丢弃队列中的过时帧。
+1. `app_mobile/.../connect/udp/UdpReceiver.java`：`start()` 后固定 `Thread.sleep(1000)` 再发送 `"hello"` 握手包，增加首屏等待 `1 s`。
+2. `app_mobile/.../preview/PreviewPresenter.java`：每收到一包 UDP 都向 `WorkThreadHandler` 串行队列 `post` 解码绘制任务，若主界面/画布锁竞争变慢时未丢弃队列中的过时帧。
 
 ---
 

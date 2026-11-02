@@ -25,20 +25,17 @@ public final class ProtocolVerification {
                     batch.write(FrameCodec.encode(1,"{\"red\":1,\"green\":0,\"blue\":0}"));
                     batch.write(FrameCodec.encode(2,"{\"di\":true}"));
                     batch.write(FrameCodec.encode(4,"{\"progress\":100}"));
-                    batch.write(FrameCodec.encode(3,"{\"action\":1,\"width\":320,\"height\":240,\"transferVideo\":true,\"tfCmd\":{}}"));
                     out.write(batch.toByteArray()); out.flush();
-                    var info=FrameCodec.read(socket.getInputStream());
-                    check(info.type()==5 && JsonParser.parseString(info.body()).getAsJsonObject().getAsJsonArray("sizes").isEmpty(),"camera info shape");
-                    check(FrameCodec.read(socket.getInputStream()).type()==-1,"signed text type");
-                    check(FrameCodec.read(socket.getInputStream()).body().contains("TensorFlow unsupported"),"unsupported inference reported");
                     awaitActions(log, "servo.release", "buzzer.enabled");
                     out.write(FrameCodec.encode(6,"{\"rotate\":\"LEFT\",\"speed\":40}"));
                     out.write(FrameCodec.encode(6,"{\"rotate\":\"RIGHT\",\"speed\":25}"));
                     out.write(FrameCodec.encode(0,"{\"left\":0,\"right\":0}"));
                     out.write(FrameCodec.encode(4,"{\"progress\":101}"));
                     out.write(FrameCodec.encode(1,"not json"));
-                    out.write(FrameCodec.encode(5,"{}"));
-                    check(FrameCodec.read(socket.getInputStream()).type()==5,"connection survives rejected commands");
+                    out.write(FrameCodec.encode(3,"{}"));
+                    out.write(FrameCodec.encode(0,"{\"left\":10,\"right\":10}"));
+                    out.flush();
+                    awaitEvent(log,11,"wheel.speed");
                 }
             }
             List<JsonObject> events=events(log);
@@ -46,13 +43,15 @@ public final class ProtocolVerification {
             expect(events,2,"light.rgb","[100,100,100]");
             expect(events,3,"buzzer.enabled","true"); expect(events,3,"buzzer.enabled","false");
             expect(events,4,"wheel.release","true"); expect(events,4,"servo.pulseMs","1.5"); expect(events,4,"servo.release","true");
-            expect(events,6,"wheel.speed","{\"left\":-40,\"right\":40}");
-            expect(events,7,"wheel.speed","{\"left\":25,\"right\":-25}");
-            expect(events,8,"wheel.speed","{\"left\":0,\"right\":0}");
+            expect(events,5,"wheel.speed","{\"left\":-40,\"right\":40}");
+            expect(events,6,"wheel.speed","{\"left\":25,\"right\":-25}");
+            expect(events,7,"wheel.speed","{\"left\":0,\"right\":0}");
             check(events.stream().filter(e->e.get("action").getAsString().equals("rejected")).count()==2,"invalid commands rejected");
+            expect(events,10,"unsupported.type","3");
+            expect(events,11,"wheel.speed","{\"left\":10,\"right\":10}");
             try (ServerSocket rebound = new ServerSocket()) { rebound.setReuseAddress(true); rebound.bind(new InetSocketAddress("127.0.0.1",port)); }
             return Map.of("status","PASS","verification","已验证","scope","TCP loopback + recording, no physical output or old phone acceptance",
-                "checks",List.of("fragmented header/body","coalesced frames","types 0..6","signed 0xFF response","recorded action values","servo/wheel exclusion","500ms releases","invalid JSON/range rejection","port rebind after shutdown"),"events",events);
+                "checks",List.of("fragmented header/body","coalesced frames","types 0,1,2,4,6","unsupported type logged","recorded action values","servo/wheel exclusion","500ms releases","invalid JSON/range rejection","connection survives rejected commands","port rebind after shutdown"),"events",events);
         } finally { Files.deleteIfExists(log); }
     }
     private static void awaitActions(Path log,String a,String b) throws Exception {
@@ -63,6 +62,14 @@ public final class ProtocolVerification {
             Thread.sleep(20);
         }
         throw new AssertionError("timed releases missing");
+    }
+    private static void awaitEvent(Path log,long command,String action) throws Exception {
+        long until=System.nanoTime()+3_000_000_000L;
+        while(System.nanoTime()<until) {
+            if(events(log).stream().anyMatch(e->e.get("command").getAsLong()==command && e.get("action").getAsString().equals(action))) return;
+            Thread.sleep(20);
+        }
+        throw new AssertionError("connection did not survive rejected commands");
     }
     private static List<JsonObject> events(Path log) throws IOException {
         return Files.readAllLines(log).stream().filter(s->!s.isBlank()).map(s->JsonParser.parseString(s).getAsJsonObject()).toList();

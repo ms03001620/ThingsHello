@@ -4,7 +4,7 @@ import json, os, pathlib, signal, socket, subprocess, time
 results=pathlib.Path('results'); results.mkdir(exist_ok=True)
 records=[]
 config=results/'lifecycle.properties'
-config.write_text('hardware.mode=simulated\nbind=127.0.0.1\ntcp.port=8010\nudp.port=0\ncamera=disabled\nactions.path=results/lifecycle-actions.jsonl\n')
+config.write_text('hardware.mode=simulated\nbind=127.0.0.1\ntcp.port=8010\nactions.path=results/lifecycle-actions.jsonl\n')
 for iteration in range(3):
     log=results / ('lifecycle-%d.log' % iteration)
     with log.open('w') as stream:

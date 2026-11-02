@@ -44,10 +44,10 @@ java -version
 
 ### 2.2 树莓派（Raspberry Pi OS Lite 64-bit）
 
-1. **安装运行依赖**（Java 21 JRE、`lgpio` Python 绑定、V4L2 工具）：
+1. **安装运行依赖**（Java 21 JRE、`lgpio` Python 绑定）：
    ```bash
    sudo apt update
-   sudo apt install -y openjdk-21-jre-headless python3-lgpio v4l-utils
+   sudo apt install -y openjdk-21-jre-headless python3-lgpio
    ```
 
 2. **配置运行用户硬件权限组**（假设运行用户为 `pi`，修改后需重新登录生效）：
@@ -135,15 +135,15 @@ car-pi <doctor | serve | verify> [--config <path>] [--suite <name>] [--output <p
 
 | 参数 | 适用子命令 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `--config <path>` | `doctor`、`serve`、`verify`（`camera` 套件） | 内置录制模式默认配置 | 指定 `.properties` 运行配置文件路径 |
-| `--suite <name>` | `verify`（必填） | 空字符串 | 指定验证套件：`protocol`、`fixture-video` 或 `camera` |
+| `--config <path>` | `doctor`、`serve`、`verify` | 内置录制模式默认配置 | 指定 `.properties` 运行配置文件路径 |
+| `--suite <name>` | `verify`（必填） | 空字符串 | 指定验证套件：目前只有 `protocol` |
 | `--output <path>` | `doctor`、`verify` | 不写文件（仅打印到标准输出） | 将格式化 JSON 结果同时写入指定文件（自动创建父目录） |
 
 ---
 
 ### 4.2 `doctor`：运行环境与配置自检
 
-读取系统环境（OS、内核、CPU 架构、Java 版本、程序实现版本）并校验指定配置文件格式是否合法，输出 JSON 报告。不会实际驱动电机或打开摄像头。
+读取系统环境（OS、内核、CPU 架构、Java 版本、程序实现版本）并校验指定配置文件格式是否合法，输出 JSON 报告。不会实际驱动电机。
 
 ```bash
 # 使用默认配置自检并打印到终端
@@ -157,7 +157,7 @@ bin/car-pi doctor --config config/pi3-lgpio.properties --output results/doctor.j
 
 ### 4.3 `serve`：启动小车控制与视频服务
 
-加载配置，初始化 GPIO/PWM 后端与摄像头控制器，监听 TCP 控制端口（默认 `8010`）及摄像头 UDP 端口（默认 `8000`）。
+加载配置，初始化 GPIO/PWM 后端，监听 TCP 控制端口（默认 `8010`）。
 
 ```bash
 # 树莓派真实硬件运行
@@ -168,26 +168,20 @@ bin/car-pi serve
 ```
 
 - **启动就绪标志**：标准输出打印 `READY tcp=8010 hardware=real`（模拟模式为 `hardware=simulated`）。
-- **优雅停止**：前台按 `Ctrl + C`（`SIGINT`）或后台执行 `kill <PID>`（`SIGTERM`）。Shutdown Hook 会自动关闭 Socket、停止摄像头采集、将车轮/灯/蜂鸣器复位并关闭舵机 PWM0。`SIGTERM` 退出码为 `143`（已在 `car-pi.service` 中配置 `SuccessExitStatus=143` 视为正常停止）。
-- **生产配置文件**：`config/pi3-lgpio.properties`（`hardware.mode=real`、`camera=v4l2`，已配置车轮、RGB 灯、蜂鸣器、BCM18 硬件 PWM 舵机及 USB 摄像头路径）。
+- **优雅停止**：前台按 `Ctrl + C`（`SIGINT`）或后台执行 `kill <PID>`（`SIGTERM`）。Shutdown Hook 会自动关闭 Socket、将车轮/灯/蜂鸣器复位并关闭舵机 PWM0。`SIGTERM` 退出码为 `143`（已在 `car-pi.service` 中配置 `SuccessExitStatus=143` 视为正常停止）。
+- **生产配置文件**：`config/pi3-lgpio.properties`（`hardware.mode=real`，已配置车轮、RGB 灯、蜂鸣器及 BCM18 硬件 PWM 舵机）。
 
 ---
 
 ### 4.4 `verify`：执行内置自动化验证套件
 
-用于在部署激活前或排障时验证协议、模拟视频链路及实机摄像头单帧抓取。
+用于在部署激活前或排障时验证 TCP 协议与指令分发。
 - 当结果 `status` 为 `"PASS"` 时，进程退出码为 `0`；
 - 当结果为 `"FAIL"` 或 `"BLOCKED"` 时，进程退出码为 **`2`**。
 
 ```bash
-# 1. 验证 TCP 协议编解码与指令分发逻辑（无须硬件）
+# 验证 TCP 协议编解码与指令分发逻辑（无须硬件）
 bin/car-pi verify --suite protocol --output results/verify-protocol.json
-
-# 2. 验证模拟摄像头 UDP 视频握手与帧回传链路（无须硬件）
-bin/car-pi verify --suite fixture-video --output results/verify-video.json
-
-# 3. 验证真实摄像头能否成功抓取一帧 320x240 JPEG（需在连接了摄像头的树莓派上运行）
-bin/car-pi verify --suite camera --config config/pi3-lgpio.properties --output results/verify-camera.json
 ```
 
 ---
@@ -240,7 +234,7 @@ cd car_pi
 - `<release-name>`（必填）：`releases/` 下的版本目录名，例如 `car-pi-0.1.1`。
 
 **内部自动执行的完整流程：**
-1. 进入新版本目录，依次执行 `doctor`、`verify --suite protocol`、`verify --suite fixture-video` 预检（任一失败立即中止，不影响当前线上服务）；
+1. 进入新版本目录，依次执行 `doctor`、`verify --suite protocol` 预检（任一失败立即中止，不影响当前线上服务）；
 2. 创建临时软链接 `<root>/current.next` 指向新版本；
 3. 停止当前 `car-pi.service`，通过 `mv -Tf` 原子替换 `<root>/current` 软链接；
 4. 启动 `car-pi.service`，等待 2 秒后通过 `systemctl is-active --quiet car-pi.service` 检查存活：
@@ -278,7 +272,7 @@ mkdir -p "$ROOT/config"
 cp "$REL/config/pi3-lgpio.properties" "$ROOT/config/service.properties"
 ```
 
-> 若小车仅安装排线摄像头（无 USB 摄像头），可将 `$ROOT/config/service.properties` 中的 `camera=v4l2` 改为 `camera=disabled`，避免 USB 设备节点不存在报错；排线摄像头由独立的 `car-pi-rtsp` 服务管理。
+> 摄像头视频不经过 `car-pi`，由独立的 `car-pi-rtsp` 服务管理（见文末附录）。
 
 ### 步骤 2：安装舵机硬件 PWM0 预备服务
 
@@ -366,7 +360,7 @@ journalctl -u car-pi-rtsp -f
 
 ```bash
 # 【树莓派】检查监听端口（TCP 8010 为控制端口，TCP 8554 为 CSI RTSP 端口）
-ss -tulnp | grep -E '8010|8000|8554'
+ss -tulnp | grep -E '8010|8554'
 
 # 【树莓派】检查 BCM18 引脚是否已切为硬件 PWM0（应包含 GPIO18 = PWM0）
 pinctrl get 18
@@ -374,10 +368,6 @@ pinctrl get 18
 # 【树莓派】手动运行舵机 PWM 导出脚本测试权限与节点
 sudo /usr/local/sbin/car-pi-prepare-servo
 ls -l /sys/class/pwm/pwmchip0/pwm0/
-
-# 【树莓派】检查 USB 摄像头设备节点与支持格式
-ls -l /dev/v4l/by-id/
-v4l2-ctl -d /dev/video0 --list-formats-ext
 
 # 【开发机 Mac】远程探测小车控制端口与 RTSP 视频端口是否开放
 nc -vz <小车IP> 8010

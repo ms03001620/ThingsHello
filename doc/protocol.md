@@ -9,13 +9,12 @@ TCP 头为正文 UTF-8 字节数（4 字节小端）+ 类型（1 字节）+ 正�
 - `0`：`left` / `right`（左右轮速度）
 - `1`：`red` / `green` / `blue`（RGB 灯光）
 - `2`：`di`（蜂鸣器，触发后 500ms 自动关闭）
-- `3`：`action` / `width` / `height` / `transferVideo` / `tfCmd`（摄像头开关与参数）
+- `3`：`action` / `width` / `height` / `transferVideo` / `tfCmd`（旧摄像头开关；**car_pi 已不再支持**，收到只记 `unsupported.type` 日志，不回复）
 - `4`：`progress`（云台舵机 `0..100`）
-- `5`：摄像头状态信息查询与响应
+- `5`：旧摄像头状态查询（**car_pi 已不再支持**，同上）
 - `6`：`rotate` / `speed`（原地左/右转向）
 
 灯有任一分量大于 0 即三色全开 100%。左转为 `left=-speed`、`right=speed`；右转相反。舵机 `0..100` 对应脉宽 `0.8..1.5ms`，每次指令重置 500ms 自动释放定时器；切换至车轮控制时取消舵机定时器并互斥释放。
 
-摄像头信息结构为 `{"sizes":[{"mWidth":320,"mHeight":240}],"hardwareLevel":null}`（`disabled` 模式 `sizes` 为空）。
+car_pi 已移除旧的 USB 摄像头 JPEG/UDP 视频通路（UDP 8000 不再监听），视频改由 CSI 排线摄像头的 RTSP 服务提供（见 `car_pi/deploy/csi/`）。注意：以前手机发 type 3 会立即收到 type 5 回复，现在没有任何回复；手机端旧预览页若等待该回复，会停在空白页而不报错。
 
-UDP 握手包为 `05 68 65 6c 6c 6f`（`0x05` + `"hello"`）；图像包为 `05` + 完整 JPEG 数据，回复客户端实际来源端口，单包最大 JPEG 长度为 65506 字节。

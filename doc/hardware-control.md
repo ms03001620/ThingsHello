@@ -42,39 +42,9 @@ echo 0        | sudo tee $P/enable         # 停止输出
 
 ---
 
-## 摄像头（Pi 3 实测，2026-10-30）
+## 摄像头
 
-### 结论
-
-- 摄像头是 **USB UVC 免驱摄像头**（USB ID `038f:6001`），设备节点 `/dev/video0`，不是 CSI 排线摄像头。
-- `rpicam-still` / `rpicam-vid` 报 `no cameras available`，`camera=rpicam` 模式不适用于 USB 摄像头。
-- 应使用 V4L2（`camera=v4l2`）：在 `car_pi/config/pi3-lgpio.properties` 中已将 `camera.device` 固定为 `/dev/v4l/by-id/usb-lihappe8_Corp._USB_2.0_Camera-video-index0`。
-- Pi 上已有 `v4l2-ctl`，没有 `ffmpeg`。
-
-### 支持的格式
-
-| 格式 | 分辨率 | 帧率 |
-| --- | --- | --- |
-| MJPG | 640×480、352×288、320×240 等 | 30 fps |
-| YUYV | 640×480、352×288、320×240、176×144、160×120 | 30 fps |
-
-`V4l2FrameSource` 要求原生 MJPG 320×240，本摄像头满足，无需 YUYV 转 JPEG。
-
-### 在 Pi 上手动拍照
-
-```sh
-v4l2-ctl -d /dev/video0 --set-fmt-video=width=640,height=480,pixelformat=MJPG \
-  --stream-mmap --stream-count=15 --stream-to=/tmp/f.mjpg
-# 取最后一帧（前几帧可能曝光未稳定）
-python3 -c "d=open('/tmp/f.mjpg','rb').read().split(b'\xff\xd8'); open('/tmp/shot.jpg','wb').write(b'\xff\xd8'+d[-1])"
-```
-
-查看格式：`v4l2-ctl -d /dev/video0 --list-formats-ext`。
-
-### 视频传输协议
-
-- TCP 指令类型 3（`CAMERA`）开/关摄像头，类型 5 返回摄像头信息（含 `error`、`sentFrames`、`droppedFrames`）。
-- 图像以单帧 JPEG 通过 UDP 8000 发送，单包上限 65506 字节，超出的帧丢弃。320×240 MJPG 一般远小于此上限。
+小车只使用 CSI 排线摄像头（OV5647），视频由独立的 `car-pi-rtsp` 服务（MediaMTX，H.264 RTSP）提供，不经过 `car_pi`。配置见 `car_pi/deploy/csi/`，延迟优化见 `doc/csi-h264-latency-optimization.md`。
 
 ## Java 运行集成说明
 

@@ -1,8 +1,8 @@
 # car_pi
 
-树莓派小车控制与摄像头服务（Java / Kotlin，JVM 21），由原 Android Things `app` 模块迁移而来，运行于 Raspberry Pi OS Lite。
-服务默认通过 TCP `8010` 端口接收手机端 `app_mobile` 的控制指令（车轮驱动、RGB 灯光、蜂鸣器、云台舵机），
-并通过 UDP `8000` 端口回传摄像头画面；同时支持独立部署排线摄像头 H.264 RTSP 视频流服务。
+树莓派小车控制服务（Java / Kotlin，JVM 21），由原 Android Things `app` 模块迁移而来，运行于 Raspberry Pi OS Lite。
+服务默认通过 TCP `8010` 端口接收手机端 `app_mobile` 的控制指令（车轮驱动、RGB 灯光、蜂鸣器、云台舵机）。
+摄像头画面由独立部署的排线摄像头 H.264 RTSP 视频流服务提供（见 `deploy/csi/`），不经过本服务。
 
 构建需 JDK 21 及以上版本，树莓派运行需安装 Java 21 JRE。
 
@@ -49,7 +49,7 @@
 **关闭服务：**
 
 - 前台运行：按 `Ctrl + C` 退出。
-- 后台运行：执行 `kill <PID>` 发送 `SIGTERM` 信号，服务会自动关闭监听端口、停止摄像头采集并释放 GPIO 资源。
+- 后台运行：执行 `kill <PID>` 发送 `SIGTERM` 信号，服务会自动关闭监听端口并释放 GPIO 资源。
 
 ### 2. systemd 服务管理（树莓派已安装服务时）
 
@@ -70,6 +70,6 @@ sudo systemctl stop car-pi
 - `config/`：树莓派实车硬件运行配置（`pi3-lgpio.properties`）。
 - `deploy/`：系统部署配置，包含 systemd 服务单元模板、硬件初始化脚本、流媒体服务配置及命令手册（[deploy/README.md](deploy/README.md)）。
 - `gradle/`：Gradle Wrapper 构建包装器配置。
-- `hardware-tests/`：树莓派实机验证脚本（控制、USB 摄像头、网络、生命周期、缺失摄像头冒烟测试），需在发布目录根下运行，运行方式与结果判定见 [hardware-tests/README.md](hardware-tests/README.md)。
+- `hardware-tests/`：树莓派实机验证脚本（车轮控制、服务生命周期），需在发布目录根下运行，运行方式与结果判定见 [hardware-tests/README.md](hardware-tests/README.md)。
 - `scripts/`：版本打包上传与树莓派端版本切换脚本。
 - `src/`：Java / Kotlin 业务源码、资源文件及单元测试代码。

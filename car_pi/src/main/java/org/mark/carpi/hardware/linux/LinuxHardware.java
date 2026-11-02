@@ -13,7 +13,7 @@ public final class LinuxHardware implements Hardware {
     public LinuxHardware(GpioBackend io,HardwareConfig config,ActionLogRecorder recorder) { this.io=io;this.config=config;this.recorder=recorder; }
     public synchronized void action(long command,String action,Object value) {
         recorder.record(command,action,value);
-        if(Set.of("command","rejected","camera.request","unsupported.type").contains(action)) return;
+        if(Set.of("command","rejected","unsupported.type").contains(action)) return;
         if(faulted || closed)throw new IllegalStateException("Hardware faulted/closed; restart required");
         try {
             switch(action) {

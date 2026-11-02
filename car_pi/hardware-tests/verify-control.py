@@ -4,7 +4,7 @@ import argparse, datetime, json, pathlib, socket, struct, subprocess, time
 parser=argparse.ArgumentParser();parser.add_argument('--allow-motion',action='store_true');args=parser.parse_args()
 if not args.allow_motion:parser.error('Physical movement requires --allow-motion and raised wheels')
 root=pathlib.Path('results');root.mkdir(exist_ok=True)
-config=(pathlib.Path('config/pi3-lgpio.properties').read_text().replace('tcp.port=8010','tcp.port=18012').replace('camera=v4l2','camera=disabled').replace('actions.path=results/hardware-actions.jsonl','actions.path=results/control-test.jsonl'))
+config=(pathlib.Path('config/pi3-lgpio.properties').read_text().replace('tcp.port=8010','tcp.port=18012').replace('actions.path=results/hardware-actions.jsonl','actions.path=results/control-test.jsonl'))
 (root/'control-test.properties').write_text(config);(root/'control-test.jsonl').write_text('')
 def send(s,t,data):
     b=json.dumps(data).encode();s.sendall(struct.pack('<IB',len(b),t)+b)

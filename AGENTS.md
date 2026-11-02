@@ -21,7 +21,7 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 
 | 模块 | 职责 | 源码根目录 / 首读入口 |
 | --- | --- | --- |
-| `car_pi` | 独立 Java 21 小车服务，不加入 Android 构建 | `car_pi/README.md`；`car_pi/src/main/kotlin/org/mark/carpi/CarMain.kt`；Java 实现在 `car_pi/src/main/java/org/mark/carpi/` 下的 `camera/`、`hardware/linux/`；在 `car_pi` 内运行 `./gradlew test installDist` |
+| `car_pi` | 独立 Java 21 小车服务，不加入 Android 构建 | `car_pi/README.md`；`car_pi/src/main/kotlin/org/mark/carpi/CarMain.kt`；Java 实现在 `car_pi/src/main/java/org/mark/carpi/` 下的 `hardware/linux/`；在 `car_pi` 内运行 `./gradlew test installDist` |
 | `app` | 小车主应用：外设控制、接收命令、摄像头服务 | `app/src/main/java/org/mark/thingshello/`；`MainActivity.java` |
 | `app_mobile` | 手机主应用：连接、摇杆遥控、视频预览 | `app_mobile/src/main/java/org/mark/mobile/`；`MainActivity.java`、`CtrlActivity.java` |
 | `lib_unit_socket` | 两端共用的 TCP / UDP 通信、命令类型及数据对象 | `lib_unit_socket/src/main/java/org/mark/lib_unit_socket/`；`SocketManager.java`、`ConnectedThread.java`、`bean/` |
@@ -100,4 +100,4 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 
 ## 排线 H.264 / RTSP 新预览
 
-720p 低延迟根因与优化记录：[doc/csi-h264-latency-optimization.md](doc/csi-h264-latency-optimization.md)。Pi 服务配置与部署：`car_pi/deploy/csi/`；实机验证脚本：`car_pi/hardware-tests/`；手机入口 `CtrlActivity` 的 `btn_h264`，独立页面 `app_mobile/.../preview/H264Activity.java`。旧 USB JPEG/UDP 保留。
+720p 低延迟根因与优化记录：[doc/csi-h264-latency-optimization.md](doc/csi-h264-latency-optimization.md)。Pi 服务配置与部署：`car_pi/deploy/csi/`；实机验证脚本：`car_pi/hardware-tests/`；手机入口 `CtrlActivity` 的 `btn_h264`，独立页面 `app_mobile/.../preview/H264Activity.java`。car_pi 已移除旧的 USB JPEG/UDP 视频通路。

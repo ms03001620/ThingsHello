@@ -8,7 +8,7 @@ case "$root" in /*) ;; *) exit 2;; esac
 case "$root" in *[!a-zA-Z0-9_./-]*) exit 2;; esac
 case "$release" in ''|.|..|*[!a-zA-Z0-9_.-]*) exit 2;; esac
 [ -x "$root/releases/$release/bin/car-pi" ]
-(cd "$root/releases/$release" && bin/car-pi doctor && bin/car-pi verify --suite protocol --output results/preactivate-protocol.json >/dev/null && bin/car-pi verify --suite fixture-video --output results/preactivate-video.json >/dev/null)
+(cd "$root/releases/$release" && bin/car-pi doctor && bin/car-pi verify --suite protocol --output results/preactivate-protocol.json >/dev/null)
 old=$(readlink "$root/current" || true)
 sudo -v
 [ ! -e "$root/current.next" ] && [ ! -L "$root/current.next" ]
