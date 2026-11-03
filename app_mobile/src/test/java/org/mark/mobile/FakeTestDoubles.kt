@@ -120,6 +120,10 @@ class FakeCarControlRepository : ICarControlRepository {
         callback?.onStatusChange(status)
     }
 
+    fun emitLogMessage(message: String?, e: Exception? = null) {
+        callback?.onLogMessage(message, e)
+    }
+
     fun emitException(e: Exception) {
         callback?.onExceptionToReOpen(e)
     }

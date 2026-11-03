@@ -55,8 +55,8 @@ public class ConnectedThread extends Thread {
             updateStatus(ClientMessageCallback.Status.CONNECTED);
             mReceiveMessageCallback.onLogMessage(getName() + ", 已连接Socket:" + socket.toString(), null);
         } catch (Exception e) {
-            updateStatus(ClientMessageCallback.Status.NO_CONNECT);
             mReceiveMessageCallback.onLogMessage(getName() + "开始连接Socket", e);
+            updateStatus(ClientMessageCallback.Status.NO_CONNECT);
         }
 
         mSocket = socket;
@@ -127,6 +127,9 @@ public class ConnectedThread extends Thread {
         while (current < total) {
             int unRead = total - current;
             int readLength = inputStream.read(bodyBytes, current, unRead);
+            if (readLength == -1) {
+                return -1;
+            }
             current += readLength;
         }
         return current;

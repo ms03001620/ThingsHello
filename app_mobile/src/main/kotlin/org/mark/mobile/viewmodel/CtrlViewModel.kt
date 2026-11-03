@@ -41,6 +41,9 @@ class CtrlViewModel(
     @Volatile
     private var returning: Boolean = false
 
+    @Volatile
+    private var userExited: Boolean = false
+
     private val clientMessageCallback = object : ClientMessageCallback {
         override fun onReceiveMessage(message: ByteArray?, type: Int) = Unit
 
@@ -259,14 +262,32 @@ class CtrlViewModel(
     }
 
     fun checkStillConnected() {
-        if (!isDemo && !controlRepository.isConnected()) {
+        if (!isDemo && !userExited && !controlRepository.isConnected()) {
             triggerReturnRefused()
         }
     }
 
+    /**
+     * 用户主动从遥控页返回连接页（左上角返回键或系统返回）：
+     * 立即停轮并主动断开 TCP 连接，释放小车单客户端独占控制权，避免返回首页后锁死槽位或误展示连接被拒。
+     */
+    fun onActivityFinishing() {
+        synchronized(this) {
+            if (isDemo || returning || userExited) {
+                return
+            }
+            userExited = true
+        }
+        saveRecentCarUseCase.cancel()
+        onHornUp()
+        controlRepository.cancelServo()
+        controlRepository.stopWheelNow()
+        controlRepository.disconnect()
+    }
+
     private fun triggerReturnRefused() {
         synchronized(this) {
-            if (isDemo || returning) {
+            if (isDemo || returning || userExited) {
                 return
             }
             returning = true

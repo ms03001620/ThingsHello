@@ -32,8 +32,10 @@ class SaveRecentCarUseCase(
         cancelTask = scheduler.scheduleCancellable(SAVE_DELAY_MS) {
             cancelTask = null
             if (isReturning() || isDemo || !controlRepository.isConnected()) return@scheduleCancellable
-            if (host.isNullOrEmpty() || port <= 0) return@scheduleCancellable
-            prefsRepository.saveRecentAddress(host, port)
+            val actualHost = controlRepository.getConnectedHost()?.takeIf { it.isNotEmpty() } ?: host
+            val actualPort = controlRepository.getConnectedPort().takeIf { it > 0 } ?: port
+            if (actualHost.isNullOrEmpty() || actualPort <= 0) return@scheduleCancellable
+            prefsRepository.saveRecentAddress(actualHost, actualPort)
             savedInSession = true
         }
     }

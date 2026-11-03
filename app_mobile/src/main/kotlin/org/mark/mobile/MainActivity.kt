@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
 
     private var beamAnimator: ObjectAnimator? = null
+    private var initialInputApplied: Boolean = false
     private var barWidthPx: Int = 0
     private var cutM: Float = 0f
     private var cutL: Float = 0f
@@ -54,6 +55,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        initialInputApplied = savedInstanceState != null
         binding = ActivityMainBinding.inflate(layoutInflater)
         window.statusBarColor = colorCompat(R.color.cp_bg)
         setContentView(binding.root)
@@ -119,11 +121,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun observeViewModel() {
         viewModel.initialInput.observe(this, Observer { (initialHost, initialPort) ->
-            if (!initialHost.isNullOrEmpty() && binding.editHost.text.isNullOrEmpty()) {
-                binding.editHost.setText(initialHost)
-            }
-            if (!initialPort.isNullOrEmpty()) {
-                binding.editPort.setText(initialPort)
+            if (!initialInputApplied) {
+                initialInputApplied = true
+                if (!initialHost.isNullOrEmpty()) {
+                    binding.editHost.setText(initialHost)
+                    binding.editHost.setSelection(initialHost.length)
+                }
+                if (!initialPort.isNullOrEmpty()) {
+                    binding.editPort.setText(initialPort)
+                }
             }
         })
 

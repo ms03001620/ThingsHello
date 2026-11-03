@@ -68,6 +68,22 @@ class UseCasesAndThrottleTest {
             ),
             emitted
         )
+
+        // reset() invalidates deduplication cache so subsequent stop sendNow(0, 0) after external rotate is NOT dropped
+        throttle.sendNow(WheelSpeed(0, 0))
+        assertEquals(4, emitted.size) // still deduplicated when no external action occurred
+
+        throttle.reset() // external rotate starts while lastSent was (0, 0)
+        throttle.sendNow(WheelSpeed(0, 0)) // emergency stop on onStop() must NOT be dropped!
+        assertEquals(5, emitted.size)
+        assertEquals(WheelSpeed(0, 0), emitted.last())
+
+        // reset() also cancels any pending delayed flush so stale joystick values never overwrite rotate
+        scheduler.advanceBy(10L) // within 50ms window of previous emit
+        throttle.submit(WheelSpeed(40, 40)) // pending
+        throttle.reset()
+        scheduler.advanceBy(100L)
+        assertEquals(5, emitted.size)
     }
 
     @Test

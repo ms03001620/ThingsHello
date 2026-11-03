@@ -34,7 +34,8 @@ class MainViewModel(
 
     private var connectRequested = false
     private var userCancelled = false
-    private var ignoreNextNoConnect = false
+
+    @Volatile
     private var lastErrorMessage = ""
 
     private var currentHost: String = ""
@@ -46,12 +47,15 @@ class MainViewModel(
         }
 
         override fun onExceptionToReOpen(e: Exception) {
+            val err = e.message ?: e.toString()
+            lastErrorMessage = err
             scheduler.runOnUi {
-                lastErrorMessage = e.message.orEmpty()
+                lastErrorMessage = err
                 val currentStatus = uiState.value?.status ?: ConnectStatus.IDLE
-                if (connectRequested && !userCancelled) {
+                if ((connectRequested && !userCancelled) || currentStatus == ConnectStatus.REFUSED) {
+                    connectRequested = false
                     updateStatus(ConnectStatus.REFUSED)
-                } else if (currentStatus != ConnectStatus.REFUSED) {
+                } else {
                     updateStatus(ConnectStatus.IDLE)
                 }
             }
@@ -59,10 +63,21 @@ class MainViewModel(
 
         override fun onLogMessage(message: String?, e: Exception?) {
             if (e != null) {
-                Log.e(TAG, message, e)
-                lastErrorMessage = e.message ?: e.toString()
+                val err = e.message ?: e.toString()
+                lastErrorMessage = err
+                scheduler.runOnUi {
+                    lastErrorMessage = err
+                    val current = uiState.value
+                    if (current?.status == ConnectStatus.REFUSED) {
+                        val isTimeout = connectCarUseCase.isTimeoutError(err)
+                        if (current.isTimeoutError != isTimeout) {
+                            uiState.value = current.copy(isTimeoutError = isTimeout)
+                        }
+                    }
+                }
+                runCatching { Log.e(TAG, message, e) }
             } else if (message != null) {
-                Log.d(TAG, message)
+                runCatching { Log.d(TAG, message) }
             }
         }
 
@@ -102,8 +117,21 @@ class MainViewModel(
         return when (uiState.value?.status) {
             ConnectStatus.CONNECTING -> false
             ConnectStatus.ONLINE -> {
-                emitNavigateToCtrl(hostInput, portInput)
-                false
+                val trimmedHost = hostInput.trim()
+                val trimmedPort = portInput.trim().toIntOrNull()
+                if (controlRepository.isConnected() &&
+                    trimmedHost.isNotEmpty() &&
+                    trimmedHost == controlRepository.getConnectedHost() &&
+                    trimmedPort != null &&
+                    trimmedPort == controlRepository.getConnectedPort()
+                ) {
+                    connectRequested = false
+                    navigateToCtrl.value = Event(Pair(trimmedHost, trimmedPort))
+                    false
+                } else {
+                    attemptConnect(hostInput, portInput)
+                    true
+                }
             }
             else -> {
                 attemptConnect(hostInput, portInput)
@@ -121,7 +149,6 @@ class MainViewModel(
             currentPort = trimmedPort
             userCancelled = false
             connectRequested = true
-            ignoreNextNoConnect = true
             lastErrorMessage = ""
             uiState.value = MainUiState(
                 status = ConnectStatus.CONNECTING,
@@ -146,7 +173,6 @@ class MainViewModel(
 
     fun onConnectionRefusedExtra() {
         connectRequested = false
-        ignoreNextNoConnect = false
         lastErrorMessage = ""
         controlRepository.disconnect()
         updateStatus(ConnectStatus.REFUSED)
@@ -180,27 +206,22 @@ class MainViewModel(
                 }
             }
             ClientMessageCallback.Status.CONNECTED -> {
-                ignoreNextNoConnect = false
                 updateStatus(ConnectStatus.ONLINE)
                 scheduler.postDelayed(NAVIGATE_DELAY_MS) {
                     if (uiState.value?.status == ConnectStatus.ONLINE && controlRepository.isConnected()) {
+                        connectRequested = false
                         navigateToCtrl.value = Event(Pair(currentHost, currentPort))
                     }
                 }
             }
             ClientMessageCallback.Status.NO_CONNECT -> {
-                if (ignoreNextNoConnect) {
-                    ignoreNextNoConnect = false
-                    if (connectRequested && currentStatus == ConnectStatus.CONNECTING) {
-                        return
-                    }
-                }
                 if (currentStatus == ConnectStatus.REFUSED) {
                     return
                 }
                 if (userCancelled) {
                     updateStatus(ConnectStatus.IDLE)
                 } else if (connectRequested) {
+                    connectRequested = false
                     updateStatus(ConnectStatus.REFUSED)
                 } else {
                     updateStatus(ConnectStatus.IDLE)
@@ -215,12 +236,6 @@ class MainViewModel(
             status = newStatus,
             isTimeoutError = connectCarUseCase.isTimeoutError(lastErrorMessage)
         )
-    }
-
-    private fun emitNavigateToCtrl(hostInput: String, portInput: String) {
-        val host = hostInput.trim().ifEmpty { currentHost }
-        val port = portInput.trim().toIntOrNull() ?: currentPort
-        navigateToCtrl.value = Event(Pair(host, port))
     }
 
     override fun onCleared() {

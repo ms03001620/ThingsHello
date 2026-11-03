@@ -70,7 +70,6 @@ class CarControlRepository(
     override fun getConnectedPort(): Int = connectedManager.connectedPort
 
     override fun connect(host: String, port: Int) {
-        connectedManager.stop()
         connectedManager.init(host, port)
     }
 
@@ -103,6 +102,9 @@ class CarControlRepository(
     }
 
     override fun sendWheelRotate(rotate: WheelRotateCmd.Rotate, speed: Int) {
+        // 原地旋转绕过差速节流器直接改写电机状态：必须取消挂起的摇杆指令并清空 lastSent，
+        // 避免后续松手或页面 onStop() 调用的 stopWheelNow() 因 lastSent == (0, 0) 被去重丢弃。
+        wheelThrottle.reset()
         connectedManager.sendObject(WheelRotateCmd(rotate, speed), CmdConstant.WHEEL_ROTATE)
     }
 

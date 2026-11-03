@@ -115,7 +115,10 @@ class CtrlActivity : AppCompatActivity() {
 
     private val rotateTouchListener = View.OnTouchListener { v, event ->
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> viewModel.onRotatePressed(isLeft = v === binding.btnLeft)
+            MotionEvent.ACTION_DOWN -> {
+                v.parent?.requestDisallowInterceptTouchEvent(true)
+                viewModel.onRotatePressed(isLeft = v === binding.btnLeft)
+            }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> viewModel.onRotateReleased(isLeft = v === binding.btnLeft)
         }
         false
@@ -206,7 +209,10 @@ class CtrlActivity : AppCompatActivity() {
             CutShapeHelper.stroked(0, yellow, dpF(1), cutBr = dpF(11)),
             CutShapeHelper.stroked(0x26FCEE0A, yellow, dpF(1), cutBr = dpF(11))
         )
-        binding.btnBack.setOnClickListener { finish() }
+        binding.btnBack.setOnClickListener {
+            viewModel.onActivityFinishing()
+            finish()
+        }
 
         wifiBg = ParallelogramDrawable(colorCompat(R.color.cp_cyan), dpF(8))
         binding.textWifi.background = wifiBg
@@ -442,9 +448,12 @@ class CtrlActivity : AppCompatActivity() {
             actionBg(colorCompat(R.color.cp_panel)),
             actionBg(colorCompat(R.color.cp_red))
         )
-        binding.btnHorn.root.setOnTouchListener { _, e ->
+        binding.btnHorn.root.setOnTouchListener { v, e ->
             when (e.actionMasked) {
-                MotionEvent.ACTION_DOWN -> viewModel.onHornDown()
+                MotionEvent.ACTION_DOWN -> {
+                    v.parent?.requestDisallowInterceptTouchEvent(true)
+                    viewModel.onHornDown()
+                }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> viewModel.onHornUp()
             }
             false
@@ -547,8 +556,17 @@ class CtrlActivity : AppCompatActivity() {
         super.onStop()
     }
 
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        viewModel.onActivityFinishing()
+        super.onBackPressed()
+    }
+
     override fun onDestroy() {
         uiHandler.removeCallbacksAndMessages(null)
+        if (isFinishing) {
+            viewModel.onActivityFinishing()
+        }
         super.onDestroy()
     }
 }

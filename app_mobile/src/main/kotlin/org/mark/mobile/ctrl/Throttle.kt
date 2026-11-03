@@ -61,6 +61,12 @@ class Throttle<T : Any>(
         pending = null
     }
 
+    /** 取消挂起任务并清空去重缓存（用于外部通道直接改变底层执行器状态时同步） */
+    fun reset() {
+        cancel()
+        lastSent = null
+    }
+
     private fun emit(value: T) {
         if (value == lastSent) return
         lastSent = value

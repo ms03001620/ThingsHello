@@ -119,6 +119,32 @@ class CtrlViewModelTest {
     }
 
     @Test
+    fun `onResume saves actual connected car address rather than mismatched intent extra`() {
+        fakeControlRepo.host = "192.168.8.100"
+        fakeControlRepo.port = 8010
+        val vm = createViewModel()
+
+        vm.onResume("invalid-stale-extra", 9999)
+        fakeScheduler.advanceBy(SaveRecentCarUseCase.SAVE_DELAY_MS)
+        assertEquals(Pair("192.168.8.100", 8010), fakePrefsRepo.savedRecent)
+    }
+
+    @Test
+    fun `onActivityFinishing stops motion, disconnects TCP and suppresses returnToConnectRefused`() {
+        val vm = createViewModel()
+        vm.onHornDown()
+
+        vm.onActivityFinishing()
+        fakeControlRepo.emitStatus(ClientMessageCallback.Status.NO_CONNECT)
+
+        assertFalse(vm.uiState.value!!.isHornPressed)
+        assertEquals(1, fakeControlRepo.cancelServoCount)
+        assertEquals(1, fakeControlRepo.stopWheelNowCount)
+        assertTrue(fakeControlRepo.disconnectCalled)
+        assertNull(vm.returnToConnectRefused.value)
+    }
+
+    @Test
     fun `joystick forward and release send mixed wheel speed and stopNow`() {
         fakePrefsRepo.savedSpeed = 60
         val vm = createViewModel()
