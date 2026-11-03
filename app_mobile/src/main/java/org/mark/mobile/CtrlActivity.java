@@ -54,6 +54,8 @@ import org.mark.lib_unit_socket.bean.WheelRotateCmd;
 import org.mark.mobile.connect.ConnectedManager;
 import org.mark.mobile.ctrl.SpeedMixer;
 import org.mark.mobile.ctrl.Throttle;
+import org.mark.mobile.databinding.ActivityCtrlBinding;
+import org.mark.mobile.databinding.ItemCyberActionBinding;
 import org.mark.mobile.preview.LowLatencyRenderersFactory;
 import org.mark.mobile.ui.cyber.CutShapeHelper;
 import org.mark.mobile.ui.cyber.CyberSlider;
@@ -80,19 +82,15 @@ public class CtrlActivity extends AppCompatActivity {
     private static final int RSSI_WEAK = -75;
     private static final int REQ_STORAGE = 11;
 
+    private ActivityCtrlBinding binding;
     private final Handler ui = new Handler(Looper.getMainLooper());
     private int mSpeedCurrent = WheelCmd.DEFAULT_SPEED;
     private float mStickPower;
     private boolean mLightOn;
     private boolean mDemo;
 
-    private TextView textWifi;
     private ParallelogramDrawable wifiBg;
     private TextView cellPower, cellSpeed, cellFps, cellBitrate;
-    private TextView textServo, textSpeed, textVideoState;
-    private CyberSlider sliderServo, sliderSpeed;
-    private View btnLight;
-    private PlayerView playerView;
     private SimpleExoPlayer player;
     private DecoderCounters lastCounters;
     private int lastFrames;
@@ -106,10 +104,11 @@ public class CtrlActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        setContentView(R.layout.activity_ctrl);
+        binding = ActivityCtrlBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         mDemo = BuildConfig.DEBUG && "demo".equals(getIntent().getStringExtra(MainActivity.EXTRA_DEBUG_STATE));
 
-        findViewById(R.id.scanline_overlay).setBackground(
+        binding.scanlineOverlay.setBackground(
                 new ScanlineDrawable(getResources(), color(R.color.scanline)));
 
         servoThrottle = new Throttle<>(SEND_INTERVAL_MS, new Throttle.Sink<Integer>() {
@@ -143,17 +142,15 @@ public class CtrlActivity extends AppCompatActivity {
 
     // ---------- top bar ----------
     private void setupTopBar() {
-        View back = findViewById(R.id.btn_back);
-        back.setBackground(CutShapeHelper.states(
+        binding.btnBack.setBackground(CutShapeHelper.states(
                 CutShapeHelper.stroked(0, color(R.color.cp_yellow), dp(1), 0, 0, dp(11), 0),
                 CutShapeHelper.stroked(0x26FCEE0A, color(R.color.cp_yellow), dp(1), 0, 0, dp(11), 0)));
-        back.setOnClickListener(v -> finish());
+        binding.btnBack.setOnClickListener(v -> finish());
 
         renderSubtitle();
 
-        textWifi = findViewById(R.id.text_wifi);
         wifiBg = new ParallelogramDrawable(color(R.color.cp_cyan), dp(8));
-        textWifi.setBackground(wifiBg);
+        binding.textWifi.setBackground(wifiBg);
     }
 
     private void renderSubtitle() {
@@ -162,9 +159,8 @@ public class CtrlActivity extends AppCompatActivity {
         int port = mDemo ? 8010 : cm.getConnectedPort();
         boolean connected = mDemo || cm.isConnected();
         String addr = host == null || host.isEmpty() ? "--" : host + ":" + (port > 0 ? port : "--");
-        TextView sub = findViewById(R.id.text_drive_sub);
-        sub.setText(addr + (connected ? " · 已连接" : " · 未连接"));
-        sub.setTextColor(color(connected ? R.color.cp_cyan : R.color.cp_red));
+        binding.textDriveSub.setText(addr + (connected ? " · 已连接" : " · 未连接"));
+        binding.textDriveSub.setTextColor(color(connected ? R.color.cp_cyan : R.color.cp_red));
     }
 
     private final Runnable rssiTick = new Runnable() {
@@ -176,29 +172,25 @@ public class CtrlActivity extends AppCompatActivity {
 
     private void showRssi(@Nullable Integer rssi) {
         boolean weak = rssi != null && rssi <= RSSI_WEAK;
-        textWifi.setText(rssi == null ? "WiFi --" : "WiFi " + rssi + "dBm");
+        binding.textWifi.setText(rssi == null ? "WiFi --" : "WiFi " + rssi + "dBm");
         wifiBg.setColor(color(weak ? R.color.cp_red : R.color.cp_cyan));
-        textWifi.setTextColor(color(weak ? R.color.cp_white : R.color.cp_on_yellow));
+        binding.textWifi.setTextColor(color(weak ? R.color.cp_white : R.color.cp_on_yellow));
     }
 
     // ---------- video ----------
     private void setupVideo() {
-        View box = findViewById(R.id.video_box);
-        box.setBackground(CutShapeHelper.panel(color(R.color.cp_panel), 0, dp(24), 0, 0));
-        playerView = findViewById(R.id.player_small);
-        textVideoState = findViewById(R.id.text_video_state);
+        binding.videoBox.setBackground(CutShapeHelper.panel(color(R.color.cp_panel), 0, dp(24), 0, 0));
         GradientDrawable tint = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
                 new int[]{0x40FF003C, 0x00000000, 0x4002D7F2});
-        findViewById(R.id.video_tint).setBackground(tint);
-        findViewById(R.id.video_scan).setBackground(new ScanlineDrawable(getResources(), 0x40000000));
-        findViewById(R.id.video_corner).setBackground(new CornerMask(color(R.color.cp_bg), dp(24)));
-        View full = findViewById(R.id.btn_fullscreen);
-        full.setBackground(CutShapeHelper.states(
+        binding.videoTint.setBackground(tint);
+        binding.videoScan.setBackground(new ScanlineDrawable(getResources(), 0x40000000));
+        binding.videoCorner.setBackground(new CornerMask(color(R.color.cp_bg), dp(24)));
+        binding.btnFullscreen.setBackground(CutShapeHelper.states(
                 CutShapeHelper.panel(color(R.color.cp_yellow), 0, 0, dp(11), 0),
                 CutShapeHelper.panel(color(R.color.cp_yellow_pressed), 0, 0, dp(11), 0)));
-        full.setOnClickListener(v -> openPreview());
+        binding.btnFullscreen.setOnClickListener(v -> openPreview());
         // Tapping the mini player also enters fullscreen preview (spec: entered from mini player).
-        playerView.setOnClickListener(v -> openPreview());
+        binding.playerSmall.setOnClickListener(v -> openPreview());
     }
 
     private static final int REQ_PREVIEW = 21;
@@ -206,8 +198,8 @@ public class CtrlActivity extends AppCompatActivity {
     private void openPreview() {
         Intent intent = new Intent(this, org.mark.mobile.preview.H264Activity.class);
         intent.putExtra("host", ConnectedManager.getInstance().getConnectedHost());
-        intent.putExtra(org.mark.mobile.preview.H264Activity.EXTRA_SERVO, sliderServo.getValue());
-        intent.putExtra(org.mark.mobile.preview.H264Activity.EXTRA_SPEED_LIMIT, sliderSpeed.getValue());
+        intent.putExtra(org.mark.mobile.preview.H264Activity.EXTRA_SERVO, binding.sliderServo.getValue());
+        intent.putExtra(org.mark.mobile.preview.H264Activity.EXTRA_SPEED_LIMIT, binding.sliderSpeed.getValue());
         intent.putExtra(org.mark.mobile.preview.H264Activity.EXTRA_LIGHT, mLightOn);
         if (mDemo) intent.putExtra(MainActivity.EXTRA_DEBUG_STATE, "demo");
         startActivityForResult(intent, REQ_PREVIEW);
@@ -233,7 +225,7 @@ public class CtrlActivity extends AppCompatActivity {
         player = new SimpleExoPlayer.Builder(this, new LowLatencyRenderersFactory(this))
                 .setLoadControl(buffering).build();
         player.setVolume(0f);
-        playerView.setPlayer(player);
+        binding.playerSmall.setPlayer(player);
         player.addListener(new Player.EventListener() {
             @Override public void onPlaybackStateChanged(int state) {
                 setLive(state == Player.STATE_READY);
@@ -246,7 +238,7 @@ public class CtrlActivity extends AppCompatActivity {
     }
 
     private void releasePlayer() {
-        playerView.setPlayer(null);
+        binding.playerSmall.setPlayer(null);
         if (player != null) {
             player.release();
             player = null;
@@ -257,17 +249,16 @@ public class CtrlActivity extends AppCompatActivity {
     }
 
     private void setLive(boolean live) {
-        textVideoState.setVisibility(live ? View.GONE : View.VISIBLE);
-        findViewById(R.id.tag_live).setVisibility(live ? View.VISIBLE : View.GONE);
+        binding.textVideoState.setVisibility(live ? View.GONE : View.VISIBLE);
+        binding.tagLive.setVisibility(live ? View.VISIBLE : View.GONE);
     }
 
     // ---------- telemetry ----------
     private void setupTelemetry() {
-        LinearLayout row = findViewById(R.id.telemetry_row);
-        cellPower = addCell(row, "摇杆功率", true);
-        cellSpeed = addCell(row, "限速", true);
-        cellFps = addCell(row, "视频帧率", true);
-        cellBitrate = addCell(row, "码率", false);
+        cellPower = addCell(binding.telemetryRow, "摇杆功率", true);
+        cellSpeed = addCell(binding.telemetryRow, "限速", true);
+        cellFps = addCell(binding.telemetryRow, "视频帧率", true);
+        cellBitrate = addCell(binding.telemetryRow, "码率", false);
     }
 
     private TextView addCell(LinearLayout row, String label, boolean gap) {
@@ -361,26 +352,22 @@ public class CtrlActivity extends AppCompatActivity {
 
     // ---------- gimbal ----------
     private void setupGimbal() {
-        findViewById(R.id.card_gimbal).setBackground(
+        binding.cardGimbal.setBackground(
                 CutShapeHelper.panel(color(R.color.cp_panel), 0, 0, dp(14), 0));
-        textServo = findViewById(R.id.text_servo);
-        sliderServo = findViewById(R.id.slider_servo);
-        sliderServo.setListener((value, fromUser) -> {
-            textServo.setText(value + "%");
+        binding.sliderServo.setListener((value, fromUser) -> {
+            binding.textServo.setText(value + "%");
             servoThrottle.submit(value); // only on change, ≤ every 50ms, trailing flush once
         });
-        textServo.setText(sliderServo.getValue() + "%");
-        View recenter = findViewById(R.id.btn_recenter);
-        recenter.setBackground(CutShapeHelper.states(
+        binding.textServo.setText(binding.sliderServo.getValue() + "%");
+        binding.btnRecenter.setBackground(CutShapeHelper.states(
                 CutShapeHelper.stroked(0, color(R.color.cp_cyan), dp(1), 0, 0, dp(9), 0),
                 CutShapeHelper.stroked(0x2602D7F2, color(R.color.cp_cyan), dp(1), 0, 0, dp(9), 0)));
-        recenter.setOnClickListener(v -> sliderServo.setValue(50, true));
+        binding.btnRecenter.setOnClickListener(v -> binding.sliderServo.setValue(50, true));
     }
 
     // ---------- drive ----------
     private void setupDrive() {
-        OctagonJoystickView joystick = findViewById(R.id.joystick);
-        joystick.setListener((angle, power) -> {
+        binding.joystick.setListener((angle, power) -> {
             if (angle < 0 || power <= 0.02f) {
                 mStickPower = 0;
                 wheelThrottle.sendNow("0,0");
@@ -392,8 +379,7 @@ public class CtrlActivity extends AppCompatActivity {
             refreshStickCells();
         });
 
-        for (int id : new int[]{R.id.btnLeft, R.id.btnRight}) {
-            ImageView b = findViewById(id);
+        for (ImageView b : new ImageView[]{binding.btnLeft, binding.btnRight}) {
             b.setBackground(CutShapeHelper.states(
                     CutShapeHelper.stroked(color(R.color.cyan_08), color(R.color.cp_cyan), dp(2), 0, 0, dp(16), 0),
                     CutShapeHelper.stroked(color(R.color.cp_cyan), color(R.color.cp_cyan), dp(2), 0, 0, dp(16), 0)));
@@ -414,7 +400,7 @@ public class CtrlActivity extends AppCompatActivity {
                 return false;
             }
             WheelRotateCmd rotateCmd = new WheelRotateCmd();
-            rotateCmd.setRotate(v.getId() == R.id.btnLeft ? WheelRotateCmd.Rotate.LEFT : WheelRotateCmd.Rotate.RIGHT);
+            rotateCmd.setRotate(v == binding.btnLeft ? WheelRotateCmd.Rotate.LEFT : WheelRotateCmd.Rotate.RIGHT);
             rotateCmd.setSpeed(action == MotionEvent.ACTION_DOWN ? mSpeedCurrent : 0);
             ConnectedManager.getInstance().sendObject(rotateCmd, CmdConstant.WHEEL_ROTATE);
             return false;
@@ -422,16 +408,14 @@ public class CtrlActivity extends AppCompatActivity {
     };
 
     private void setupSpeed() {
-        textSpeed = findViewById(R.id.text_speed);
-        sliderSpeed = findViewById(R.id.slider_speed);
         int saved = PreferUtils.getInstance(this).getSpeed(WheelCmd.DEFAULT_SPEED);
         if (saved <= 0 || saved > 100) saved = WheelCmd.DEFAULT_SPEED;
         mSpeedCurrent = saved;
-        sliderSpeed.setValue(saved, false);
-        textSpeed.setText(saved + "%");
-        sliderSpeed.setListener((value, fromUser) -> {
+        binding.sliderSpeed.setValue(saved, false);
+        binding.textSpeed.setText(saved + "%");
+        binding.sliderSpeed.setListener((value, fromUser) -> {
             mSpeedCurrent = value;
-            textSpeed.setText(value + "%");
+            binding.textSpeed.setText(value + "%");
             PreferUtils.getInstance(this).saveSpeed(value);
             refreshStickCells();
         });
@@ -440,10 +424,9 @@ public class CtrlActivity extends AppCompatActivity {
 
     // ---------- actions ----------
     private void setupActions() {
-        btnLight = findViewById(R.id.btn_light);
-        bindAction(btnLight, R.drawable.ic_light, "车灯 关");
+        bindAction(binding.btnLight, R.drawable.ic_light, "车灯 关");
         renderLight();
-        btnLight.setOnClickListener(v -> {
+        binding.btnLight.getRoot().setOnClickListener(v -> {
             mLightOn = !mLightOn;
             LightCmd lightCmd = new LightCmd();
             lightCmd.setEnable(mLightOn);
@@ -451,27 +434,25 @@ public class CtrlActivity extends AppCompatActivity {
             renderLight();
         });
 
-        View horn = findViewById(R.id.btn_horn);
-        bindAction(horn, R.drawable.ic_buzzer, "鸣笛 按住");
-        horn.setBackground(CutShapeHelper.states(actionBg(color(R.color.cp_panel)), actionBg(color(R.color.cp_red))));
-        horn.setOnTouchListener((v, e) -> {
+        bindAction(binding.btnHorn, R.drawable.ic_buzzer, "鸣笛 按住");
+        binding.btnHorn.getRoot().setBackground(CutShapeHelper.states(actionBg(color(R.color.cp_panel)), actionBg(color(R.color.cp_red))));
+        binding.btnHorn.getRoot().setOnTouchListener((v, e) -> {
             int a = e.getActionMasked();
             if (a == MotionEvent.ACTION_DOWN) {
                 ui.removeCallbacks(hornTick);
                 ui.post(hornTick);
-                setActionColors(v, color(R.color.cp_white), false);
+                setActionColors(binding.btnHorn, color(R.color.cp_white), false);
             } else if (a == MotionEvent.ACTION_UP || a == MotionEvent.ACTION_CANCEL) {
                 // Car beeps 500ms per di:true; just stop resending (di:false is a no-op).
                 ui.removeCallbacks(hornTick);
-                setActionColors(v, color(R.color.cp_text_dim), false);
+                setActionColors(binding.btnHorn, color(R.color.cp_text_dim), false);
             }
             return false;
         });
 
-        View snap = findViewById(R.id.btn_snapshot);
-        bindAction(snap, R.drawable.ic_snapshot, "截图");
-        snap.setBackground(CutShapeHelper.states(actionBg(color(R.color.cp_panel)), actionBg(0xFF22222E)));
-        snap.setOnClickListener(v -> takeSnapshot());
+        bindAction(binding.btnSnapshot, R.drawable.ic_snapshot, "截图");
+        binding.btnSnapshot.getRoot().setBackground(CutShapeHelper.states(actionBg(color(R.color.cp_panel)), actionBg(0xFF22222E)));
+        binding.btnSnapshot.getRoot().setOnClickListener(v -> takeSnapshot());
     }
 
     private static final long HORN_REPEAT_MS = 400;
@@ -486,28 +467,27 @@ public class CtrlActivity extends AppCompatActivity {
         return new BottomEdgeCut(fill, color(R.color.cp_action_edge), dp(2), dp(15), dp(14));
     }
 
-    private void bindAction(View root, int icon, String text) {
-        ((ImageView) root.findViewById(R.id.action_icon)).setImageResource(icon);
-        ((TextView) root.findViewById(R.id.action_text)).setText(text);
-        setActionColors(root, color(R.color.cp_text_dim), false);
+    private void bindAction(ItemCyberActionBinding item, int icon, String text) {
+        item.actionIcon.setImageResource(icon);
+        item.actionText.setText(text);
+        setActionColors(item, color(R.color.cp_text_dim), false);
     }
 
-    private void setActionColors(View root, int c, boolean bold) {
-        ((ImageView) root.findViewById(R.id.action_icon)).setImageTintList(ColorStateList.valueOf(c));
-        TextView t = root.findViewById(R.id.action_text);
-        t.setTextColor(c);
-        t.setTypeface(null, bold ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+    private void setActionColors(ItemCyberActionBinding item, int c, boolean bold) {
+        item.actionIcon.setImageTintList(ColorStateList.valueOf(c));
+        item.actionText.setTextColor(c);
+        item.actionText.setTypeface(null, bold ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
     }
 
     private void renderLight() {
-        ((TextView) btnLight.findViewById(R.id.action_text)).setText(mLightOn ? "车灯 开" : "车灯 关");
-        btnLight.setBackground(actionBg(color(mLightOn ? R.color.cp_yellow : R.color.cp_panel)));
-        setActionColors(btnLight, color(mLightOn ? R.color.cp_on_yellow : R.color.cp_text_dim), mLightOn);
+        binding.btnLight.actionText.setText(mLightOn ? "车灯 开" : "车灯 关");
+        binding.btnLight.getRoot().setBackground(actionBg(color(mLightOn ? R.color.cp_yellow : R.color.cp_panel)));
+        setActionColors(binding.btnLight, color(mLightOn ? R.color.cp_on_yellow : R.color.cp_text_dim), mLightOn);
     }
 
     // ---------- screenshot ----------
     private void takeSnapshot() {
-        View surface = playerView.getVideoSurfaceView();
+        View surface = binding.playerSmall.getVideoSurfaceView();
         Bitmap frame = null;
         if (player != null && player.getPlaybackState() == Player.STATE_READY && surface instanceof TextureView) {
             frame = ((TextureView) surface).getBitmap();
@@ -529,8 +509,8 @@ public class CtrlActivity extends AppCompatActivity {
 
     // ---------- debug demo (screenshots only) ----------
     private void applyDemo() {
-        sliderServo.setValue(65, false);
-        sliderSpeed.setValue(72, false);
+        binding.sliderServo.setValue(65, false);
+        binding.sliderSpeed.setValue(72, false);
         mStickPower = 0.72f;
         refreshStickCells();
         setCell(cellFps, "30", "FPS");
@@ -538,7 +518,7 @@ public class CtrlActivity extends AppCompatActivity {
         showRssi(-52);
         mLightOn = true;
         renderLight();
-        findViewById(R.id.tag_live).setVisibility(View.VISIBLE);
+        binding.tagLive.setVisibility(View.VISIBLE);
     }
 
     // ---------- lifecycle / connection ----------

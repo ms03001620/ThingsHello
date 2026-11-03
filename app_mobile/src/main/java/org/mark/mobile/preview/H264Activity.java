@@ -39,6 +39,7 @@ import org.mark.mobile.BuildConfig;
 import org.mark.mobile.MainActivity;
 import org.mark.mobile.R;
 import org.mark.mobile.connect.ConnectedManager;
+import org.mark.mobile.databinding.ActivityPreviewCyberBinding;
 import org.mark.mobile.ui.cyber.CutShapeHelper;
 import org.mark.mobile.ui.cyber.ScanlineDrawable;
 import org.mark.mobile.utils.GallerySaver;
@@ -53,11 +54,8 @@ public final class H264Activity extends AppCompatActivity {
     public static final String EXTRA_LIGHT = "light";
     private static final long HUD_AUTO_HIDE_MS = 4000;
 
-    private PlayerView video;
+    private ActivityPreviewCyberBinding binding;
     private SimpleExoPlayer player;
-    private View hud, tagRec, hint, hudRoot;
-    private TextView noSignal, pillStream, pillBuf, pillWifi, pillRate, pillServo, pillSpeed;
-    private ImageView btnLight;
     private boolean demo, lightOn, hudVisible = true;
     private long lastStatsTime, lastRxBytes = -1;
     private int lastRenderedFrames;
@@ -98,50 +96,35 @@ public final class H264Activity extends AppCompatActivity {
         }
     };
     private final Runnable autoHide = () -> setHudVisible(false);
-    private final Runnable hideHint = () -> hint.animate().alpha(0f).setDuration(200).start();
+    private final Runnable hideHint = () -> binding.textHint.animate().alpha(0f).setDuration(200).start();
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
-        setContentView(R.layout.activity_preview_cyber);
+        binding = ActivityPreviewCyberBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         demo = BuildConfig.DEBUG && getIntent().getStringExtra(MainActivity.EXTRA_DEBUG_STATE) != null;
         lightOn = getIntent().getBooleanExtra(EXTRA_LIGHT, false);
 
-        video = findViewById(R.id.player_full);
-        hud = findViewById(R.id.hud);
-        hudRoot = findViewById(R.id.hud_root);
-        tagRec = findViewById(R.id.tag_rec);
-        hint = findViewById(R.id.text_hint);
-        noSignal = findViewById(R.id.text_no_signal);
-        pillStream = findViewById(R.id.pill_stream);
-        pillBuf = findViewById(R.id.pill_buf);
-        pillWifi = findViewById(R.id.pill_wifi);
-        pillRate = findViewById(R.id.pill_rate);
-        pillServo = findViewById(R.id.pill_servo);
-        pillSpeed = findViewById(R.id.pill_speed);
-        btnLight = findViewById(R.id.btn_light_pv);
-
         int yellow = color(R.color.cp_yellow);
         int pillBg = color(R.color.scrim_70);
-        for (TextView p : new TextView[]{pillStream, pillBuf, pillWifi, pillRate, pillServo, pillSpeed}) {
+        for (TextView p : new TextView[]{binding.pillStream, binding.pillBuf, binding.pillWifi, binding.pillRate, binding.pillServo, binding.pillSpeed}) {
             CutShapeHelper.applyWithLeftBar(p, pillBg, color(R.color.cp_cyan), dp(2), 0, 0, 0, 0);
         }
-        hint.setBackground(CutShapeHelper.panel(pillBg, 0, 0, 0, 0));
-        tagRec.setBackground(CutShapeHelper.panel(color(R.color.cp_red), 0, 0, 0, 0));
+        binding.textHint.setBackground(CutShapeHelper.panel(pillBg, 0, 0, 0, 0));
+        binding.tagRec.setBackground(CutShapeHelper.panel(color(R.color.cp_red), 0, 0, 0, 0));
 
         GradientDrawable tint = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
                 new int[]{0x2EFF003C, 0x00000000, 0x2E02D7F2});
-        findViewById(R.id.overlay_tint).setBackground(tint);
-        findViewById(R.id.overlay_scan).setBackground(new ScanlineDrawable(getResources(), 0x26000000));
-        findViewById(R.id.overlay_frame).setBackground(
+        binding.overlayTint.setBackground(tint);
+        binding.overlayScan.setBackground(new ScanlineDrawable(getResources(), 0x26000000));
+        binding.overlayFrame.setBackground(
                 CutShapeHelper.stroked(0x00000000, (yellow & 0x00FFFFFF) | 0x99000000, dp(2), 0, dp(30), 0, dp(30)));
 
-        View back = findViewById(R.id.btn_back_pv);
-        back.setBackground(CutShapeHelper.stroked(pillBg, yellow, dp(1), 0, 0, dp(10), 0));
-        back.setOnClickListener(v -> finishWithResult());
-        View snap = findViewById(R.id.btn_snap_pv);
-        snap.setBackground(CutShapeHelper.stroked(pillBg, yellow, dp(1), 0, 0, dp(10), 0));
-        snap.setOnClickListener(v -> { takeSnapshot(); bumpHud(); });
-        btnLight.setOnClickListener(v -> {
+        binding.btnBackPv.setBackground(CutShapeHelper.stroked(pillBg, yellow, dp(1), 0, 0, dp(10), 0));
+        binding.btnBackPv.setOnClickListener(v -> finishWithResult());
+        binding.btnSnapPv.setBackground(CutShapeHelper.stroked(pillBg, yellow, dp(1), 0, 0, dp(10), 0));
+        binding.btnSnapPv.setOnClickListener(v -> { takeSnapshot(); bumpHud(); });
+        binding.btnLightPv.setOnClickListener(v -> {
             lightOn = !lightOn;
             if (!demo) {
                 LightCmd cmd = new LightCmd();
@@ -153,32 +136,31 @@ public final class H264Activity extends AppCompatActivity {
         });
         renderLight();
 
-        pillServo.setText(String.format(Locale.US, "云台 %d%%", getIntent().getIntExtra(EXTRA_SERVO, 50)));
+        binding.pillServo.setText(String.format(Locale.US, "云台 %d%%", getIntent().getIntExtra(EXTRA_SERVO, 50)));
         int speedLimit = getIntent().getIntExtra(EXTRA_SPEED_LIMIT, -1);
-        pillSpeed.setText(speedLimit < 0 ? "限速 --" : String.format(Locale.US, "限速 %d%%", speedLimit));
+        binding.pillSpeed.setText(speedLimit < 0 ? "限速 --" : String.format(Locale.US, "限速 %d%%", speedLimit));
 
         GestureDetector gd = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
             @Override public boolean onDown(MotionEvent e) { return true; }
             @Override public boolean onDoubleTap(MotionEvent e) {
                 if (!demo && player != null && player.getPlayerError() != null) {
-                    noSignal.setText("NO SIGNAL");
+                    binding.textNoSignal.setText("NO SIGNAL");
                     play();
                 }
                 setHudVisible(!hudVisible);
                 return true;
             }
         });
-        View root = findViewById(R.id.preview_root);
-        root.setOnTouchListener((v, e) -> gd.onTouchEvent(e));
+        binding.previewRoot.setOnTouchListener((v, e) -> gd.onTouchEvent(e));
 
         // keep HUD clear of the notch / rounded corners
-        root.setOnApplyWindowInsetsListener((v, insets) -> {
+        binding.previewRoot.setOnApplyWindowInsetsListener((v, insets) -> {
             int l = 0, t = 0, r = 0, b = 0;
             if (Build.VERSION.SDK_INT >= 28) {
                 DisplayCutout c = insets.getDisplayCutout();
                 if (c != null) { l = c.getSafeInsetLeft(); t = c.getSafeInsetTop(); r = c.getSafeInsetRight(); b = c.getSafeInsetBottom(); }
             }
-            hudRoot.setPadding(l, t, r, b);
+            binding.hudRoot.setPadding(l, t, r, b);
             return insets;
         });
 
@@ -210,10 +192,10 @@ public final class H264Activity extends AppCompatActivity {
     // ---------- HUD ----------
     private void setHudVisible(boolean show) {
         hudVisible = show;
-        hud.animate().cancel();
-        if (show) hud.setVisibility(View.VISIBLE);
-        hud.animate().alpha(show ? 1f : 0f).setDuration(200)
-                .withEndAction(() -> { if (!hudVisible) hud.setVisibility(View.INVISIBLE); }).start();
+        binding.hud.animate().cancel();
+        if (show) binding.hud.setVisibility(View.VISIBLE);
+        binding.hud.animate().alpha(show ? 1f : 0f).setDuration(200)
+                .withEndAction(() -> { if (!hudVisible) binding.hud.setVisibility(View.INVISIBLE); }).start();
         diagnostics.removeCallbacks(autoHide);
         if (show && !demo) diagnostics.postDelayed(autoHide, HUD_AUTO_HIDE_MS);
     }
@@ -226,22 +208,22 @@ public final class H264Activity extends AppCompatActivity {
 
     private void renderLight() {
         int yellow = color(R.color.cp_yellow);
-        btnLight.setBackground(lightOn
+        binding.btnLightPv.setBackground(lightOn
                 ? CutShapeHelper.stroked(yellow, yellow, dp(1), 0, 0, dp(10), 0)
                 : CutShapeHelper.stroked(color(R.color.scrim_70), yellow, dp(1), 0, 0, dp(10), 0));
-        btnLight.setColorFilter(lightOn ? color(R.color.cp_bg) : yellow);
-        ((ImageView) findViewById(R.id.btn_snap_pv)).setColorFilter(yellow);
+        binding.btnLightPv.setColorFilter(lightOn ? color(R.color.cp_bg) : yellow);
+        binding.btnSnapPv.setColorFilter(yellow);
     }
 
     private void setLive(boolean live) {
-        tagRec.setVisibility(live ? View.VISIBLE : View.GONE);
-        noSignal.setVisibility(live ? View.GONE : View.VISIBLE);
+        binding.tagRec.setVisibility(live ? View.VISIBLE : View.GONE);
+        binding.textNoSignal.setVisibility(live ? View.GONE : View.VISIBLE);
     }
 
     private void updateHud() {
         if (demo) return;
         Integer rssi = WifiRssi.read(this);
-        pillWifi.setText(rssi == null ? "手机 WiFi --" : "手机 WiFi " + rssi + "dBm");
+        binding.pillWifi.setText(rssi == null ? "手机 WiFi --" : "手机 WiFi " + rssi + "dBm");
         long now = SystemClock.elapsedRealtime();
         String fps = null, rate = "--";
         long rx = TrafficStats.getUidRxBytes(Process.myUid());
@@ -261,15 +243,15 @@ public final class H264Activity extends AppCompatActivity {
             }
             lastCounters = c;
             boolean ready = player.getPlaybackState() == Player.STATE_READY;
-            pillBuf.setText(ready ? "BUF " + player.getTotalBufferedDuration() + "ms" : "BUF --");
+            binding.pillBuf.setText(ready ? "BUF " + player.getTotalBufferedDuration() + "ms" : "BUF --");
             VideoSize s = player.getVideoSize();
             String res = s.width > 0 ? s.width + "×" + s.height : "--";
-            pillStream.setText("CSI · " + res + " · " + (fps == null ? "--" : fps) + "FPS · RTSP");
+            binding.pillStream.setText("CSI · " + res + " · " + (fps == null ? "--" : fps) + "FPS · RTSP");
         } else {
-            pillBuf.setText("BUF --");
-            pillStream.setText("CSI · -- · --FPS · RTSP");
+            binding.pillBuf.setText("BUF --");
+            binding.pillStream.setText("CSI · -- · --FPS · RTSP");
         }
-        pillRate.setText(rate + "Mbps");
+        binding.pillRate.setText(rate + "Mbps");
         lastRxBytes = rx;
         lastStatsTime = now;
     }
@@ -283,7 +265,7 @@ public final class H264Activity extends AppCompatActivity {
                 .setPrioritizeTimeOverSizeThresholds(true)
                 .build();
         player = new SimpleExoPlayer.Builder(this, new LowLatencyRenderersFactory(this)).setLoadControl(buffering).build();
-        video.setPlayer(player);
+        binding.playerFull.setPlayer(player);
         player.addListener(new Player.EventListener() {
             @Override public void onPlaybackStateChanged(int state) {
                 if (state == Player.STATE_READY) {
@@ -293,7 +275,7 @@ public final class H264Activity extends AppCompatActivity {
             }
             @Override public void onPlayerError(ExoPlaybackException error) {
                 setLive(false);
-                noSignal.setText("NO SIGNAL · 双击重试");
+                binding.textNoSignal.setText("NO SIGNAL · 双击重试");
             }
         });
         player.addVideoListener(new com.google.android.exoplayer2.video.VideoListener() {
@@ -311,7 +293,7 @@ public final class H264Activity extends AppCompatActivity {
         appliedSpeed = 1.0f;
         lastCounters = null;
         lastRenderedFrames = 0;
-        video.setPlayer(null);
+        binding.playerFull.setPlayer(null);
         if (player != null) { player.release(); player = null; }
     }
 
@@ -340,7 +322,7 @@ public final class H264Activity extends AppCompatActivity {
 
     // ---------- snapshot ----------
     private void takeSnapshot() {
-        View surface = video.getVideoSurfaceView();
+        View surface = binding.playerFull.getVideoSurfaceView();
         Bitmap bmp = surface instanceof TextureView ? ((TextureView) surface).getBitmap() : null;
         if (bmp == null || player == null) {
             Toast.makeText(this, "无视频画面，无法截图", Toast.LENGTH_SHORT).show();
@@ -358,17 +340,17 @@ public final class H264Activity extends AppCompatActivity {
 
     // ---------- debug demo (BuildConfig.DEBUG only) ----------
     private void applyDemo() {
-        video.setBackgroundColor(0xFF1A1A22);
+        binding.playerFull.setBackgroundColor(0xFF1A1A22);
         setLive(true);
-        noSignal.setVisibility(View.GONE);
-        pillStream.setText("CSI · 1280×720 · 30FPS · RTSP");
-        pillBuf.setText("BUF 300ms");
-        pillWifi.setText("手机 WiFi -52dBm");
-        pillRate.setText("4.2Mbps");
-        pillServo.setText("云台 65%");
-        pillSpeed.setText("限速 72%");
+        binding.textNoSignal.setVisibility(View.GONE);
+        binding.pillStream.setText("CSI · 1280×720 · 30FPS · RTSP");
+        binding.pillBuf.setText("BUF 300ms");
+        binding.pillWifi.setText("手机 WiFi -52dBm");
+        binding.pillRate.setText("4.2Mbps");
+        binding.pillServo.setText("云台 65%");
+        binding.pillSpeed.setText("限速 72%");
         String s = getIntent().getStringExtra(MainActivity.EXTRA_DEBUG_STATE);
-        if ("demo_hidden".equals(s)) { hudVisible = false; hud.setVisibility(View.INVISIBLE); }
+        if ("demo_hidden".equals(s)) { hudVisible = false; binding.hud.setVisibility(View.INVISIBLE); }
     }
 
     private int color(int id) { return ContextCompat.getColor(this, id); }

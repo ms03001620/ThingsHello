@@ -23,6 +23,7 @@ import android.widget.TextView;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.lib_unit_socket.bean.JsonReceiver;
 import org.mark.mobile.connect.ConnectedManager;
+import org.mark.mobile.databinding.ActivityMainBinding;
 import org.mark.mobile.ui.cyber.CutShapeHelper;
 import org.mark.mobile.ui.cyber.ScanlineDrawable;
 import org.mark.mobile.utils.PreferUtils;
@@ -47,23 +48,8 @@ public class MainActivity extends AppCompatActivity {
         REFUSED
     }
 
+    private ActivityMainBinding binding;
     private PreferUtils mPreferUtils;
-    private EditText editTextHost;
-    private EditText editTextPort;
-    private View wrapIp;
-    private View wrapPort;
-    private TextView textIpError;
-    private View cardOnline;
-    private View cardRefused;
-    private TextView textOnlineTitle;
-    private TextView textOnlineDesc;
-    private TextView textRefusedDesc;
-    private View btnConnect;
-    private TextView textConnect;
-    private ProgressBar progressConnect;
-    private View btnRetry;
-    private LinearLayout listRecent;
-    private View scanBeam;
 
     private UiState mUiState = UiState.IDLE;
     private boolean mConnectRequested;
@@ -79,8 +65,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
         getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.cp_bg));
-        setContentView(R.layout.activity_main);
+        setContentView(binding.getRoot());
 
         mPreferUtils = PreferUtils.getInstance(this);
 
@@ -89,7 +76,10 @@ public class MainActivity extends AppCompatActivity {
         mCutL = dp(22);
         mCutInputBr = dp(14);
 
-        bindViews();
+        binding.scanlineOverlay.setBackground(new ScanlineDrawable(
+                getResources(), ContextCompat.getColor(this, R.color.scanline)));
+        binding.scanlineOverlay.setAlpha(1f);
+
         applyCyberChrome();
         setupInputs();
         setupActions();
@@ -144,31 +134,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void bindViews() {
-        editTextHost = findViewById(R.id.edit_host);
-        editTextPort = findViewById(R.id.edit_port);
-        wrapIp = findViewById(R.id.wrap_ip);
-        wrapPort = findViewById(R.id.wrap_port);
-        textIpError = findViewById(R.id.text_ip_error);
-        cardOnline = findViewById(R.id.card_status_online);
-        cardRefused = findViewById(R.id.card_status_refused);
-        textOnlineTitle = findViewById(R.id.text_status_online_title);
-        textOnlineDesc = findViewById(R.id.text_status_online_desc);
-        textRefusedDesc = findViewById(R.id.text_status_refused_desc);
-        btnConnect = findViewById(R.id.btn_connect);
-        textConnect = findViewById(R.id.text_connect);
-        progressConnect = findViewById(R.id.progress_connect);
-        btnRetry = findViewById(R.id.btn_retry);
-        listRecent = findViewById(R.id.list_recent);
-        scanBeam = findViewById(R.id.scan_beam);
-
-        View scanOverlay = findViewById(R.id.scanline_overlay);
-        scanOverlay.setBackground(new ScanlineDrawable(
-                getResources(), ContextCompat.getColor(this, R.color.scanline)));
-        // Color already carries 4% alpha (#0AFCEE0A); keep view opaque, non-interactive.
-        scanOverlay.setAlpha(1f);
-    }
-
     private void applyCyberChrome() {
         int panel = ContextCompat.getColor(this, R.color.cp_panel);
         int yellow = ContextCompat.getColor(this, R.color.cp_yellow);
@@ -178,25 +143,24 @@ public class MainActivity extends AppCompatActivity {
         int cyan12 = ContextCompat.getColor(this, R.color.cyan_12);
         int red13 = ContextCompat.getColor(this, R.color.red_13);
 
-        View cardCar = findViewById(R.id.card_car);
         // TR/BL cut ~28x27 on 350x150 → use ~28dp / 27dp
-        CutShapeHelper.apply(cardCar, cyan07, 0, dp(28), 0, dp(27));
+        CutShapeHelper.apply(binding.cardCar, cyan07, 0, dp(28), 0, dp(27));
 
-        CutShapeHelper.applyWithLeftBar(wrapIp, panel, yellow, mBarWidthPx, 0, 0, mCutInputBr, 0);
-        CutShapeHelper.applyWithLeftBar(wrapPort, panel, yellow, mBarWidthPx, 0, 0, mCutInputBr, 0);
+        CutShapeHelper.applyWithLeftBar(binding.wrapIp, panel, yellow, mBarWidthPx, 0, 0, mCutInputBr, 0);
+        CutShapeHelper.applyWithLeftBar(binding.wrapPort, panel, yellow, mBarWidthPx, 0, 0, mCutInputBr, 0);
 
-        CutShapeHelper.applyWithLeftBar(cardOnline, cyan12, cyan, mBarWidthPx, 0, 0, 0, mCutM);
-        CutShapeHelper.applyWithLeftBar(cardRefused, red13, red, mBarWidthPx, 0, 0, 0, mCutM);
+        CutShapeHelper.applyWithLeftBar(binding.cardStatusOnline, cyan12, cyan, mBarWidthPx, 0, 0, 0, mCutM);
+        CutShapeHelper.applyWithLeftBar(binding.cardStatusRefused, red13, red, mBarWidthPx, 0, 0, 0, mCutM);
 
-        CutShapeHelper.applyButton(btnConnect, yellow,
+        CutShapeHelper.applyButton(binding.btnConnect, yellow,
                 ContextCompat.getColor(this, R.color.yellow_30), 0, mCutL, 0, mCutL);
 
         // Retry: red cut BR ~20%x30% of 54x32 ≈ 11 x 10
-        CutShapeHelper.applyButton(btnRetry, red,
+        CutShapeHelper.applyButton(binding.btnRetry, red,
                 Color.WHITE, 0, 0, dp(11), 0);
 
-        if (progressConnect.getIndeterminateDrawable() != null) {
-            progressConnect.getIndeterminateDrawable().setColorFilter(
+        if (binding.progressConnect.getIndeterminateDrawable() != null) {
+            binding.progressConnect.getIndeterminateDrawable().setColorFilter(
                     ContextCompat.getColor(this, R.color.cp_on_yellow), PorterDuff.Mode.SRC_IN);
         }
 
@@ -204,19 +168,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startBeamAnimation() {
-        if (scanBeam == null) {
+        if (binding.scanBeam == null) {
             return;
         }
-        scanBeam.post(new Runnable() {
+        binding.scanBeam.post(new Runnable() {
             @Override
             public void run() {
-                View parent = (View) scanBeam.getParent();
+                View parent = (View) binding.scanBeam.getParent();
                 if (parent == null || parent.getHeight() == 0) {
-                    scanBeam.post(this);
+                    binding.scanBeam.post(this);
                     return;
                 }
                 float travel = parent.getHeight() * 0.5f;
-                mBeamAnimator = ObjectAnimator.ofFloat(scanBeam, View.TRANSLATION_Y, -travel * 0.3f, travel * 0.3f);
+                mBeamAnimator = ObjectAnimator.ofFloat(binding.scanBeam, View.TRANSLATION_Y, -travel * 0.3f, travel * 0.3f);
                 mBeamAnimator.setDuration(2000);
                 mBeamAnimator.setRepeatMode(ValueAnimator.REVERSE);
                 mBeamAnimator.setRepeatCount(ValueAnimator.INFINITE);
@@ -229,16 +193,16 @@ public class MainActivity extends AppCompatActivity {
     private void setupInputs() {
         String[] recent = mPreferUtils.getAddress();
         if (recent != null && recent.length > 0 && !TextUtils.isEmpty(recent[0])) {
-            editTextHost.setText(recent[0]);
+            binding.editHost.setText(recent[0]);
         }
         if (mPreferUtils.hasCached() && mPreferUtils.getPortNumber() > 0) {
-            editTextPort.setText(mPreferUtils.getPort());
+            binding.editPort.setText(mPreferUtils.getPort());
         }
 
         View.OnFocusChangeListener focusListener = new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                View wrap = v == editTextHost ? wrapIp : wrapPort;
+                View wrap = v == binding.editHost ? binding.wrapIp : binding.wrapPort;
                 int yellow = ContextCompat.getColor(MainActivity.this, R.color.cp_yellow);
                 int panel = ContextCompat.getColor(MainActivity.this, R.color.cp_panel);
                 if (hasFocus) {
@@ -249,19 +213,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-        editTextHost.setOnFocusChangeListener(focusListener);
-        editTextPort.setOnFocusChangeListener(focusListener);
+        binding.editHost.setOnFocusChangeListener(focusListener);
+        binding.editPort.setOnFocusChangeListener(focusListener);
 
-        editTextHost.addTextChangedListener(new SimpleWatcher() {
+        binding.editHost.addTextChangedListener(new SimpleWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
-                textIpError.setVisibility(View.GONE);
+                binding.textIpError.setVisibility(View.GONE);
             }
         });
     }
 
     private void setupActions() {
-        btnConnect.setOnClickListener(new View.OnClickListener() {
+        binding.btnConnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mUiState == UiState.CONNECTING) {
@@ -275,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btnConnect.setOnTouchListener(new View.OnTouchListener() {
+        binding.btnConnect.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (mUiState == UiState.CONNECTING) {
@@ -285,17 +249,17 @@ public class MainActivity extends AppCompatActivity {
                 int pressed = ContextCompat.getColor(MainActivity.this, R.color.cp_yellow_pressed);
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        CutShapeHelper.applyButton(btnConnect, pressed,
+                        CutShapeHelper.applyButton(binding.btnConnect, pressed,
                                 ContextCompat.getColor(MainActivity.this, R.color.yellow_30),
                                 0, mCutL, 0, mCutL);
-                        btnConnect.setTranslationY(dp(1));
+                        binding.btnConnect.setTranslationY(dp(1));
                         break;
                     case MotionEvent.ACTION_UP:
                     case MotionEvent.ACTION_CANCEL:
-                        CutShapeHelper.applyButton(btnConnect, yellow,
+                        CutShapeHelper.applyButton(binding.btnConnect, yellow,
                                 ContextCompat.getColor(MainActivity.this, R.color.yellow_30),
                                 0, mCutL, 0, mCutL);
-                        btnConnect.setTranslationY(0);
+                        binding.btnConnect.setTranslationY(0);
                         break;
                     default:
                         break;
@@ -304,7 +268,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btnRetry.setOnClickListener(new View.OnClickListener() {
+        binding.btnRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 attemptConnect();
@@ -313,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void populateRecent() {
-        listRecent.removeAllViews();
+        binding.listRecent.removeAllViews();
         String[] addresses = mPreferUtils.getAddress();
         if (addresses == null || addresses.length == 0) {
             TextView empty = new TextView(this);
@@ -321,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
             empty.setTextColor(ContextCompat.getColor(this, R.color.cp_text_dim));
             empty.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
             empty.setAlpha(0.5f);
-            listRecent.addView(empty);
+            binding.listRecent.addView(empty);
             return;
         }
         int max = Math.min(addresses.length, 5);
@@ -338,26 +302,26 @@ public class MainActivity extends AppCompatActivity {
             row.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    editTextHost.setText(host);
-                    editTextHost.setSelection(host.length());
+                    binding.editHost.setText(host);
+                    binding.editHost.setSelection(host.length());
                 }
             });
-            listRecent.addView(row);
+            binding.listRecent.addView(row);
         }
     }
 
     private void attemptConnect() {
         hideKeyboard();
-        final String host = editTextHost.getText() != null
-                ? editTextHost.getText().toString().trim() : "";
-        final String portText = editTextPort.getText() != null
-                ? editTextPort.getText().toString().trim() : "";
+        final String host = binding.editHost.getText() != null
+                ? binding.editHost.getText().toString().trim() : "";
+        final String portText = binding.editPort.getText() != null
+                ? binding.editPort.getText().toString().trim() : "";
         if (TextUtils.isEmpty(host) || TextUtils.isEmpty(portText)) {
-            textIpError.setText(R.string.cp_input_error);
-            textIpError.setVisibility(View.VISIBLE);
+            binding.textIpError.setText(R.string.cp_input_error);
+            binding.textIpError.setVisibility(View.VISIBLE);
             int red = ContextCompat.getColor(this, R.color.cp_red);
             int panel = ContextCompat.getColor(this, R.color.cp_panel);
-            CutShapeHelper.applyWithLeftBar(wrapIp, panel, red, mBarWidthPx, 0, 0, mCutInputBr, 0);
+            CutShapeHelper.applyWithLeftBar(binding.wrapIp, panel, red, mBarWidthPx, 0, 0, mCutInputBr, 0);
             return;
         }
         int port;
@@ -367,8 +331,8 @@ public class MainActivity extends AppCompatActivity {
                 throw new NumberFormatException("port");
             }
         } catch (Exception e) {
-            textIpError.setText(R.string.cp_input_error);
-            textIpError.setVisibility(View.VISIBLE);
+            binding.textIpError.setText(R.string.cp_input_error);
+            binding.textIpError.setVisibility(View.VISIBLE);
             return;
         }
 
@@ -383,53 +347,52 @@ public class MainActivity extends AppCompatActivity {
 
     private void showState(UiState state) {
         mUiState = state;
-        cardOnline.setVisibility(View.GONE);
-        cardRefused.setVisibility(View.GONE);
-        progressConnect.setVisibility(View.GONE);
-        btnConnect.setEnabled(true);
-        btnConnect.setAlpha(1f);
-        textConnect.setAlpha(1f);
+        binding.cardStatusOnline.setVisibility(View.GONE);
+        binding.cardStatusRefused.setVisibility(View.GONE);
+        binding.progressConnect.setVisibility(View.GONE);
+        binding.btnConnect.setEnabled(true);
+        binding.btnConnect.setAlpha(1f);
+        binding.textConnect.setAlpha(1f);
 
         int yellow = ContextCompat.getColor(this, R.color.cp_yellow);
         int cyan = ContextCompat.getColor(this, R.color.cp_cyan);
 
         switch (state) {
             case IDLE:
-                textConnect.setText(R.string.cp_connect);
-                CutShapeHelper.applyButton(btnConnect, yellow,
+                binding.textConnect.setText(R.string.cp_connect);
+                CutShapeHelper.applyButton(binding.btnConnect, yellow,
                         ContextCompat.getColor(this, R.color.yellow_30), 0, mCutL, 0, mCutL);
                 break;
             case CONNECTING:
-                textConnect.setText(R.string.cp_connecting);
-                progressConnect.setVisibility(View.VISIBLE);
-                textOnlineTitle.setText(R.string.cp_status_connecting_title);
-                textOnlineDesc.setText(R.string.cp_status_connecting_desc);
-                cardOnline.setVisibility(View.VISIBLE);
-                btnConnect.setEnabled(false);
-                btnConnect.setAlpha(0.85f);
+                binding.textConnect.setText(R.string.cp_connecting);
+                binding.progressConnect.setVisibility(View.VISIBLE);
+                binding.textStatusOnlineTitle.setText(R.string.cp_status_connecting_title);
+                binding.textStatusOnlineDesc.setText(R.string.cp_status_connecting_desc);
+                binding.cardStatusOnline.setVisibility(View.VISIBLE);
+                binding.btnConnect.setEnabled(false);
+                binding.btnConnect.setAlpha(0.85f);
                 break;
             case ONLINE:
-                textConnect.setText(R.string.cp_connect);
-                String port = editTextPort.getText() != null
-                        ? editTextPort.getText().toString().trim() : "8010";
-                textOnlineTitle.setText(R.string.cp_status_online_title);
-                textOnlineDesc.setText(getString(R.string.cp_status_online_desc, port));
-                cardOnline.setVisibility(View.VISIBLE);
+                binding.textConnect.setText(R.string.cp_connect);
+                String port = binding.editPort.getText() != null
+                        ? binding.editPort.getText().toString().trim() : "8010";
+                binding.textStatusOnlineTitle.setText(R.string.cp_status_online_title);
+                binding.textStatusOnlineDesc.setText(getString(R.string.cp_status_online_desc, port));
+                binding.cardStatusOnline.setVisibility(View.VISIBLE);
                 break;
             case REFUSED:
-                textConnect.setText(R.string.cp_connect);
+                binding.textConnect.setText(R.string.cp_connect);
                 if (isTimeoutError(mLastErrorMessage)) {
-                    textRefusedDesc.setText(R.string.cp_status_timeout_desc);
+                    binding.textStatusRefusedDesc.setText(R.string.cp_status_timeout_desc);
                 } else {
-                    textRefusedDesc.setText(R.string.cp_status_refused_desc);
+                    binding.textStatusRefusedDesc.setText(R.string.cp_status_refused_desc);
                 }
-                cardRefused.setVisibility(View.VISIBLE);
+                binding.cardStatusRefused.setVisibility(View.VISIBLE);
                 break;
             default:
                 break;
         }
     }
-
     private boolean isTimeoutError(String msg) {
         if (msg == null) {
             return false;
@@ -444,9 +407,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void openControl() {
         Intent intent = new Intent(MainActivity.this, CtrlActivity.class);
-        intent.putExtra(CtrlActivity.EXTRA_HOST, editTextHost.getText().toString().trim());
+        intent.putExtra(CtrlActivity.EXTRA_HOST, binding.editHost.getText().toString().trim());
         try {
-            intent.putExtra(CtrlActivity.EXTRA_PORT, Integer.parseInt(editTextPort.getText().toString().trim()));
+            intent.putExtra(CtrlActivity.EXTRA_PORT, Integer.parseInt(binding.editPort.getText().toString().trim()));
         } catch (NumberFormatException ignored) {
         }
         startActivity(intent);
@@ -512,7 +475,7 @@ public class MainActivity extends AppCompatActivity {
                 mIgnoreNextNoConnect = false;
                 showState(UiState.ONLINE);
                 // Navigate to control after a brief beat so online card is visible
-                btnConnect.postDelayed(new Runnable() {
+                binding.btnConnect.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         if (mUiState == UiState.ONLINE && ConnectedManager.getInstance().isConnected()) {
