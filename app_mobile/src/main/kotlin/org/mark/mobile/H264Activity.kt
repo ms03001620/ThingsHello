@@ -2,7 +2,6 @@ package org.mark.mobile
 
 import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.GradientDrawable
 import android.net.TrafficStats
@@ -13,7 +12,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Process
 import android.os.SystemClock
-import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.TextureView
@@ -21,7 +19,6 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.exoplayer2.DefaultLoadControl
@@ -33,11 +30,16 @@ import com.google.android.exoplayer2.decoder.DecoderCounters
 import com.google.android.exoplayer2.source.rtsp.RtspMediaSource
 import org.mark.mobile.databinding.ActivityPreviewCyberBinding
 import org.mark.mobile.preview.LowLatencyRenderersFactory
-import org.mark.mobile.repository.H264Repository
+import org.mark.mobile.repository.CarControlRepository
 import org.mark.mobile.ui.cyber.CutShapeHelper
 import org.mark.mobile.ui.cyber.ScanlineDrawable
-import org.mark.mobile.utils.GallerySaver
+import org.mark.mobile.usecase.MediaStoreSnapshotStore
+import org.mark.mobile.usecase.SaveSnapshotUseCase
+import org.mark.mobile.usecase.SnapshotResult
 import org.mark.mobile.utils.WifiRssi
+import org.mark.mobile.utils.colorCompat
+import org.mark.mobile.utils.dp
+import org.mark.mobile.utils.dpF
 import org.mark.mobile.utils.hide
 import org.mark.mobile.utils.show
 import org.mark.mobile.viewmodel.H264UiState
@@ -64,6 +66,7 @@ class H264Activity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPreviewCyberBinding
     private lateinit var viewModel: H264ViewModel
+    private lateinit var saveSnapshotUseCase: SaveSnapshotUseCase
 
     private val uiHandler = Handler(Looper.getMainLooper())
     private var player: SimpleExoPlayer? = null
@@ -84,7 +87,7 @@ class H264Activity : AppCompatActivity() {
             val currentPlayer = player ?: return
             val isReady = currentPlayer.playbackState == Player.STATE_READY
             val bufferedMs = if (isReady) currentPlayer.totalBufferedDuration else 0L
-            val next = H264ViewModel.computeCatchUpSpeed(isReady, bufferedMs, appliedSpeed)
+            val next = viewModel.computeCatchUpSpeed(isReady, bufferedMs, appliedSpeed)
             if (next != appliedSpeed) {
                 appliedSpeed = next
                 currentPlayer.setPlaybackSpeed(next)
@@ -117,11 +120,11 @@ class H264Activity : AppCompatActivity() {
         val servoPercent = intent.getIntExtra(EXTRA_SERVO, 50)
         val speedLimit = intent.getIntExtra(EXTRA_SPEED_LIMIT, -1)
 
-        val repository = H264Repository()
+        saveSnapshotUseCase = SaveSnapshotUseCase(MediaStoreSnapshotStore(this))
         viewModel = ViewModelProvider(
             this,
             H264ViewModel.Factory(
-                repository = repository,
+                controlRepository = CarControlRepository(),
                 isDemo = isDemo,
                 debugState = debugState,
                 initialLightOn = initialLightOn,
@@ -159,43 +162,39 @@ class H264Activity : AppCompatActivity() {
     }
 
     private fun applyCyberChrome() {
-        val yellow = color(R.color.cp_yellow)
-        val cyan = color(R.color.cp_cyan)
-        val pillBg = color(R.color.scrim_70)
+        val yellow = colorCompat(R.color.cp_yellow)
+        val cyan = colorCompat(R.color.cp_cyan)
+        val pillBg = colorCompat(R.color.scrim_70)
 
-        val pills = arrayOf(
+        for (pill in arrayOf(
             binding.pillStream,
             binding.pillBuf,
             binding.pillWifi,
             binding.pillRate,
             binding.pillServo,
             binding.pillSpeed
-        )
-        for (pill in pills) {
-            CutShapeHelper.applyWithLeftBar(pill, pillBg, cyan, dp(2), 0f, 0f, 0f, 0f)
+        )) {
+            CutShapeHelper.applyWithLeftBar(pill, pillBg, cyan, dp(2))
         }
 
-        binding.textHint.background = CutShapeHelper.panel(pillBg, 0f, 0f, 0f, 0f)
-        binding.tagRec.background = CutShapeHelper.panel(color(R.color.cp_red), 0f, 0f, 0f, 0f)
+        binding.textHint.background = CutShapeHelper.panel(pillBg)
+        binding.tagRec.background = CutShapeHelper.panel(colorCompat(R.color.cp_red))
 
-        val tint = GradientDrawable(
+        binding.overlayTint.background = GradientDrawable(
             GradientDrawable.Orientation.LEFT_RIGHT,
             intArrayOf(0x2EFF003C, 0x00000000, 0x2E02D7F2)
         )
-        binding.overlayTint.background = tint
         binding.overlayScan.background = ScanlineDrawable(resources, 0x26000000)
         binding.overlayFrame.background = CutShapeHelper.stroked(
             0x00000000,
             (yellow and 0x00FFFFFF) or 0x99000000.toInt(),
             dpF(2),
-            0f,
-            dpF(30),
-            0f,
-            dpF(30)
+            cutTr = dpF(30),
+            cutBl = dpF(30)
         )
 
-        binding.btnBackPv.background = CutShapeHelper.stroked(pillBg, yellow, dpF(1), 0f, 0f, dpF(10), 0f)
-        binding.btnSnapPv.background = CutShapeHelper.stroked(pillBg, yellow, dpF(1), 0f, 0f, dpF(10), 0f)
+        binding.btnBackPv.background = CutShapeHelper.stroked(pillBg, yellow, dpF(1), cutBr = dpF(10))
+        binding.btnSnapPv.background = CutShapeHelper.stroked(pillBg, yellow, dpF(1), cutBr = dpF(10))
         binding.btnSnapPv.setColorFilter(yellow)
 
         if (viewModel.isDemo) {
@@ -209,27 +208,23 @@ class H264Activity : AppCompatActivity() {
             takeSnapshot()
             viewModel.bumpHud()
         }
-        binding.btnLightPv.setOnClickListener {
-            viewModel.onToggleLight()
-        }
+        binding.btnLightPv.setOnClickListener { viewModel.onToggleLight() }
     }
 
     private fun setupGesturesAndInsets() {
-        val gestureDetector =
-            GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
-                override fun onDown(e: MotionEvent): Boolean = true
+        val gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDown(e: MotionEvent): Boolean = true
 
-                override fun onDoubleTap(e: MotionEvent): Boolean {
-                    val hasError = player?.playerError != null
-                    if (viewModel.onScreenDoubleTap(hasError)) {
-                        play()
-                    }
-                    return true
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                val hasError = player?.playerError != null
+                if (viewModel.onScreenDoubleTap(hasError)) {
+                    play()
                 }
-            })
+                return true
+            }
+        })
         binding.previewRoot.setOnTouchListener { _, event -> gestureDetector.onTouchEvent(event) }
 
-        // Keep HUD clear of the notch / rounded corners
         binding.previewRoot.setOnApplyWindowInsetsListener { _, insets ->
             var l = 0
             var t = 0
@@ -310,13 +305,14 @@ class H264Activity : AppCompatActivity() {
     }
 
     private fun renderLight(lightOn: Boolean) {
-        val yellow = color(R.color.cp_yellow)
-        binding.btnLightPv.background = if (lightOn) {
-            CutShapeHelper.stroked(yellow, yellow, dpF(1), 0f, 0f, dpF(10), 0f)
-        } else {
-            CutShapeHelper.stroked(color(R.color.scrim_70), yellow, dpF(1), 0f, 0f, dpF(10), 0f)
-        }
-        binding.btnLightPv.setColorFilter(if (lightOn) color(R.color.cp_bg) else yellow)
+        val yellow = colorCompat(R.color.cp_yellow)
+        binding.btnLightPv.background = CutShapeHelper.stroked(
+            if (lightOn) yellow else colorCompat(R.color.scrim_70),
+            yellow,
+            dpF(1),
+            cutBr = dpF(10)
+        )
+        binding.btnLightPv.setColorFilter(if (lightOn) colorCompat(R.color.cp_bg) else yellow)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -480,40 +476,26 @@ class H264Activity : AppCompatActivity() {
     // ---------- snapshot ----------
     private fun takeSnapshot() {
         val surface = binding.playerFull.videoSurfaceView
-        val bmp: Bitmap? = if (surface is TextureView) surface.bitmap else null
-        if (bmp == null || player == null) {
-            Toast.makeText(this, "无视频画面，无法截图", Toast.LENGTH_SHORT).show()
-            return
+        val frame: Bitmap? = if (player != null && surface is TextureView) surface.bitmap else null
+
+        when (saveSnapshotUseCase(frame)) {
+            SnapshotResult.NO_FRAME -> {
+                Toast.makeText(this, "无视频画面，无法截图", Toast.LENGTH_SHORT).show()
+            }
+            SnapshotResult.NEED_STORAGE_PERMISSION -> {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    REQ_STORAGE
+                )
+                Toast.makeText(this, "需要存储权限，授权后再截图", Toast.LENGTH_SHORT).show()
+            }
+            SnapshotResult.SAVED -> {
+                Toast.makeText(this, "已保存到相册 Pictures/ThingsHello", Toast.LENGTH_SHORT).show()
+            }
+            SnapshotResult.FAILED -> {
+                Toast.makeText(this, "截图保存失败", Toast.LENGTH_SHORT).show()
+            }
         }
-        if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                REQ_STORAGE
-            )
-            Toast.makeText(this, "需要存储权限，授权后再截图", Toast.LENGTH_SHORT).show()
-            return
-        }
-        val uri = GallerySaver.save(this, bmp)
-        Toast.makeText(
-            this,
-            if (uri != null) "已保存到相册 Pictures/ThingsHello" else "截图保存失败",
-            Toast.LENGTH_SHORT
-        ).show()
     }
-
-    // ---------- helpers ----------
-    private fun color(res: Int): Int = ContextCompat.getColor(this, res)
-
-    private fun dp(value: Int): Int {
-        return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, value.toFloat(), resources.displayMetrics
-        ).roundToInt()
-    }
-
-    private fun dpF(value: Int): Float = dp(value).toFloat()
 }

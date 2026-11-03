@@ -10,19 +10,20 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mark.lib_unit_socket.ClientMessageCallback
-import org.mark.mobile.repository.IH264Repository
+import org.mark.mobile.FakeCarControlRepository
+import org.mark.mobile.FakeUiScheduler
 
 class H264ViewModelTest {
 
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
-    private lateinit var fakeRepo: FakeH264Repository
+    private lateinit var fakeControlRepo: FakeCarControlRepository
     private lateinit var fakeScheduler: FakeUiScheduler
 
     @Before
     fun setUp() {
-        fakeRepo = FakeH264Repository()
+        fakeControlRepo = FakeCarControlRepository()
         fakeScheduler = FakeUiScheduler()
     }
 
@@ -34,7 +35,7 @@ class H264ViewModelTest {
         speedLimit: Int = -1
     ): H264ViewModel {
         return H264ViewModel(
-            repository = fakeRepo,
+            controlRepository = fakeControlRepo,
             isDemo = isDemo,
             debugState = debugState,
             initialLightOn = initialLightOn,
@@ -58,12 +59,10 @@ class H264ViewModelTest {
         assertEquals("限速 80%", state.speedPillText)
         assertNull(vm.finishPreview.value)
 
-        // Advance 3000ms -> hint hides, HUD still visible
         fakeScheduler.advanceBy(H264ViewModel.HINT_HIDE_DELAY_MS)
         assertFalse(vm.uiState.value!!.isHintVisible)
         assertTrue(vm.uiState.value!!.isHudVisible)
 
-        // Advance to 4000ms -> HUD auto-hides
         fakeScheduler.advanceBy(1000L)
         assertFalse(vm.uiState.value!!.isHudVisible)
     }
@@ -76,7 +75,7 @@ class H264ViewModelTest {
 
     @Test
     fun `demo and demo_hidden modes initialize preset telemetry and disable auto-hide`() {
-        fakeRepo.connected = false
+        fakeControlRepo.connected = false
         val demoVm = createViewModel(isDemo = true, debugState = "demo")
         val demoState = demoVm.uiState.value!!
 
@@ -89,7 +88,6 @@ class H264ViewModelTest {
         assertEquals("云台 65%", demoState.servoPillText)
         assertEquals("限速 72%", demoState.speedPillText)
 
-        // Demo mode does not auto-hide HUD or finish on disconnect
         demoVm.onStart()
         fakeScheduler.advanceBy(10_000L)
         assertTrue(demoVm.uiState.value!!.isHudVisible)
@@ -108,11 +106,11 @@ class H264ViewModelTest {
         vm.onToggleLight()
         assertTrue(vm.uiState.value!!.isLightOn)
         assertTrue(vm.uiState.value!!.isHudVisible)
-        assertEquals(listOf(true), fakeRepo.lightSentHistory)
+        assertEquals(listOf(true), fakeControlRepo.lightSentHistory)
 
         vm.onToggleLight()
         assertFalse(vm.uiState.value!!.isLightOn)
-        assertEquals(listOf(true, false), fakeRepo.lightSentHistory)
+        assertEquals(listOf(true, false), fakeControlRepo.lightSentHistory)
     }
 
     @Test
@@ -123,13 +121,11 @@ class H264ViewModelTest {
         assertFalse(vm.uiState.value!!.isLive)
         assertEquals("NO SIGNAL · 双击重试", vm.uiState.value!!.noSignalText)
 
-        // Double tap while player has error -> requests retry & hides HUD
         val retry = vm.onScreenDoubleTap(hasPlayerError = true)
         assertTrue(retry)
         assertEquals("NO SIGNAL", vm.uiState.value!!.noSignalText)
         assertFalse(vm.uiState.value!!.isHudVisible)
 
-        // Double tap without error -> does not retry & shows HUD
         val retry2 = vm.onScreenDoubleTap(hasPlayerError = false)
         assertFalse(retry2)
         assertTrue(vm.uiState.value!!.isHudVisible)
@@ -181,84 +177,27 @@ class H264ViewModelTest {
         vm.onToggleLight()
         vm.onStart()
 
-        fakeRepo.connected = false
+        fakeControlRepo.connected = false
         fakeScheduler.advanceBy(H264ViewModel.LINK_WATCH_POLL_MS)
 
         val event = vm.finishPreview.value
         assertNotNull(event)
         assertEquals(true, event!!.getContentIfNotHandled())
 
-        // Subsequent callbacks / back presses are idempotent
-        fakeRepo.emitStatus(ClientMessageCallback.Status.NO_CONNECT)
+        fakeControlRepo.emitStatus(ClientMessageCallback.Status.NO_CONNECT)
         vm.onBackRequested()
         assertNull(vm.finishPreview.value!!.getContentIfNotHandled())
     }
 
     @Test
     fun `catch-up playback speed follows stepped thresholds and hysteresis`() {
-        assertEquals(1.0f, H264ViewModel.computeCatchUpSpeed(false, 500L, 1.25f), 0.001f)
-        assertEquals(1.25f, H264ViewModel.computeCatchUpSpeed(true, 351L, 1.0f), 0.001f)
-        assertEquals(1.15f, H264ViewModel.computeCatchUpSpeed(true, 200L, 1.0f), 0.001f)
-        assertEquals(1.05f, H264ViewModel.computeCatchUpSpeed(true, 100L, 1.0f), 0.001f)
-        // Hysteresis band (46..75ms): keep 1.05f if catching up, keep 1.0f if steady
-        assertEquals(1.05f, H264ViewModel.computeCatchUpSpeed(true, 60L, 1.15f), 0.001f)
-        assertEquals(1.0f, H264ViewModel.computeCatchUpSpeed(true, 60L, 1.0f), 0.001f)
-        assertEquals(1.0f, H264ViewModel.computeCatchUpSpeed(true, 45L, 1.05f), 0.001f)
-    }
-
-    private class FakeUiScheduler : UiScheduler {
-        private data class ScheduledTask(val runAtMs: Long, val block: () -> Unit)
-
-        private var nowMs: Long = 0L
-        private val tasks = mutableListOf<ScheduledTask>()
-
-        override fun runOnUi(block: () -> Unit) {
-            block()
-        }
-
-        override fun postDelayed(delayMillis: Long, block: () -> Unit) {
-            tasks.add(ScheduledTask(nowMs + delayMillis, block))
-        }
-
-        override fun cancelAll() {
-            tasks.clear()
-        }
-
-        fun advanceBy(deltaMs: Long) {
-            val target = nowMs + deltaMs
-            while (true) {
-                val next = tasks.filter { it.runAtMs <= target }.minByOrNull { it.runAtMs } ?: break
-                tasks.remove(next)
-                nowMs = next.runAtMs
-                next.block.invoke()
-            }
-            nowMs = target
-        }
-    }
-
-    private class FakeH264Repository : IH264Repository {
-        var connected: Boolean = true
-        var callback: ClientMessageCallback? = null
-        val lightSentHistory = mutableListOf<Boolean>()
-
-        override fun isConnected(): Boolean = connected
-
-        override fun addCallback(callback: ClientMessageCallback) {
-            this.callback = callback
-        }
-
-        override fun removeCallback(callback: ClientMessageCallback) {
-            if (this.callback === callback) {
-                this.callback = null
-            }
-        }
-
-        override fun sendLight(enable: Boolean) {
-            lightSentHistory.add(enable)
-        }
-
-        fun emitStatus(status: ClientMessageCallback.Status) {
-            callback?.onStatusChange(status)
-        }
+        val vm = createViewModel()
+        assertEquals(1.0f, vm.computeCatchUpSpeed(false, 500L, 1.25f), 0.001f)
+        assertEquals(1.25f, vm.computeCatchUpSpeed(true, 351L, 1.0f), 0.001f)
+        assertEquals(1.15f, vm.computeCatchUpSpeed(true, 200L, 1.0f), 0.001f)
+        assertEquals(1.05f, vm.computeCatchUpSpeed(true, 100L, 1.0f), 0.001f)
+        assertEquals(1.05f, vm.computeCatchUpSpeed(true, 60L, 1.15f), 0.001f)
+        assertEquals(1.0f, vm.computeCatchUpSpeed(true, 60L, 1.0f), 0.001f)
+        assertEquals(1.0f, vm.computeCatchUpSpeed(true, 45L, 1.05f), 0.001f)
     }
 }

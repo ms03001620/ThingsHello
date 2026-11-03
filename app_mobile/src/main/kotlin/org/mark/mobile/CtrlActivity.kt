@@ -2,20 +2,13 @@ package org.mark.mobile
 
 import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.ColorFilter
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.net.TrafficStats
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -35,7 +28,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -48,15 +40,22 @@ import com.google.android.exoplayer2.source.rtsp.RtspMediaSource
 import org.mark.mobile.databinding.ActivityCtrlBinding
 import org.mark.mobile.databinding.ItemCyberActionBinding
 import org.mark.mobile.preview.LowLatencyRenderersFactory
-import org.mark.mobile.repository.CtrlRepository
+import org.mark.mobile.repository.CarControlRepository
+import org.mark.mobile.repository.CarPrefsRepository
 import org.mark.mobile.ui.cyber.CutShapeHelper
 import org.mark.mobile.ui.cyber.ParallelogramDrawable
 import org.mark.mobile.ui.cyber.ScanlineDrawable
-import org.mark.mobile.utils.GallerySaver
+import org.mark.mobile.usecase.MediaStoreSnapshotStore
+import org.mark.mobile.usecase.SaveSnapshotUseCase
+import org.mark.mobile.usecase.SnapshotResult
 import org.mark.mobile.utils.PreferUtils
 import org.mark.mobile.utils.WifiRssi
+import org.mark.mobile.utils.colorCompat
+import org.mark.mobile.utils.dp
+import org.mark.mobile.utils.dpF
 import org.mark.mobile.utils.hide
 import org.mark.mobile.utils.show
+import org.mark.mobile.utils.sp
 import org.mark.mobile.viewmodel.CtrlUiState
 import org.mark.mobile.viewmodel.CtrlViewModel
 import java.util.Locale
@@ -78,6 +77,7 @@ class CtrlActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCtrlBinding
     private lateinit var viewModel: CtrlViewModel
+    private lateinit var saveSnapshotUseCase: SaveSnapshotUseCase
 
     private val uiHandler = Handler(Looper.getMainLooper())
     private lateinit var wifiBg: ParallelogramDrawable
@@ -115,12 +115,8 @@ class CtrlActivity : AppCompatActivity() {
 
     private val rotateTouchListener = View.OnTouchListener { v, event ->
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                viewModel.onRotatePressed(isLeft = v === binding.btnLeft)
-            }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                viewModel.onRotateReleased(isLeft = v === binding.btnLeft)
-            }
+            MotionEvent.ACTION_DOWN -> viewModel.onRotatePressed(isLeft = v === binding.btnLeft)
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> viewModel.onRotateReleased(isLeft = v === binding.btnLeft)
         }
         false
     }
@@ -131,13 +127,14 @@ class CtrlActivity : AppCompatActivity() {
         binding = ActivityCtrlBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val isDemo = BuildConfig.DEBUG &&
-            intent.getStringExtra(MainActivity.EXTRA_DEBUG_STATE) == "demo"
-        val repository = CtrlRepository(PreferUtils.getInstance(this))
-        viewModel = ViewModelProvider(this, CtrlViewModel.Factory(repository, isDemo))
+        val isDemo = BuildConfig.DEBUG && intent.getStringExtra(MainActivity.EXTRA_DEBUG_STATE) == "demo"
+        val controlRepository = CarControlRepository()
+        val prefsRepository = CarPrefsRepository(PreferUtils.getInstance(this))
+        saveSnapshotUseCase = SaveSnapshotUseCase(MediaStoreSnapshotStore(this))
+        viewModel = ViewModelProvider(this, CtrlViewModel.Factory(controlRepository, prefsRepository, isDemo))
             .get(CtrlViewModel::class.java)
 
-        binding.scanlineOverlay.background = ScanlineDrawable(resources, color(R.color.scanline))
+        binding.scanlineOverlay.background = ScanlineDrawable(resources, colorCompat(R.color.scanline))
 
         setupTopBar()
         setupVideo()
@@ -167,32 +164,27 @@ class CtrlActivity : AppCompatActivity() {
     }
 
     private fun renderUiState(state: CtrlUiState) {
-        // 顶部连接状态副标题与 WiFi 胶囊
         binding.textDriveSub.text = state.subtitleText
-        binding.textDriveSub.setTextColor(color(if (state.isConnected) R.color.cp_cyan else R.color.cp_red))
+        binding.textDriveSub.setTextColor(colorCompat(if (state.isConnected) R.color.cp_cyan else R.color.cp_red))
 
         binding.textWifi.text = if (state.wifiRssi == null) "WiFi --" else "WiFi ${state.wifiRssi}dBm"
-        wifiBg.setColor(color(if (state.isWifiWeak) R.color.cp_red else R.color.cp_cyan))
-        binding.textWifi.setTextColor(color(if (state.isWifiWeak) R.color.cp_white else R.color.cp_on_yellow))
+        wifiBg.setColor(colorCompat(if (state.isWifiWeak) R.color.cp_red else R.color.cp_cyan))
+        binding.textWifi.setTextColor(colorCompat(if (state.isWifiWeak) R.color.cp_white else R.color.cp_on_yellow))
 
-        // 视频状态覆盖层
         if (state.showNoSignal) binding.textVideoState.show() else binding.textVideoState.hide()
         if (state.showLiveTag) binding.tagLive.show() else binding.tagLive.hide()
 
-        // 4 格遥测数据
         setCell(cellBuffer, state.bufferMsText, "ms")
         setCell(cellSpeed, state.speedLimit.toString(), "%")
         setCell(cellFps, state.fpsText, "FPS")
         setCell(cellBitrate, state.bitrateText, "Mbps")
 
-        // 云台与限速滑条
         binding.sliderServo.setValue(state.servoPercent, false)
         binding.textServo.text = "${state.servoPercent}%"
 
         binding.sliderSpeed.setValue(state.speedLimit, false)
         binding.textSpeed.text = "${state.speedLimit}%"
 
-        // 车灯与鸣笛按键视觉状态
         if (lastRenderedLightOn != state.isLightOn) {
             lastRenderedLightOn = state.isLightOn
             renderLight(state.isLightOn)
@@ -201,7 +193,7 @@ class CtrlActivity : AppCompatActivity() {
             lastRenderedHornPressed = state.isHornPressed
             setActionColors(
                 binding.btnHorn,
-                color(if (state.isHornPressed) R.color.cp_white else R.color.cp_text_dim),
+                colorCompat(if (state.isHornPressed) R.color.cp_white else R.color.cp_text_dim),
                 false
             )
         }
@@ -209,32 +201,31 @@ class CtrlActivity : AppCompatActivity() {
 
     // ---------- top bar ----------
     private fun setupTopBar() {
+        val yellow = colorCompat(R.color.cp_yellow)
         binding.btnBack.background = CutShapeHelper.states(
-            CutShapeHelper.stroked(0, color(R.color.cp_yellow), dpF(1), 0f, 0f, dpF(11), 0f),
-            CutShapeHelper.stroked(0x26FCEE0A, color(R.color.cp_yellow), dpF(1), 0f, 0f, dpF(11), 0f)
+            CutShapeHelper.stroked(0, yellow, dpF(1), cutBr = dpF(11)),
+            CutShapeHelper.stroked(0x26FCEE0A, yellow, dpF(1), cutBr = dpF(11))
         )
         binding.btnBack.setOnClickListener { finish() }
 
-        wifiBg = ParallelogramDrawable(color(R.color.cp_cyan), dpF(8))
+        wifiBg = ParallelogramDrawable(colorCompat(R.color.cp_cyan), dpF(8))
         binding.textWifi.background = wifiBg
     }
 
     // ---------- video ----------
     private fun setupVideo() {
-        binding.videoBox.background = CutShapeHelper.panel(color(R.color.cp_panel), 0f, dpF(24), 0f, 0f)
-        val tint = GradientDrawable(
+        binding.videoBox.background = CutShapeHelper.panel(colorCompat(R.color.cp_panel), cutTr = dpF(24))
+        binding.videoTint.background = GradientDrawable(
             GradientDrawable.Orientation.LEFT_RIGHT,
             intArrayOf(0x40FF003C, 0x00000000, 0x4002D7F2)
         )
-        binding.videoTint.background = tint
         binding.videoScan.background = ScanlineDrawable(resources, 0x40000000)
-        binding.videoCorner.background = CornerMask(color(R.color.cp_bg), dpF(24))
+        binding.videoCorner.background = CutShapeHelper.cornerMask(colorCompat(R.color.cp_bg), dpF(24))
         binding.btnFullscreen.background = CutShapeHelper.states(
-            CutShapeHelper.panel(color(R.color.cp_yellow), 0f, 0f, dpF(11), 0f),
-            CutShapeHelper.panel(color(R.color.cp_yellow_pressed), 0f, 0f, dpF(11), 0f)
+            CutShapeHelper.panel(colorCompat(R.color.cp_yellow), cutBr = dpF(11)),
+            CutShapeHelper.panel(colorCompat(R.color.cp_yellow_pressed), cutBr = dpF(11))
         )
         binding.btnFullscreen.setOnClickListener { openPreview() }
-        // Tapping the mini player also enters fullscreen preview (spec: entered from mini player).
         binding.playerSmall.setOnClickListener { openPreview() }
     }
 
@@ -252,6 +243,7 @@ class CtrlActivity : AppCompatActivity() {
         startActivityForResult(intent, REQ_PREVIEW)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQ_PREVIEW && data != null) {
@@ -321,17 +313,19 @@ class CtrlActivity : AppCompatActivity() {
     private fun addCell(row: LinearLayout, label: String, gap: Boolean): TextView {
         val cell = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(8), dp(6) + dp(2), dp(8), dp(6))
-            background = TopBarPanel(color(R.color.cp_panel), color(R.color.cp_cyan), dpF(2))
+            setPadding(dp(8), dp(8), dp(8), dp(6))
+            background = CutShapeHelper.topBarPanel(
+                colorCompat(R.color.cp_panel), colorCompat(R.color.cp_cyan), dpF(2)
+            )
         }
         val labelView = TextView(this).apply {
             text = label
-            setTextColor(color(R.color.cp_cyan))
+            setTextColor(colorCompat(R.color.cp_cyan))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f)
         }
         val valueView = TextView(this).apply {
             typeface = ResourcesCompat.getFont(this@CtrlActivity, R.font.orbitron_bold)
-            setTextColor(color(R.color.cp_yellow))
+            setTextColor(colorCompat(R.color.cp_yellow))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             setSingleLine(true)
             text = "--"
@@ -357,11 +351,7 @@ class CtrlActivity : AppCompatActivity() {
     }
 
     private fun setCell(cell: TextView, value: String?, unit: String?) {
-        cell.text = if (value == null) {
-            "--"
-        } else {
-            valueUnit(value, unit, 0xB3FCEE0A.toInt(), sp(10))
-        }
+        cell.text = if (value == null) "--" else valueUnit(value, unit, 0xB3FCEE0A.toInt(), sp(10))
     }
 
     private fun updateVideoStats() {
@@ -376,10 +366,8 @@ class CtrlActivity : AppCompatActivity() {
             return
         }
 
-        // Buffered duration: ExoPlayer internal playback buffer in ms (same metric as legacy H264Activity)
         val bufferMs = currentPlayer!!.totalBufferedDuration.coerceAtLeast(0L).toString()
 
-        // FPS: rendered output buffers delta (DecoderCounters)
         val counters = currentPlayer.videoDecoderCounters
         var fps: String? = null
         if (counters != null) {
@@ -392,7 +380,6 @@ class CtrlActivity : AppCompatActivity() {
         }
         lastCounters = counters
 
-        // Bitrate: app UID received bytes/s (RTSP stream dominates traffic)
         val rx = TrafficStats.getUidRxBytes(Process.myUid())
         var mbps: String? = null
         if (rx != TrafficStats.UNSUPPORTED.toLong() && lastRxBytes >= 0 && now > lastStatsTime) {
@@ -406,15 +393,14 @@ class CtrlActivity : AppCompatActivity() {
 
     // ---------- gimbal ----------
     private fun setupGimbal() {
-        binding.cardGimbal.background = CutShapeHelper.panel(color(R.color.cp_panel), 0f, 0f, dpF(14), 0f)
+        val cyan = colorCompat(R.color.cp_cyan)
+        binding.cardGimbal.background = CutShapeHelper.panel(colorCompat(R.color.cp_panel), cutBr = dpF(14))
         binding.sliderServo.setListener { value, fromUser ->
-            if (fromUser) {
-                viewModel.onServoChanged(value)
-            }
+            if (fromUser) viewModel.onServoChanged(value)
         }
         binding.btnRecenter.background = CutShapeHelper.states(
-            CutShapeHelper.stroked(0, color(R.color.cp_cyan), dpF(1), 0f, 0f, dpF(9), 0f),
-            CutShapeHelper.stroked(0x2602D7F2, color(R.color.cp_cyan), dpF(1), 0f, 0f, dpF(9), 0f)
+            CutShapeHelper.stroked(0, cyan, dpF(1), cutBr = dpF(9)),
+            CutShapeHelper.stroked(0x2602D7F2, cyan, dpF(1), cutBr = dpF(9))
         )
         binding.btnRecenter.setOnClickListener { viewModel.onRecenterServo() }
     }
@@ -425,14 +411,15 @@ class CtrlActivity : AppCompatActivity() {
             viewModel.onJoystickMove(angle, power)
         }
 
+        val cyan = colorCompat(R.color.cp_cyan)
         for (btn in arrayOf(binding.btnLeft, binding.btnRight)) {
             btn.background = CutShapeHelper.states(
-                CutShapeHelper.stroked(color(R.color.cyan_08), color(R.color.cp_cyan), dpF(2), 0f, 0f, dpF(16), 0f),
-                CutShapeHelper.stroked(color(R.color.cp_cyan), color(R.color.cp_cyan), dpF(2), 0f, 0f, dpF(16), 0f)
+                CutShapeHelper.stroked(colorCompat(R.color.cyan_08), cyan, dpF(2), cutBr = dpF(16)),
+                CutShapeHelper.stroked(cyan, cyan, dpF(2), cutBr = dpF(16))
             )
             btn.imageTintList = ColorStateList(
                 arrayOf(intArrayOf(android.R.attr.state_pressed), intArrayOf()),
-                intArrayOf(color(R.color.cp_on_yellow), color(R.color.cp_cyan))
+                intArrayOf(colorCompat(R.color.cp_on_yellow), cyan)
             )
             btn.isClickable = true
             btn.setOnTouchListener(rotateTouchListener)
@@ -441,23 +428,19 @@ class CtrlActivity : AppCompatActivity() {
 
     private fun setupSpeed() {
         binding.sliderSpeed.setListener { value, fromUser ->
-            if (fromUser) {
-                viewModel.onSpeedChanged(value)
-            }
+            if (fromUser) viewModel.onSpeedChanged(value)
         }
     }
 
     // ---------- actions ----------
     private fun setupActions() {
         bindAction(binding.btnLight, R.drawable.ic_light, "车灯 关")
-        binding.btnLight.root.setOnClickListener {
-            viewModel.onToggleLight()
-        }
+        binding.btnLight.root.setOnClickListener { viewModel.onToggleLight() }
 
         bindAction(binding.btnHorn, R.drawable.ic_buzzer, "鸣笛 按住")
         binding.btnHorn.root.background = CutShapeHelper.states(
-            actionBg(color(R.color.cp_panel)),
-            actionBg(color(R.color.cp_red))
+            actionBg(colorCompat(R.color.cp_panel)),
+            actionBg(colorCompat(R.color.cp_red))
         )
         binding.btnHorn.root.setOnTouchListener { _, e ->
             when (e.actionMasked) {
@@ -469,20 +452,20 @@ class CtrlActivity : AppCompatActivity() {
 
         bindAction(binding.btnSnapshot, R.drawable.ic_snapshot, "截图")
         binding.btnSnapshot.root.background = CutShapeHelper.states(
-            actionBg(color(R.color.cp_panel)),
+            actionBg(colorCompat(R.color.cp_panel)),
             actionBg(0xFF22222E.toInt())
         )
         binding.btnSnapshot.root.setOnClickListener { takeSnapshot() }
     }
 
-    private fun actionBg(fill: Int): Drawable {
-        return BottomEdgeCut(fill, color(R.color.cp_action_edge), dpF(2), dpF(15), dpF(14))
-    }
+    private fun actionBg(fill: Int): Drawable = CutShapeHelper.bottomEdgeCut(
+        fill, colorCompat(R.color.cp_action_edge), dpF(2), dpF(15), dpF(14)
+    )
 
     private fun bindAction(item: ItemCyberActionBinding, icon: Int, text: String) {
         item.actionIcon.setImageResource(icon)
         item.actionText.text = text
-        setActionColors(item, color(R.color.cp_text_dim), false)
+        setActionColors(item, colorCompat(R.color.cp_text_dim), false)
     }
 
     private fun setActionColors(item: ItemCyberActionBinding, c: Int, bold: Boolean) {
@@ -493,10 +476,10 @@ class CtrlActivity : AppCompatActivity() {
 
     private fun renderLight(lightOn: Boolean) {
         binding.btnLight.actionText.text = if (lightOn) "车灯 开" else "车灯 关"
-        binding.btnLight.root.background = actionBg(color(if (lightOn) R.color.cp_yellow else R.color.cp_panel))
+        binding.btnLight.root.background = actionBg(colorCompat(if (lightOn) R.color.cp_yellow else R.color.cp_panel))
         setActionColors(
             binding.btnLight,
-            color(if (lightOn) R.color.cp_on_yellow else R.color.cp_text_dim),
+            colorCompat(if (lightOn) R.color.cp_on_yellow else R.color.cp_text_dim),
             lightOn
         )
     }
@@ -514,25 +497,26 @@ class CtrlActivity : AppCompatActivity() {
         } else {
             null
         }
-        if (frame == null) {
-            Toast.makeText(this, "暂无视频画面，无法截图", Toast.LENGTH_SHORT).show()
-            return
+
+        when (saveSnapshotUseCase(frame)) {
+            SnapshotResult.NO_FRAME -> {
+                Toast.makeText(this, "暂无视频画面，无法截图", Toast.LENGTH_SHORT).show()
+            }
+            SnapshotResult.NEED_STORAGE_PERMISSION -> {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    REQ_STORAGE
+                )
+                Toast.makeText(this, "需要存储权限，授权后请再点一次截图", Toast.LENGTH_SHORT).show()
+            }
+            SnapshotResult.SAVED -> {
+                Toast.makeText(this, "已保存到相册", Toast.LENGTH_SHORT).show()
+            }
+            SnapshotResult.FAILED -> {
+                Toast.makeText(this, "截图保存失败", Toast.LENGTH_SHORT).show()
+            }
         }
-        if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                REQ_STORAGE
-            )
-            Toast.makeText(this, "需要存储权限，授权后请再点一次截图", Toast.LENGTH_SHORT).show()
-            return
-        }
-        val saved = GallerySaver.save(this, frame)
-        Toast.makeText(this, if (saved != null) "已保存到相册" else "截图保存失败", Toast.LENGTH_SHORT).show()
     }
 
     // ---------- lifecycle ----------
@@ -566,102 +550,5 @@ class CtrlActivity : AppCompatActivity() {
     override fun onDestroy() {
         uiHandler.removeCallbacksAndMessages(null)
         super.onDestroy()
-    }
-
-    // ---------- helpers ----------
-    private fun color(res: Int): Int = ContextCompat.getColor(this, res)
-
-    private fun dp(value: Int): Int {
-        return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, value.toFloat(), resources.displayMetrics
-        ).roundToInt()
-    }
-
-    private fun dpF(value: Int): Float = dp(value).toFloat()
-
-    private fun sp(value: Int): Int {
-        return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_SP, value.toFloat(), resources.displayMetrics
-        ).roundToInt()
-    }
-
-    /** Covers the top-right triangle with page bg to fake a TR cut over the video surface. */
-    private class CornerMask(c: Int, private val cut: Float) : Drawable() {
-        private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = c }
-
-        override fun draw(c: Canvas) {
-            val path = Path()
-            val r = bounds.right.toFloat()
-            val t = bounds.top.toFloat()
-            path.moveTo(r - cut, t)
-            path.lineTo(r, t)
-            path.lineTo(r, t + cut)
-            path.close()
-            c.drawPath(path, paint)
-        }
-
-        override fun setAlpha(a: Int) = Unit
-        override fun setColorFilter(f: ColorFilter?) = Unit
-
-        @Deprecated("Deprecated in Java")
-        override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
-    }
-
-    /** Telemetry cell: panel fill + 2dp cyan top edge. */
-    private class TopBarPanel(f: Int, b: Int, private val h: Float) : Drawable() {
-        private val fill = Paint().apply { color = f }
-        private val bar = Paint().apply { color = b }
-
-        override fun draw(c: Canvas) {
-            c.drawRect(bounds, fill)
-            c.drawRect(
-                bounds.left.toFloat(),
-                bounds.top.toFloat(),
-                bounds.right.toFloat(),
-                bounds.top + h,
-                bar
-            )
-        }
-
-        override fun setAlpha(a: Int) = Unit
-        override fun setColorFilter(f: ColorFilter?) = Unit
-
-        @Deprecated("Deprecated in Java")
-        override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
-    }
-
-    /** Action key: fill, BR cut, 2dp bottom edge (#333). */
-    private class BottomEdgeCut(
-        f: Int,
-        e: Int,
-        private val h: Float,
-        private val cutW: Float,
-        private val cutH: Float
-    ) : Drawable() {
-        private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = f }
-        private val edge = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = e }
-
-        override fun draw(c: Canvas) {
-            val l = bounds.left.toFloat()
-            val t = bounds.top.toFloat()
-            val r = bounds.right.toFloat()
-            val b = bounds.bottom.toFloat()
-            val p = Path().apply {
-                moveTo(l, t)
-                lineTo(r, t)
-                lineTo(r, b - cutH)
-                lineTo(r - cutW, b)
-                lineTo(l, b)
-                close()
-            }
-            c.drawPath(p, fill)
-            c.drawRect(l, b - h, r - cutW, b, edge)
-        }
-
-        override fun setAlpha(a: Int) = Unit
-        override fun setColorFilter(f: ColorFilter?) = Unit
-
-        @Deprecated("Deprecated in Java")
-        override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
     }
 }

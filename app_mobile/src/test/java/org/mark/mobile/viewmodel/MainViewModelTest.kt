@@ -10,22 +10,30 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mark.lib_unit_socket.ClientMessageCallback
-import org.mark.mobile.repository.IMainRepository
+import org.mark.mobile.FakeCarControlRepository
+import org.mark.mobile.FakeCarPrefsRepository
+import org.mark.mobile.FakeUiScheduler
 
 class MainViewModelTest {
 
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
-    private lateinit var fakeRepo: FakeMainRepository
+    private lateinit var fakeControlRepo: FakeCarControlRepository
+    private lateinit var fakePrefsRepo: FakeCarPrefsRepository
     private lateinit var fakeScheduler: FakeUiScheduler
     private lateinit var viewModel: MainViewModel
 
     @Before
     fun setUp() {
-        fakeRepo = FakeMainRepository()
+        fakeControlRepo = FakeCarControlRepository().apply {
+            connected = false
+            host = null
+            port = 0
+        }
+        fakePrefsRepo = FakeCarPrefsRepository()
         fakeScheduler = FakeUiScheduler()
-        viewModel = MainViewModel(fakeRepo, fakeScheduler)
+        viewModel = MainViewModel(fakeControlRepo, fakePrefsRepo, scheduler = fakeScheduler)
     }
 
     @Test
@@ -44,7 +52,6 @@ class MainViewModelTest {
         assertTrue(state.highlightHostError)
         assertEquals(ConnectStatus.IDLE, state.status)
 
-        // Typing clears error
         viewModel.onHostTextChanged()
         assertFalse(viewModel.uiState.value!!.hasInputError)
     }
@@ -62,16 +69,16 @@ class MainViewModelTest {
     fun `connect success transitions to ONLINE and navigates after delay`() {
         viewModel.attemptConnect("192.168.1.20", "8010")
         assertEquals(ConnectStatus.CONNECTING, viewModel.uiState.value!!.status)
-        assertEquals("192.168.1.20", fakeRepo.lastConnectedHost)
-        assertEquals(8010, fakeRepo.lastConnectedPort)
+        assertEquals("192.168.1.20", fakeControlRepo.host)
+        assertEquals(8010, fakeControlRepo.port)
 
         // First NO_CONNECT from previous stop() is ignored while CONNECTING
-        fakeRepo.emitStatus(ClientMessageCallback.Status.NO_CONNECT)
+        fakeControlRepo.emitStatus(ClientMessageCallback.Status.NO_CONNECT)
         assertEquals(ConnectStatus.CONNECTING, viewModel.uiState.value!!.status)
 
         // Connected
-        fakeRepo.connected = true
-        fakeRepo.emitStatus(ClientMessageCallback.Status.CONNECTED)
+        fakeControlRepo.connected = true
+        fakeControlRepo.emitStatus(ClientMessageCallback.Status.CONNECTED)
         assertEquals(ConnectStatus.ONLINE, viewModel.uiState.value!!.status)
         assertNull(viewModel.navigateToCtrl.value)
 
@@ -80,18 +87,15 @@ class MainViewModelTest {
         val navEvent = viewModel.navigateToCtrl.value
         assertNotNull(navEvent)
         assertEquals(Pair("192.168.1.20", 8010), navEvent!!.getContentIfNotHandled())
-        // Event is single-shot
         assertNull(navEvent.getContentIfNotHandled())
     }
 
     @Test
     fun `connection timeout failure sets REFUSED with isTimeoutError true`() {
         viewModel.attemptConnect("192.168.1.20", "8010")
-        // Initial stop() NO_CONNECT
-        fakeRepo.emitStatus(ClientMessageCallback.Status.NO_CONNECT)
+        fakeControlRepo.emitStatus(ClientMessageCallback.Status.NO_CONNECT)
 
-        // Socket exception with timeout message
-        fakeRepo.emitException(Exception("failed to connect: ETIMEDOUT (Connection timed out)"))
+        fakeControlRepo.emitException(Exception("failed to connect: ETIMEDOUT (Connection timed out)"))
         val state = viewModel.uiState.value!!
         assertEquals(ConnectStatus.REFUSED, state.status)
         assertTrue(state.isTimeoutError)
@@ -100,9 +104,9 @@ class MainViewModelTest {
     @Test
     fun `connection refused sets REFUSED with isTimeoutError false`() {
         viewModel.attemptConnect("192.168.1.20", "8010")
-        fakeRepo.emitStatus(ClientMessageCallback.Status.NO_CONNECT)
+        fakeControlRepo.emitStatus(ClientMessageCallback.Status.NO_CONNECT)
 
-        fakeRepo.emitException(Exception("Connection refused"))
+        fakeControlRepo.emitException(Exception("Connection refused"))
         val state = viewModel.uiState.value!!
         assertEquals(ConnectStatus.REFUSED, state.status)
         assertFalse(state.isTimeoutError)
@@ -111,75 +115,7 @@ class MainViewModelTest {
     @Test
     fun `onConnectionRefusedExtra disconnects and shows REFUSED`() {
         viewModel.onConnectionRefusedExtra()
-        assertTrue(fakeRepo.disconnectCalled)
+        assertTrue(fakeControlRepo.disconnectCalled)
         assertEquals(ConnectStatus.REFUSED, viewModel.uiState.value!!.status)
-    }
-
-    private class FakeUiScheduler : UiScheduler {
-        private val delayedTasks = mutableListOf<() -> Unit>()
-
-        override fun runOnUi(block: () -> Unit) {
-            block()
-        }
-
-        override fun postDelayed(delayMillis: Long, block: () -> Unit) {
-            delayedTasks.add(block)
-        }
-
-        override fun cancelAll() {
-            delayedTasks.clear()
-        }
-
-        fun runPendingDelayed() {
-            val copy = delayedTasks.toList()
-            delayedTasks.clear()
-            copy.forEach { it.invoke() }
-        }
-    }
-
-    private class FakeMainRepository : IMainRepository {
-        var callback: ClientMessageCallback? = null
-        var lastConnectedHost: String? = null
-        var lastConnectedPort: Int? = null
-        var connected: Boolean = false
-        var disconnectCalled: Boolean = false
-
-        override fun getRecentAddresses(maxCount: Int): List<String> {
-            return listOf("192.168.1.100", "192.168.1.101")
-        }
-
-        override fun getInitialHost(): String? = "192.168.1.100"
-
-        override fun getInitialPort(): String? = "8010"
-
-        override fun connect(host: String, port: Int) {
-            lastConnectedHost = host
-            lastConnectedPort = port
-        }
-
-        override fun disconnect() {
-            disconnectCalled = true
-            connected = false
-        }
-
-        override fun isConnected(): Boolean = connected
-
-        override fun addCallback(callback: ClientMessageCallback) {
-            this.callback = callback
-        }
-
-        override fun removeCallback(callback: ClientMessageCallback) {
-            if (this.callback === callback) {
-                this.callback = null
-            }
-        }
-
-        fun emitStatus(status: ClientMessageCallback.Status) {
-            callback?.onStatusChange(status)
-        }
-
-        fun emitException(e: Exception) {
-            callback?.onExceptionToReOpen(e)
-        }
     }
 }

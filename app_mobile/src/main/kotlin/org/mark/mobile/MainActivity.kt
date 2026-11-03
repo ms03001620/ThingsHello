@@ -15,20 +15,22 @@ import android.view.animation.LinearInterpolator
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import org.mark.mobile.databinding.ActivityMainBinding
-import org.mark.mobile.repository.MainRepository
+import org.mark.mobile.repository.CarControlRepository
+import org.mark.mobile.repository.CarPrefsRepository
 import org.mark.mobile.ui.cyber.CutShapeHelper
 import org.mark.mobile.ui.cyber.ScanlineDrawable
 import org.mark.mobile.utils.PreferUtils
+import org.mark.mobile.utils.colorCompat
+import org.mark.mobile.utils.dp
+import org.mark.mobile.utils.dpF
 import org.mark.mobile.utils.hide
 import org.mark.mobile.utils.show
 import org.mark.mobile.viewmodel.ConnectStatus
 import org.mark.mobile.viewmodel.MainUiState
 import org.mark.mobile.viewmodel.MainViewModel
-import kotlin.math.roundToInt
 
 /**
  * Cyberpunk 2077 Connect screen (MVVM View Layer).
@@ -53,21 +55,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        window.statusBarColor = ContextCompat.getColor(this, R.color.cp_bg)
+        window.statusBarColor = colorCompat(R.color.cp_bg)
         setContentView(binding.root)
 
-        val repository = MainRepository(PreferUtils.getInstance(this))
-        viewModel = ViewModelProvider(this, MainViewModel.Factory(repository))
+        val controlRepository = CarControlRepository()
+        val prefsRepository = CarPrefsRepository(PreferUtils.getInstance(this))
+        viewModel = ViewModelProvider(this, MainViewModel.Factory(controlRepository, prefsRepository))
             .get(MainViewModel::class.java)
 
         barWidthPx = dp(3)
-        cutM = dp(14).toFloat()
-        cutL = dp(22).toFloat()
-        cutInputBr = dp(14).toFloat()
+        cutM = dpF(14)
+        cutL = dpF(22)
+        cutInputBr = dpF(14)
 
-        binding.scanlineOverlay.background = ScanlineDrawable(
-            resources, ContextCompat.getColor(this, R.color.scanline)
-        )
+        binding.scanlineOverlay.background = ScanlineDrawable(resources, colorCompat(R.color.scanline))
         binding.scanlineOverlay.alpha = 1f
 
         applyCyberChrome()
@@ -141,34 +142,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyCyberChrome() {
-        val panel = ContextCompat.getColor(this, R.color.cp_panel)
-        val yellow = ContextCompat.getColor(this, R.color.cp_yellow)
-        val cyan = ContextCompat.getColor(this, R.color.cp_cyan)
-        val red = ContextCompat.getColor(this, R.color.cp_red)
-        val cyan07 = ContextCompat.getColor(this, R.color.cyan_07)
-        val cyan12 = ContextCompat.getColor(this, R.color.cyan_12)
-        val red13 = ContextCompat.getColor(this, R.color.red_13)
+        val panel = colorCompat(R.color.cp_panel)
+        val yellow = colorCompat(R.color.cp_yellow)
+        val cyan = colorCompat(R.color.cp_cyan)
+        val red = colorCompat(R.color.cp_red)
 
-        CutShapeHelper.apply(binding.cardCar, cyan07, 0f, dp(28).toFloat(), 0f, dp(27).toFloat())
+        CutShapeHelper.apply(binding.cardCar, colorCompat(R.color.cyan_07), cutTr = dpF(28), cutBl = dpF(27))
 
-        CutShapeHelper.applyWithLeftBar(binding.wrapIp, panel, yellow, barWidthPx, 0f, 0f, cutInputBr, 0f)
-        CutShapeHelper.applyWithLeftBar(binding.wrapPort, panel, yellow, barWidthPx, 0f, 0f, cutInputBr, 0f)
+        CutShapeHelper.applyWithLeftBar(binding.wrapIp, panel, yellow, barWidthPx, cutBr = cutInputBr)
+        CutShapeHelper.applyWithLeftBar(binding.wrapPort, panel, yellow, barWidthPx, cutBr = cutInputBr)
 
-        CutShapeHelper.applyWithLeftBar(binding.cardStatusOnline, cyan12, cyan, barWidthPx, 0f, 0f, 0f, cutM)
-        CutShapeHelper.applyWithLeftBar(binding.cardStatusRefused, red13, red, barWidthPx, 0f, 0f, 0f, cutM)
-
-        CutShapeHelper.applyButton(
-            binding.btnConnect, yellow,
-            ContextCompat.getColor(this, R.color.yellow_30), 0f, cutL, 0f, cutL
+        CutShapeHelper.applyWithLeftBar(
+            binding.cardStatusOnline, colorCompat(R.color.cyan_12), cyan, barWidthPx, cutBl = cutM
+        )
+        CutShapeHelper.applyWithLeftBar(
+            binding.cardStatusRefused, colorCompat(R.color.red_13), red, barWidthPx, cutBl = cutM
         )
 
         CutShapeHelper.applyButton(
-            binding.btnRetry, red,
-            Color.WHITE, 0f, 0f, dp(11).toFloat(), 0f
+            binding.btnConnect, yellow, colorCompat(R.color.yellow_30), cutTr = cutL, cutBl = cutL
         )
+        CutShapeHelper.applyButton(binding.btnRetry, red, Color.WHITE, cutBr = dpF(11))
 
+        @Suppress("DEPRECATION")
         binding.progressConnect.indeterminateDrawable?.setColorFilter(
-            ContextCompat.getColor(this, R.color.cp_on_yellow), PorterDuff.Mode.SRC_IN
+            colorCompat(R.color.cp_on_yellow), PorterDuff.Mode.SRC_IN
         )
 
         startBeamAnimation()
@@ -199,10 +197,10 @@ class MainActivity : AppCompatActivity() {
     private fun setupInputs() {
         val focusListener = View.OnFocusChangeListener { v, hasFocus ->
             val wrap = if (v === binding.editHost) binding.wrapIp else binding.wrapPort
-            val yellow = ContextCompat.getColor(this, R.color.cp_yellow)
-            val panel = ContextCompat.getColor(this, R.color.cp_panel)
             val width = if (hasFocus) dp(4) else barWidthPx
-            CutShapeHelper.applyWithLeftBar(wrap, panel, yellow, width, 0f, 0f, cutInputBr, 0f)
+            CutShapeHelper.applyWithLeftBar(
+                wrap, colorCompat(R.color.cp_panel), colorCompat(R.color.cp_yellow), width, cutBr = cutInputBr
+            )
         }
         binding.editHost.onFocusChangeListener = focusListener
         binding.editPort.onFocusChangeListener = focusListener
@@ -221,8 +219,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnConnect.setOnClickListener {
             val host = binding.editHost.text?.toString().orEmpty()
             val port = binding.editPort.text?.toString().orEmpty()
-            val attempted = viewModel.onConnectClicked(host, port)
-            if (attempted) {
+            if (viewModel.onConnectClicked(host, port)) {
                 hideKeyboard()
             }
         }
@@ -231,16 +228,16 @@ class MainActivity : AppCompatActivity() {
             if (viewModel.uiState.value?.status == ConnectStatus.CONNECTING) {
                 return@setOnTouchListener false
             }
-            val yellow = ContextCompat.getColor(this, R.color.cp_yellow)
-            val pressed = ContextCompat.getColor(this, R.color.cp_yellow_pressed)
-            val strokeColor = ContextCompat.getColor(this, R.color.yellow_30)
+            val yellow = colorCompat(R.color.cp_yellow)
+            val pressed = colorCompat(R.color.cp_yellow_pressed)
+            val strokeColor = colorCompat(R.color.yellow_30)
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    CutShapeHelper.applyButton(binding.btnConnect, pressed, strokeColor, 0f, cutL, 0f, cutL)
-                    binding.btnConnect.translationY = dp(1).toFloat()
+                    CutShapeHelper.applyButton(binding.btnConnect, pressed, strokeColor, cutTr = cutL, cutBl = cutL)
+                    binding.btnConnect.translationY = dpF(1)
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    CutShapeHelper.applyButton(binding.btnConnect, yellow, strokeColor, 0f, cutL, 0f, cutL)
+                    CutShapeHelper.applyButton(binding.btnConnect, yellow, strokeColor, cutTr = cutL, cutBl = cutL)
                     binding.btnConnect.translationY = 0f
                 }
             }
@@ -260,7 +257,7 @@ class MainActivity : AppCompatActivity() {
         if (addresses.isEmpty()) {
             val empty = TextView(this).apply {
                 text = "—"
-                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.cp_text_dim))
+                setTextColor(colorCompat(R.color.cp_text_dim))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
                 alpha = 0.5f
             }
@@ -271,7 +268,7 @@ class MainActivity : AppCompatActivity() {
         for (host in addresses) {
             val row = TextView(this).apply {
                 text = host
-                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.cp_text_dim))
+                setTextColor(colorCompat(R.color.cp_text_dim))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
                 setPadding(0, dp(3), 0, dp(3))
                 setOnClickListener {
@@ -288,9 +285,13 @@ class MainActivity : AppCompatActivity() {
             binding.textIpError.setText(R.string.cp_input_error)
             binding.textIpError.show()
             if (state.highlightHostError) {
-                val red = ContextCompat.getColor(this, R.color.cp_red)
-                val panel = ContextCompat.getColor(this, R.color.cp_panel)
-                CutShapeHelper.applyWithLeftBar(binding.wrapIp, panel, red, barWidthPx, 0f, 0f, cutInputBr, 0f)
+                CutShapeHelper.applyWithLeftBar(
+                    binding.wrapIp,
+                    colorCompat(R.color.cp_panel),
+                    colorCompat(R.color.cp_red),
+                    barWidthPx,
+                    cutBr = cutInputBr
+                )
             }
         } else {
             binding.textIpError.hide()
@@ -303,14 +304,15 @@ class MainActivity : AppCompatActivity() {
         binding.btnConnect.alpha = 1f
         binding.textConnect.alpha = 1f
 
-        val yellow = ContextCompat.getColor(this, R.color.cp_yellow)
-
         when (state.status) {
             ConnectStatus.IDLE -> {
                 binding.textConnect.setText(R.string.cp_connect)
                 CutShapeHelper.applyButton(
-                    binding.btnConnect, yellow,
-                    ContextCompat.getColor(this, R.color.yellow_30), 0f, cutL, 0f, cutL
+                    binding.btnConnect,
+                    colorCompat(R.color.cp_yellow),
+                    colorCompat(R.color.yellow_30),
+                    cutTr = cutL,
+                    cutBl = cutL
                 )
             }
             ConnectStatus.CONNECTING -> {
@@ -330,11 +332,9 @@ class MainActivity : AppCompatActivity() {
             }
             ConnectStatus.REFUSED -> {
                 binding.textConnect.setText(R.string.cp_connect)
-                if (state.isTimeoutError) {
-                    binding.textStatusRefusedDesc.setText(R.string.cp_status_timeout_desc)
-                } else {
-                    binding.textStatusRefusedDesc.setText(R.string.cp_status_refused_desc)
-                }
+                binding.textStatusRefusedDesc.setText(
+                    if (state.isTimeoutError) R.string.cp_status_timeout_desc else R.string.cp_status_refused_desc
+                )
                 binding.cardStatusRefused.show()
             }
         }
@@ -357,12 +357,6 @@ class MainActivity : AppCompatActivity() {
         val focus = currentFocus ?: return
         val imm = getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager
         imm?.hideSoftInputFromWindow(focus.windowToken, 0)
-    }
-
-    private fun dp(value: Int): Int {
-        return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, value.toFloat(), resources.displayMetrics
-        ).roundToInt()
     }
 
     override fun onDestroy() {

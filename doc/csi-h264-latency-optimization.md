@@ -53,7 +53,7 @@
 
 #### （1）手机端：轻量分层倍速追帧 + 回差防抖
 
-位置：`app_mobile/src/main/kotlin/org/mark/mobile/preview/H264Activity.kt`、`viewmodel/H264ViewModel.kt`
+位置：`app_mobile/src/main/kotlin/org/mark/mobile/H264Activity.kt`、`usecase/CalculateCatchUpSpeedUseCase.kt`
 
 - **原理**：排线预览流仅含单路 H.264 视频轨（无音频变调问题），且在 `shouldUseLivePlaybackSpeedControl == false` 时，`player.setPlaybackSpeed(float)` 可直接调整 `DefaultMediaClock` 推进速率，主动消耗 `SampleQueue` 积压。
 - **策略**：在 `STATE_READY` 状态下每 `200 ms` 采样 `player.getTotalBufferedDuration()`，按阶梯控速并设置 `45～75 ms` 回差带防止频繁切换或抽空缓冲触发重缓冲（`STATE_BUFFERING`）：

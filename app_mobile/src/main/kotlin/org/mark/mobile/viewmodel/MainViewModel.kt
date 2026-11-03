@@ -1,64 +1,24 @@
 package org.mark.mobile.viewmodel
 
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import org.mark.lib_unit_socket.ClientMessageCallback
 import org.mark.lib_unit_socket.bean.JsonReceiver
-import org.mark.mobile.repository.IMainRepository
+import org.mark.mobile.repository.ICarControlRepository
+import org.mark.mobile.repository.ICarPrefsRepository
+import org.mark.mobile.usecase.ConnectCarUseCase
+import org.mark.mobile.utils.AndroidUiScheduler
+import org.mark.mobile.utils.UiScheduler
 
 /**
- * 主线程调度器接口，默认使用 Android Main Looper，单元测试可注入同步实现
- */
-interface UiScheduler {
-    fun runOnUi(block: () -> Unit)
-    fun postDelayed(delayMillis: Long, block: () -> Unit)
-    fun scheduleCancellable(delayMillis: Long, block: () -> Unit): () -> Unit {
-        var cancelled = false
-        postDelayed(delayMillis) {
-            if (!cancelled) {
-                block()
-            }
-        }
-        return { cancelled = true }
-    }
-    fun cancelAll()
-}
-
-class AndroidUiScheduler : UiScheduler {
-    private val handler = Handler(Looper.getMainLooper())
-
-    override fun runOnUi(block: () -> Unit) {
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            block()
-        } else {
-            handler.post(block)
-        }
-    }
-
-    override fun postDelayed(delayMillis: Long, block: () -> Unit) {
-        handler.postDelayed(block, delayMillis)
-    }
-
-    override fun scheduleCancellable(delayMillis: Long, block: () -> Unit): () -> Unit {
-        val runnable = Runnable { block() }
-        handler.postDelayed(runnable, delayMillis)
-        return { handler.removeCallbacks(runnable) }
-    }
-
-    override fun cancelAll() {
-        handler.removeCallbacksAndMessages(null)
-    }
-}
-
-/**
- * MainActivity 对应的 MVVM ViewModel，负责管理连接状态机、输入校验、最近地址加载与导航事件
+ * MainActivity 对应的 MVVM ViewModel，负责管理连接状态机、最近地址加载与导航事件
  */
 class MainViewModel(
-    private val repository: IMainRepository,
+    private val controlRepository: ICarControlRepository,
+    private val prefsRepository: ICarPrefsRepository,
+    private val connectCarUseCase: ConnectCarUseCase = ConnectCarUseCase(controlRepository),
     private val scheduler: UiScheduler = AndroidUiScheduler()
 ) : ViewModel() {
 
@@ -114,8 +74,8 @@ class MainViewModel(
     }
 
     init {
-        repository.addCallback(clientMessageCallback)
-        initialInput.value = Pair(repository.getInitialHost(), repository.getInitialPort())
+        controlRepository.addCallback(clientMessageCallback)
+        initialInput.value = Pair(prefsRepository.getInitialHost(), prefsRepository.getInitialPort())
         refreshRecentAddresses()
     }
 
@@ -124,7 +84,7 @@ class MainViewModel(
     }
 
     fun refreshRecentAddresses() {
-        recentAddresses.value = repository.getRecentAddresses()
+        recentAddresses.value = prefsRepository.getRecentAddresses()
     }
 
     fun onHostTextChanged() {
@@ -153,51 +113,42 @@ class MainViewModel(
     }
 
     fun attemptConnect(hostInput: String, portInput: String) {
-        val host = hostInput.trim()
-        val portText = portInput.trim()
-
-        if (host.isEmpty() || portText.isEmpty()) {
-            val current = uiState.value ?: MainUiState()
-            uiState.value = current.copy(
-                hasInputError = true,
-                highlightHostError = true
+        val trimmedHost = hostInput.trim()
+        val trimmedPort = portInput.trim().toIntOrNull()
+        if (trimmedHost.isNotEmpty() && trimmedPort != null && trimmedPort in 1..65535) {
+            // 在 connect() 触发任何同步回调前先准备好连接上下文状态
+            currentHost = trimmedHost
+            currentPort = trimmedPort
+            userCancelled = false
+            connectRequested = true
+            ignoreNextNoConnect = true
+            lastErrorMessage = ""
+            uiState.value = MainUiState(
+                status = ConnectStatus.CONNECTING,
+                isTimeoutError = false,
+                hasInputError = false,
+                highlightHostError = false,
+                connectedPort = portInput.trim()
             )
-            return
         }
 
-        val port = portText.toIntOrNull()
-        if (port == null || port <= 0 || port > 65535) {
-            val current = uiState.value ?: MainUiState()
-            uiState.value = current.copy(
-                hasInputError = true,
-                highlightHostError = false
-            )
-            return
+        when (val result = connectCarUseCase(hostInput, portInput)) {
+            is ConnectCarUseCase.Result.InvalidInput -> {
+                val current = uiState.value ?: MainUiState()
+                uiState.value = current.copy(
+                    hasInputError = true,
+                    highlightHostError = result.highlightHost
+                )
+            }
+            is ConnectCarUseCase.Result.Started -> Unit
         }
-
-        currentHost = host
-        currentPort = port
-        userCancelled = false
-        connectRequested = true
-        ignoreNextNoConnect = true
-        lastErrorMessage = ""
-
-        uiState.value = MainUiState(
-            status = ConnectStatus.CONNECTING,
-            isTimeoutError = false,
-            hasInputError = false,
-            highlightHostError = false,
-            connectedPort = portText
-        )
-
-        repository.connect(host, port)
     }
 
     fun onConnectionRefusedExtra() {
         connectRequested = false
         ignoreNextNoConnect = false
         lastErrorMessage = ""
-        repository.disconnect()
+        controlRepository.disconnect()
         updateStatus(ConnectStatus.REFUSED)
     }
 
@@ -208,7 +159,7 @@ class MainViewModel(
             val current = uiState.value ?: MainUiState()
             uiState.value = current.copy(
                 status = target,
-                isTimeoutError = isTimeoutError(lastErrorMessage),
+                isTimeoutError = connectCarUseCase.isTimeoutError(lastErrorMessage),
                 connectedPort = portText
             )
         } catch (_: IllegalArgumentException) {
@@ -217,7 +168,7 @@ class MainViewModel(
 
     fun onActivityFinishing() {
         userCancelled = true
-        repository.disconnect()
+        controlRepository.disconnect()
     }
 
     private fun handleSocketStatus(status: ClientMessageCallback.Status) {
@@ -232,7 +183,7 @@ class MainViewModel(
                 ignoreNextNoConnect = false
                 updateStatus(ConnectStatus.ONLINE)
                 scheduler.postDelayed(NAVIGATE_DELAY_MS) {
-                    if (uiState.value?.status == ConnectStatus.ONLINE && repository.isConnected()) {
+                    if (uiState.value?.status == ConnectStatus.ONLINE && controlRepository.isConnected()) {
                         navigateToCtrl.value = Event(Pair(currentHost, currentPort))
                     }
                 }
@@ -262,7 +213,7 @@ class MainViewModel(
         val current = uiState.value ?: MainUiState()
         uiState.value = current.copy(
             status = newStatus,
-            isTimeoutError = isTimeoutError(lastErrorMessage)
+            isTimeoutError = connectCarUseCase.isTimeoutError(lastErrorMessage)
         )
     }
 
@@ -272,27 +223,20 @@ class MainViewModel(
         navigateToCtrl.value = Event(Pair(host, port))
     }
 
-    internal fun isTimeoutError(msg: String?): Boolean {
-        if (msg.isNullOrEmpty()) return false
-        val lower = msg.lowercase()
-        return lower.contains("timed out")
-            || lower.contains("timeout")
-            || lower.contains("enotunreach")
-            || lower.contains("network is unreachable")
-            || lower.contains("no route")
-    }
-
     override fun onCleared() {
         scheduler.cancelAll()
-        repository.removeCallback(clientMessageCallback)
+        controlRepository.removeCallback(clientMessageCallback)
         super.onCleared()
     }
 
-    class Factory(private val repository: IMainRepository) : ViewModelProvider.Factory {
+    class Factory(
+        private val controlRepository: ICarControlRepository,
+        private val prefsRepository: ICarPrefsRepository
+    ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-                return MainViewModel(repository) as T
+                return MainViewModel(controlRepository, prefsRepository) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

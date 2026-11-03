@@ -1,5 +1,6 @@
 package org.mark.mobile.repository
 
+import android.os.SystemClock
 import android.util.Log
 import org.mark.lib_unit_socket.ClientMessageCallback
 import org.mark.lib_unit_socket.bean.BuzzerCmd
@@ -10,27 +11,28 @@ import org.mark.lib_unit_socket.bean.WheelCmd
 import org.mark.lib_unit_socket.bean.WheelRotateCmd
 import org.mark.mobile.connect.ConnectedManager
 import org.mark.mobile.ctrl.Throttle
-import org.mark.mobile.utils.PreferUtils
+import org.mark.mobile.ctrl.WheelSpeed
+import org.mark.mobile.utils.AndroidUiScheduler
+import org.mark.mobile.utils.UiScheduler
 
 /**
- * 遥控页面数据仓库接口，隔离连接状态、控制命令发送、节流器与偏好配置，便于单元测试
+ * 小车控制与 TCP 连接领域仓库接口，统一服务连接页、遥控页与全屏预览页
  */
-interface ICtrlRepository {
+interface ICarControlRepository {
     fun isConnected(): Boolean
     fun getConnectedHost(): String?
     fun getConnectedPort(): Int
 
+    fun connect(host: String, port: Int)
+    fun disconnect()
+
     fun addCallback(callback: ClientMessageCallback)
     fun removeCallback(callback: ClientMessageCallback)
-
-    fun getSavedSpeed(defaultSpeed: Int): Int
-    fun saveSpeed(speed: Int)
-    fun saveRecentAddress(host: String, port: Int)
 
     fun submitServo(progress: Int)
     fun cancelServo()
 
-    fun submitWheel(left: Int, right: Int)
+    fun submitWheel(speed: WheelSpeed)
     fun stopWheelNow()
 
     fun sendWheelRotate(rotate: WheelRotateCmd.Rotate, speed: Int)
@@ -39,27 +41,26 @@ interface ICtrlRepository {
 }
 
 /**
- * 默认实现，封装 [PreferUtils]、[ConnectedManager] 与 [Throttle]
+ * 默认实现，封装 [ConnectedManager] 与指令 [Throttle]
  */
-class CtrlRepository(
-    private val preferUtils: PreferUtils,
-    private val connectedManager: ConnectedManager = ConnectedManager.getInstance()
-) : ICtrlRepository {
+class CarControlRepository(
+    private val connectedManager: ConnectedManager = ConnectedManager,
+    scheduler: UiScheduler = AndroidUiScheduler(),
+    clock: () -> Long = SystemClock::uptimeMillis
+) : ICarControlRepository {
 
     companion object {
-        private const val TAG = "CtrlRepository"
+        private const val TAG = "CarControlRepo"
         private const val SEND_INTERVAL_MS = 50L
     }
 
-    private val servoThrottle = Throttle<Int>(SEND_INTERVAL_MS) { v ->
-        Log.d(TAG, "servo $v")
-        connectedManager.sendObject(CameraServoCmd(v), CmdConstant.CAMERA_SERVO)
+    private val servoThrottle = Throttle<Int>(SEND_INTERVAL_MS, scheduler, clock) { progress ->
+        Log.d(TAG, "servo $progress")
+        connectedManager.sendObject(CameraServoCmd(progress), CmdConstant.CAMERA_SERVO)
     }
 
-    private val wheelThrottle = Throttle<String>(SEND_INTERVAL_MS) { v ->
-        val lr = v.split(",")
-        val cmd = WheelCmd(lr[0].toInt(), lr[1].toInt())
-        connectedManager.sendObject(cmd, CmdConstant.WHEEL)
+    private val wheelThrottle = Throttle<WheelSpeed>(SEND_INTERVAL_MS, scheduler, clock) { speed ->
+        connectedManager.sendObject(WheelCmd(speed.left, speed.right), CmdConstant.WHEEL)
     }
 
     override fun isConnected(): Boolean = connectedManager.isConnected
@@ -68,24 +69,21 @@ class CtrlRepository(
 
     override fun getConnectedPort(): Int = connectedManager.connectedPort
 
+    override fun connect(host: String, port: Int) {
+        connectedManager.stop()
+        connectedManager.init(host, port)
+    }
+
+    override fun disconnect() {
+        connectedManager.stop()
+    }
+
     override fun addCallback(callback: ClientMessageCallback) {
         connectedManager.addCallback(callback)
     }
 
     override fun removeCallback(callback: ClientMessageCallback) {
         connectedManager.removeCallback(callback)
-    }
-
-    override fun getSavedSpeed(defaultSpeed: Int): Int = preferUtils.getSpeed(defaultSpeed)
-
-    override fun saveSpeed(speed: Int) {
-        preferUtils.saveSpeed(speed)
-    }
-
-    override fun saveRecentAddress(host: String, port: Int) {
-        preferUtils.add(host, port)
-        preferUtils.save(host, port)
-        Log.d(TAG, "recent saved $host:$port")
     }
 
     override fun submitServo(progress: Int) {
@@ -96,12 +94,12 @@ class CtrlRepository(
         servoThrottle.cancel()
     }
 
-    override fun submitWheel(left: Int, right: Int) {
-        wheelThrottle.submit("$left,$right")
+    override fun submitWheel(speed: WheelSpeed) {
+        wheelThrottle.submit(speed)
     }
 
     override fun stopWheelNow() {
-        wheelThrottle.sendNow("0,0")
+        wheelThrottle.sendNow(WheelSpeed(0, 0))
     }
 
     override fun sendWheelRotate(rotate: WheelRotateCmd.Rotate, speed: Int) {

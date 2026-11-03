@@ -4,7 +4,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import org.mark.lib_unit_socket.ClientMessageCallback
-import org.mark.mobile.repository.IH264Repository
+import org.mark.mobile.repository.ICarControlRepository
+import org.mark.mobile.usecase.CalculateCatchUpSpeedUseCase
+import org.mark.mobile.utils.AndroidUiScheduler
+import org.mark.mobile.utils.UiScheduler
 import java.util.Locale
 
 /**
@@ -12,12 +15,13 @@ import java.util.Locale
  * 车灯同步控制、TCP 链路断连监控、低延迟倍速追帧策略计算及遥测胶囊文案更新
  */
 class H264ViewModel(
-    private val repository: IH264Repository,
+    private val controlRepository: ICarControlRepository,
     val isDemo: Boolean = false,
     private val debugState: String? = null,
     initialLightOn: Boolean = false,
     servoPercent: Int = 50,
     speedLimit: Int = -1,
+    private val catchUpSpeedUseCase: CalculateCatchUpSpeedUseCase = CalculateCatchUpSpeedUseCase(),
     private val scheduler: UiScheduler = AndroidUiScheduler()
 ) : ViewModel() {
 
@@ -25,24 +29,6 @@ class H264ViewModel(
         const val HUD_AUTO_HIDE_MS = 4000L
         const val HINT_HIDE_DELAY_MS = 3000L
         const val LINK_WATCH_POLL_MS = 500L
-
-        /**
-         * 低延迟分层倍速追帧 + 45~75ms 回差防抖
-         */
-        fun computeCatchUpSpeed(
-            isReady: Boolean,
-            bufferedMs: Long,
-            currentAppliedSpeed: Float
-        ): Float {
-            if (!isReady) return 1.0f
-            return when {
-                bufferedMs > 350 -> 1.25f
-                bufferedMs > 140 -> 1.15f
-                bufferedMs > 75 -> 1.05f
-                bufferedMs > 45 -> if (currentAppliedSpeed > 1.0f) 1.05f else 1.0f
-                else -> 1.0f
-            }
-        }
     }
 
     val uiState = MutableLiveData(H264UiState())
@@ -103,7 +89,7 @@ class H264ViewModel(
         }
         uiState.value = initialState
 
-        repository.addCallback(clientMessageCallback)
+        controlRepository.addCallback(clientMessageCallback)
 
         cancelHideHintTask = scheduler.scheduleCancellable(HINT_HIDE_DELAY_MS) {
             val current = uiState.value ?: H264UiState()
@@ -121,12 +107,18 @@ class H264ViewModel(
         uiState.value = newState
     }
 
+    fun computeCatchUpSpeed(
+        isReady: Boolean,
+        bufferedMs: Long,
+        currentAppliedSpeed: Float
+    ): Float = catchUpSpeedUseCase(isReady, bufferedMs, currentAppliedSpeed)
+
     fun onToggleLight() {
         val current = uiState.value ?: H264UiState()
         val next = !current.isLightOn
         uiState.value = current.copy(isLightOn = next)
         if (!isDemo) {
-            repository.sendLight(next)
+            controlRepository.sendLight(next)
         }
         bumpHud()
     }
@@ -237,7 +229,7 @@ class H264ViewModel(
     }
 
     private fun scheduleLinkWatchTick() {
-        if (!isDemo && !repository.isConnected()) {
+        if (!isDemo && !controlRepository.isConnected()) {
             requestFinish()
             return
         }
@@ -266,12 +258,12 @@ class H264ViewModel(
         cancelHideHintTask?.invoke()
         cancelLinkWatchTask?.invoke()
         scheduler.cancelAll()
-        repository.removeCallback(clientMessageCallback)
+        controlRepository.removeCallback(clientMessageCallback)
         super.onCleared()
     }
 
     class Factory(
-        private val repository: IH264Repository,
+        private val controlRepository: ICarControlRepository,
         private val isDemo: Boolean,
         private val debugState: String?,
         private val initialLightOn: Boolean,
@@ -282,7 +274,7 @@ class H264ViewModel(
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(H264ViewModel::class.java)) {
                 return H264ViewModel(
-                    repository = repository,
+                    controlRepository = controlRepository,
                     isDemo = isDemo,
                     debugState = debugState,
                     initialLightOn = initialLightOn,

@@ -6,34 +6,37 @@ import androidx.lifecycle.ViewModelProvider
 import org.mark.lib_unit_socket.ClientMessageCallback
 import org.mark.lib_unit_socket.bean.WheelCmd
 import org.mark.lib_unit_socket.bean.WheelRotateCmd
-import org.mark.mobile.ctrl.SpeedMixer
-import org.mark.mobile.repository.ICtrlRepository
-import kotlin.math.roundToInt
+import org.mark.mobile.repository.ICarControlRepository
+import org.mark.mobile.repository.ICarPrefsRepository
+import org.mark.mobile.usecase.DriveJoystickUseCase
+import org.mark.mobile.usecase.HoldHornUseCase
+import org.mark.mobile.usecase.SaveRecentCarUseCase
+import org.mark.mobile.utils.AndroidUiScheduler
+import org.mark.mobile.utils.UiScheduler
 
 /**
- * CtrlActivity 对应的 MVVM ViewModel，负责管理连接监控、最近地址延迟保存、
- * 摇杆差速混控、云台/限速/车灯/鸣笛控制状态及遥测数据展示
+ * CtrlActivity 对应的 MVVM ViewModel，协同 UseCase 管理连接状态、云台/限速/车灯/鸣笛与遥测展示
  */
 class CtrlViewModel(
-    private val repository: ICtrlRepository,
+    private val controlRepository: ICarControlRepository,
+    private val prefsRepository: ICarPrefsRepository,
     val isDemo: Boolean = false,
-    private val scheduler: UiScheduler = AndroidUiScheduler()
+    private val scheduler: UiScheduler = AndroidUiScheduler(),
+    private val driveJoystickUseCase: DriveJoystickUseCase = DriveJoystickUseCase(controlRepository),
+    private val holdHornUseCase: HoldHornUseCase = HoldHornUseCase(controlRepository, scheduler),
+    private val saveRecentCarUseCase: SaveRecentCarUseCase = SaveRecentCarUseCase(
+        controlRepository,
+        prefsRepository,
+        scheduler
+    )
 ) : ViewModel() {
 
     companion object {
-        /** 小车会在约 500ms 后断开被拒绝的第二个控制端；存活超过此时间后再保存最近地址 */
-        const val SAVE_RECENT_DELAY_MS = 1000L
-        const val HORN_REPEAT_MS = 400L
         const val RSSI_WEAK = -75
-        private const val STICK_DEADZONE = 0.02f
     }
 
     val uiState = MutableLiveData(CtrlUiState())
     val returnToConnectRefused = MutableLiveData<Event<Unit>>()
-
-    private var recentSaved: Boolean = false
-    private var cancelSaveRecentTask: (() -> Unit)? = null
-    private var cancelHornTask: (() -> Unit)? = null
 
     @Volatile
     private var returning: Boolean = false
@@ -58,7 +61,7 @@ class CtrlViewModel(
     }
 
     init {
-        val rawSaved = repository.getSavedSpeed(WheelCmd.DEFAULT_SPEED)
+        val rawSaved = prefsRepository.getSavedSpeed(WheelCmd.DEFAULT_SPEED)
         val initialSpeed = if (rawSaved in 1..100) rawSaved else WheelCmd.DEFAULT_SPEED
         val (subtitle, connected) = resolveSubtitleAndStatus()
 
@@ -69,7 +72,7 @@ class CtrlViewModel(
         )
 
         // 先注册监听再检查连接状态，避免注册前发生的断连事件漏捕
-        repository.addCallback(clientMessageCallback)
+        controlRepository.addCallback(clientMessageCallback)
 
         if (isDemo) {
             applyDemoState()
@@ -81,7 +84,7 @@ class CtrlViewModel(
         uiState.value = newState
     }
 
-    fun getConnectedHost(): String? = repository.getConnectedHost()
+    fun getConnectedHost(): String? = controlRepository.getConnectedHost()
 
     private fun applyDemoState() {
         val (subtitle, connected) = resolveSubtitleAndStatus()
@@ -103,9 +106,9 @@ class CtrlViewModel(
     }
 
     private fun resolveSubtitleAndStatus(): Pair<String, Boolean> {
-        val host = if (isDemo) "192.168.8.190" else repository.getConnectedHost()
-        val port = if (isDemo) 8010 else repository.getConnectedPort()
-        val connected = isDemo || repository.isConnected()
+        val host = if (isDemo) "192.168.8.190" else controlRepository.getConnectedHost()
+        val port = if (isDemo) 8010 else controlRepository.getConnectedPort()
+        val connected = isDemo || controlRepository.isConnected()
         val addr = if (host.isNullOrEmpty()) {
             "--"
         } else {
@@ -128,7 +131,7 @@ class CtrlViewModel(
         val clamped = value.coerceIn(0, 100)
         val current = uiState.value ?: CtrlUiState()
         uiState.value = current.copy(servoPercent = clamped)
-        repository.submitServo(clamped)
+        controlRepository.submitServo(clamped)
     }
 
     fun onRecenterServo() {
@@ -140,37 +143,31 @@ class CtrlViewModel(
         val current = uiState.value ?: CtrlUiState()
         uiState.value = current.copy(speedLimit = clamped)
         if (!isDemo) {
-            repository.saveSpeed(clamped)
+            prefsRepository.saveSpeed(clamped)
         }
     }
 
     fun onJoystickMove(angle: Int, power: Float) {
-        val current = uiState.value ?: CtrlUiState()
-        if (angle < 0 || power <= STICK_DEADZONE) {
-            repository.stopWheelNow()
-        } else {
-            val maxSpeed = (current.speedLimit * power).roundToInt()
-            val lr = SpeedMixer.roundSpeed(angle, maxSpeed)
-            repository.submitWheel(lr[0], lr[1])
-        }
+        val speedLimit = uiState.value?.speedLimit ?: WheelCmd.DEFAULT_SPEED
+        driveJoystickUseCase(angle, power, speedLimit)
     }
 
     fun onRotatePressed(isLeft: Boolean) {
         val speed = uiState.value?.speedLimit ?: WheelCmd.DEFAULT_SPEED
         val dir = if (isLeft) WheelRotateCmd.Rotate.LEFT else WheelRotateCmd.Rotate.RIGHT
-        repository.sendWheelRotate(dir, speed)
+        controlRepository.sendWheelRotate(dir, speed)
     }
 
     fun onRotateReleased(isLeft: Boolean) {
         val dir = if (isLeft) WheelRotateCmd.Rotate.LEFT else WheelRotateCmd.Rotate.RIGHT
-        repository.sendWheelRotate(dir, 0)
+        controlRepository.sendWheelRotate(dir, 0)
     }
 
     fun onToggleLight() {
         val current = uiState.value ?: CtrlUiState()
         val next = !current.isLightOn
         uiState.value = current.copy(isLightOn = next)
-        repository.sendLight(next)
+        controlRepository.sendLight(next)
     }
 
     fun syncLightFromPreview(lightOn: Boolean) {
@@ -181,28 +178,16 @@ class CtrlViewModel(
     }
 
     fun onHornDown() {
-        cancelHornTask?.invoke()
-        cancelHornTask = null
         val current = uiState.value ?: CtrlUiState()
         uiState.value = current.copy(isHornPressed = true)
-        triggerHornTick()
+        holdHornUseCase.start()
     }
 
-    /** 小车每次收到 di:true 鸣响 500ms，松开只需停止重发（di:false 为空操作） */
     fun onHornUp() {
-        cancelHornTask?.invoke()
-        cancelHornTask = null
+        holdHornUseCase.stop()
         val current = uiState.value ?: CtrlUiState()
         if (current.isHornPressed) {
             uiState.value = current.copy(isHornPressed = false)
-        }
-    }
-
-    private fun triggerHornTick() {
-        if (uiState.value?.isHornPressed != true) return
-        repository.sendBuzzer(true)
-        cancelHornTask = scheduler.scheduleCancellable(HORN_REPEAT_MS) {
-            triggerHornTick()
         }
     }
 
@@ -247,27 +232,18 @@ class CtrlViewModel(
 
     fun onResume(intentHost: String?, intentPort: Int) {
         checkStillConnected()
-        if (!returning && !recentSaved) {
-            cancelSaveRecentTask?.invoke()
-            cancelSaveRecentTask = scheduler.scheduleCancellable(SAVE_RECENT_DELAY_MS) {
-                if (returning || isDemo || !repository.isConnected()) return@scheduleCancellable
-                if (intentHost.isNullOrEmpty() || intentPort <= 0) return@scheduleCancellable
-                repository.saveRecentAddress(intentHost, intentPort)
-                recentSaved = true
-            }
-        }
+        saveRecentCarUseCase.scheduleIfNeeded(intentHost, intentPort, isDemo) { returning }
     }
 
     fun onPause() {
-        cancelSaveRecentTask?.invoke()
-        cancelSaveRecentTask = null
+        saveRecentCarUseCase.cancel()
     }
 
     fun onStop() {
         onHornUp()
         // 离开页面时立即停止车轮运动，取消挂起的云台指令
-        repository.cancelServo()
-        repository.stopWheelNow()
+        controlRepository.cancelServo()
+        controlRepository.stopWheelNow()
         val current = uiState.value ?: CtrlUiState()
         uiState.value = if (isDemo) {
             current
@@ -283,7 +259,7 @@ class CtrlViewModel(
     }
 
     fun checkStillConnected() {
-        if (!isDemo && !repository.isConnected()) {
+        if (!isDemo && !controlRepository.isConnected()) {
             triggerReturnRefused()
         }
     }
@@ -296,29 +272,29 @@ class CtrlViewModel(
             returning = true
         }
         scheduler.runOnUi {
-            cancelSaveRecentTask?.invoke()
-            cancelSaveRecentTask = null
+            saveRecentCarUseCase.cancel()
             returnToConnectRefused.value = Event(Unit)
         }
     }
 
     override fun onCleared() {
-        cancelSaveRecentTask?.invoke()
-        cancelHornTask?.invoke()
+        saveRecentCarUseCase.cancel()
+        holdHornUseCase.stop()
         scheduler.cancelAll()
-        repository.cancelServo()
-        repository.removeCallback(clientMessageCallback)
+        controlRepository.cancelServo()
+        controlRepository.removeCallback(clientMessageCallback)
         super.onCleared()
     }
 
     class Factory(
-        private val repository: ICtrlRepository,
+        private val controlRepository: ICarControlRepository,
+        private val prefsRepository: ICarPrefsRepository,
         private val isDemo: Boolean
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(CtrlViewModel::class.java)) {
-                return CtrlViewModel(repository, isDemo) as T
+                return CtrlViewModel(controlRepository, prefsRepository, isDemo) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
