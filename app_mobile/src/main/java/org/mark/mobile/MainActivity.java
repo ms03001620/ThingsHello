@@ -36,6 +36,9 @@ import androidx.core.content.ContextCompat;
  */
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+    public static final String EXTRA_REFUSED = "extra_refused";
+    /** Debug only: force UI state for screenshots (idle/connecting/online/refused). */
+    public static final String EXTRA_DEBUG_STATE = "debug_state";
 
     private enum UiState {
         IDLE,
@@ -95,6 +98,38 @@ public class MainActivity extends AppCompatActivity {
         showState(UiState.IDLE);
 
         ConnectedManager.getInstance().addCallback(mClientMessageCallback);
+        handleLaunchIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleLaunchIntent(intent);
+    }
+
+    private void handleLaunchIntent(@Nullable Intent intent) {
+        if (intent == null) {
+            return;
+        }
+        if (intent.getBooleanExtra(EXTRA_REFUSED, false)) {
+            intent.removeExtra(EXTRA_REFUSED);
+            mConnectRequested = false;
+            mIgnoreNextNoConnect = false;
+            mLastErrorMessage = "";
+            ConnectedManager.getInstance().stop();
+            showState(UiState.REFUSED);
+            return;
+        }
+        if (BuildConfig.DEBUG) {
+            String s = intent.getStringExtra(EXTRA_DEBUG_STATE);
+            if (s != null) {
+                try {
+                    showState(UiState.valueOf(s.toUpperCase()));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
     }
 
     private void bindViews() {
@@ -118,7 +153,8 @@ public class MainActivity extends AppCompatActivity {
         View scanOverlay = findViewById(R.id.scanline_overlay);
         scanOverlay.setBackground(new ScanlineDrawable(
                 getResources(), ContextCompat.getColor(this, R.color.scanline)));
-        scanOverlay.setAlpha((int) (0.04f * 255 / 0.04f) > 255 ? 255 : 40);
+        // Color already carries 4% alpha (#0AFCEE0A); keep view opaque, non-interactive.
+        scanOverlay.setAlpha(1f);
     }
 
     private void applyCyberChrome() {
@@ -304,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
                 ? editTextHost.getText().toString().trim() : "";
         final String portText = editTextPort.getText() != null
                 ? editTextPort.getText().toString().trim() : "";
-        if (!isValidIpv4(host) || TextUtils.isEmpty(portText)) {
+        if (TextUtils.isEmpty(host) || TextUtils.isEmpty(portText)) {
             textIpError.setText(R.string.cp_input_error);
             textIpError.setVisibility(View.VISIBLE);
             int red = ContextCompat.getColor(this, R.color.cp_red);
@@ -412,7 +448,7 @@ public class MainActivity extends AppCompatActivity {
                     mLastErrorMessage = e != null ? String.valueOf(e.getMessage()) : "";
                     if (mConnectRequested && !mUserCancelled) {
                         showState(UiState.REFUSED);
-                    } else {
+                    } else if (mUiState != UiState.REFUSED) {
                         showState(UiState.IDLE);
                     }
                 }
@@ -476,6 +512,9 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     }
                 }
+                if (mUiState == UiState.REFUSED) {
+                    break;
+                }
                 if (mUserCancelled) {
                     showState(UiState.IDLE);
                 } else if (mConnectRequested) {
@@ -487,27 +526,6 @@ public class MainActivity extends AppCompatActivity {
                 break;
             default:
                 break;
-        }
-    }
-
-    private static boolean isValidIpv4(String host) {
-        if (TextUtils.isEmpty(host)) {
-            return false;
-        }
-        String[] parts = host.split("\\.");
-        if (parts.length != 4) {
-            return false;
-        }
-        try {
-            for (String p : parts) {
-                int n = Integer.parseInt(p);
-                if (n < 0 || n > 255) {
-                    return false;
-                }
-            }
-            return true;
-        } catch (Exception e) {
-            return false;
         }
     }
 

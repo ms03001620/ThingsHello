@@ -158,7 +158,7 @@ public class CtrlActivity extends AppCompatActivity {
 
         @Override
         public void onExceptionToReOpen(@NonNull Exception e) {
-
+            backToConnectRefused();
         }
 
         @Override
@@ -168,17 +168,32 @@ public class CtrlActivity extends AppCompatActivity {
         @Override
         public void onStatusChange(@NonNull Status status) {
             if (status == Status.NO_CONNECT) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(CtrlActivity.this, "No connect", Toast.LENGTH_LONG).show();
-                        finish();
-                    }
-                });
+                backToConnectRefused();
             }
         }
     };
 
+
+    private volatile boolean mReturning;
+
+    /** Car RSTs a second controller after TCP connect; return to Connect page in refused state. */
+    private void backToConnectRefused() {
+        if (mReturning) {
+            return;
+        }
+        mReturning = true;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                android.content.Intent intent = new android.content.Intent(CtrlActivity.this, MainActivity.class);
+                intent.putExtra(MainActivity.EXTRA_REFUSED, true);
+                intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        | android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
+            }
+        });
+    }
 
     @Override
     protected void onDestroy() {
