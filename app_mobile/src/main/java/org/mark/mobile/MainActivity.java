@@ -437,20 +437,20 @@ public class MainActivity extends AppCompatActivity {
                 || lower.contains("no route");
     }
 
-    private void saveRecent() {
-        final String textHost = editTextHost.getText().toString().trim();
-        final String text = editTextPort.getText().toString().trim();
+    private void openControl() {
+        Intent intent = new Intent(MainActivity.this, CtrlActivity.class);
+        intent.putExtra(CtrlActivity.EXTRA_HOST, editTextHost.getText().toString().trim());
         try {
-            final int port = Integer.parseInt(text);
-            mPreferUtils.add(textHost, port);
-            mPreferUtils.save(textHost, port);
-            populateRecent();
-        } catch (Exception ignored) {
+            intent.putExtra(CtrlActivity.EXTRA_PORT, Integer.parseInt(editTextPort.getText().toString().trim()));
+        } catch (NumberFormatException ignored) {
         }
+        startActivity(intent);
     }
 
-    private void openControl() {
-        startActivity(new Intent(MainActivity.this, CtrlActivity.class));
+    @Override
+    protected void onResume() {
+        super.onResume();
+        populateRecent(); // CtrlActivity may have saved a newly-proven address
     }
 
     public JsonReceiver mClientMessageCallback = new JsonReceiver() {
@@ -511,7 +511,6 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         if (mUiState == UiState.ONLINE && ConnectedManager.getInstance().isConnected()) {
-                            saveRecent(); // only once truly online, not on bare TCP connect
                             openControl();
                         }
                     }

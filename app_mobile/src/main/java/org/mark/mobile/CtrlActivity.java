@@ -82,6 +82,10 @@ import androidx.core.content.ContextCompat;
 /** Cyberpunk 2077 control page (spec §3). */
 public class CtrlActivity extends AppCompatActivity {
     private static final String TAG = "CtrlActivity";
+    public static final String EXTRA_HOST = "extra_host";
+    public static final String EXTRA_PORT = "extra_port";
+    /** Car closes a rejected 2nd controller ~500ms after accept; only save after surviving this. */
+    private static final long SAVE_RECENT_DELAY_MS = 1000;
     private static final long SEND_INTERVAL_MS = 50;
     private static final int RSSI_WEAK = -75;
     private static final int REQ_STORAGE = 11;
@@ -588,7 +592,32 @@ public class CtrlActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         checkStillConnected();
+        if (!mReturning && !mRecentSaved) {
+            ui.removeCallbacks(saveRecent);
+            ui.postDelayed(saveRecent, SAVE_RECENT_DELAY_MS);
+        }
     }
+
+    @Override
+    protected void onPause() {
+        ui.removeCallbacks(saveRecent);
+        super.onPause();
+    }
+
+    private boolean mRecentSaved;
+    private final Runnable saveRecent = new Runnable() {
+        @Override public void run() {
+            if (mReturning || mDemo || !ConnectedManager.getInstance().isConnected()) return;
+            String host = getIntent().getStringExtra(EXTRA_HOST);
+            int port = getIntent().getIntExtra(EXTRA_PORT, 0);
+            if (host == null || host.isEmpty() || port <= 0) return;
+            org.mark.mobile.utils.PreferUtils p = new org.mark.mobile.utils.PreferUtils(CtrlActivity.this);
+            p.add(host, port);
+            p.save(host, port);
+            mRecentSaved = true;
+            Log.d(TAG, "recent saved " + host + ":" + port);
+        }
+    };
 
     /** Car closes a rejected 2nd controller ~500ms after accept; we may open after that. */
     private void checkStillConnected() {
@@ -644,13 +673,18 @@ public class CtrlActivity extends AppCompatActivity {
 
     /** Car RSTs a second controller after TCP connect; return to Connect page in refused state. */
     private void backToConnectRefused() {
-        if (mReturning) {
-            return;
+        // Idempotent: onCreate + onResume checks and socket callbacks may all fire.
+        // Atomic claim (callbacks arrive on the socket thread), then finish on the UI thread.
+        synchronized (this) {
+            if (mReturning || isFinishing()) {
+                return;
+            }
+            mReturning = true;
         }
-        mReturning = true;
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                ui.removeCallbacks(saveRecent);
                 Intent intent = new Intent(CtrlActivity.this, MainActivity.class);
                 intent.putExtra(MainActivity.EXTRA_REFUSED, true);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -662,6 +696,7 @@ public class CtrlActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        ui.removeCallbacks(saveRecent);
         ConnectedManager.getInstance().removeCallback(mClientMessageCallback);
         super.onDestroy();
     }
