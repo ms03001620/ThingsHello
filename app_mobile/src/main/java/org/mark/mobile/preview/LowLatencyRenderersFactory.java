@@ -16,8 +16,8 @@ import com.google.android.exoplayer2.video.VideoRendererEventListener;
 import java.util.ArrayList;
 
 /** Decoder tuning scoped to CSI preview. Unsupported devices retain normal decoding. */
-final class LowLatencyRenderersFactory extends DefaultRenderersFactory {
-    LowLatencyRenderersFactory(Context context) { super(context); }
+public final class LowLatencyRenderersFactory extends DefaultRenderersFactory {
+    public LowLatencyRenderersFactory(Context context) { super(context); }
 
     @Override protected void buildVideoRenderers(Context context, int extensionMode,
             MediaCodecSelector selector, boolean fallback, Handler handler,

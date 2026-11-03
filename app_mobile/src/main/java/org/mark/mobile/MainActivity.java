@@ -123,6 +123,13 @@ public class MainActivity extends AppCompatActivity {
         }
         if (BuildConfig.DEBUG) {
             String s = intent.getStringExtra(EXTRA_DEBUG_STATE);
+            if ("ctrl".equals(s) || "ctrl_demo".equals(s)) {
+                // Debug-only shortcut to open the (non-exported) control page for screenshots.
+                Intent ctrl = new Intent(this, CtrlActivity.class);
+                ctrl.putExtra(EXTRA_DEBUG_STATE, "ctrl_demo".equals(s) ? "demo" : "none");
+                startActivity(ctrl);
+                return;
+            }
             if (s != null) {
                 try {
                     showState(UiState.valueOf(s.toUpperCase()));

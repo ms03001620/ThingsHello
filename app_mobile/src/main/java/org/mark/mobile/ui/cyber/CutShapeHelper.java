@@ -58,6 +58,22 @@ public final class CutShapeHelper {
         view.setBackground(ripple);
     }
 
+    /** Cut panel with optional stroke. */
+    public static CutDrawable stroked(@ColorInt int fill, @ColorInt int stroke, float strokeW,
+            float cutTl, float cutTr, float cutBr, float cutBl) {
+        return new CutDrawable(fill, stroke, strokeW, cutTl, cutTr, cutBr, cutBl);
+    }
+
+    /** Pressed / default backgrounds as a StateListDrawable. */
+    public static android.graphics.drawable.StateListDrawable states(
+            Drawable normal, Drawable pressed) {
+        android.graphics.drawable.StateListDrawable s = new android.graphics.drawable.StateListDrawable();
+        s.addState(new int[]{android.R.attr.state_pressed}, pressed);
+        s.addState(new int[]{android.R.attr.state_activated}, pressed);
+        s.addState(new int[]{}, normal);
+        return s;
+    }
+
     public static void setLeftBarColor(View view, @ColorInt int barColor) {
         Drawable bg = view.getBackground();
         if (bg instanceof LeftBarCutDrawable) {
@@ -116,10 +132,11 @@ public final class CutShapeHelper {
 
         private void rebuild(Rect bounds) {
             path.reset();
-            float l = bounds.left;
-            float t = bounds.top;
-            float r = bounds.right;
-            float b = bounds.bottom;
+            float in = strokeWidth / 2f;
+            float l = bounds.left + in;
+            float t = bounds.top + in;
+            float r = bounds.right - in;
+            float b = bounds.bottom - in;
             float w = r - l;
             float h = b - t;
             float tl = Math.min(cutTl, Math.min(w, h) / 2f);
