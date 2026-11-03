@@ -35,9 +35,6 @@
             android:exported="false"
             android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.Cyber.Fullscreen" />
-        <activity
-            android:name=".TestActivity">
-        </activity>
     </application>
 
 </manifest>
