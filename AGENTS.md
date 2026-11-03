@@ -23,7 +23,7 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 | --- | --- | --- |
 | `car_pi` | 独立 Java 21 小车服务，不加入 Android 构建 | `car_pi/README.md`；`car_pi/src/main/kotlin/org/mark/carpi/CarMain.kt`；硬件实现在 `car_pi/src/main/kotlin/org/mark/carpi/repository/linux/`（分层：model/ usecase/ repository/ session/ protocol/ runtime/）；在 `car_pi` 内运行 `./gradlew test installDist` |
 | `app` | 小车主应用：外设控制、接收命令、摄像头服务 | `app/src/main/java/org/mark/thingshello/`；`MainActivity.java` |
-| `app_mobile` | 手机主应用：连接、摇杆遥控、视频预览 | `app_mobile/src/main/java/org/mark/mobile/`；`MainActivity.java`、`CtrlActivity.java` |
+| `app_mobile` | 手机主应用：连接、摇杆遥控、RTSP 视频预览 | `app_mobile/src/main/java/org/mark/mobile/`；`MainActivity.java`、`CtrlActivity.java` |
 | `lib_unit_socket` | 两端共用的 TCP / UDP 通信、命令类型及数据对象 | `lib_unit_socket/src/main/java/org/mark/lib_unit_socket/`；`SocketManager.java`、`ConnectedThread.java`、`bean/` |
 | `lib_camera` | Camera2 摄像头与采集配置封装 | `lib_camera/src/main/java/org/mark/camera/`；`DoorbellCamera.java`、`ConfigFactory.java`、`IConfig.java` |
 | `lib_base` | 通用线程、图像处理、文件及偏好设置工具 | `lib_base/src/main/java/org/mark/base/`；`thread/`、`executor/` |
@@ -44,7 +44,7 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 | 小车命令分发、硬件初始化、引脚 | `app`：`MainActivity.java`、`ctrl/DeviceManager.java`、`ctrl/DeviceHelper.java`、`ctrl/BoardDefaults.java` |
 | 车轮、摄像头舵机、灯、蜂鸣器 | `app`：`ctrl/wheel/`、`ctrl/servo/`、`ctrl/light/`、`ctrl/voice/`；车轮与舵机互斥见 `ctrl/comp/bind/ExclusiveBind.java` |
 | 小车摄像头开关、采集与图像发送 | `app`：`video/CameraServiceConnection.java`、`video/CameraService.java`、`video/CameraPresent.java`、`video/sender/`；底层见 `lib_camera` |
-| 手机预览、图像接收、画面渲染 | `app_mobile`：`preview/EyesFragment.java`、`preview/PreviewPresenter.java`、`preview/BitmapSurfaceView.java`、`connect/udp/UdpReceiver.java` |
+| 手机预览、图像接收、画面渲染 | `app_mobile`：`CtrlActivity.java`（RTSP 小窗）、`preview/H264Activity.java`（全屏）、`preview/LowLatencyRenderersFactory.java` |
 | 模型加载、分类器与标签 | `lib_tensorflow`；`app/tensorflow/ImageClassifierFactory.java`；模型与标签在 `app/src/main/assets/` |
 | 分类预览、结果排序和平滑 | `app_prework`：`cam/TfliteConfigActivity.java`、`cam/preview/`、`cam/preview/category/`；绑定模型在 `src/main/ml/` |
 | 图片检查与网格浏览 | `app_prework`：`CheckActivity.java`、`CheckPresent.java`、`grid/`、`db/DbMock.java` |
@@ -59,9 +59,9 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 
 `app_mobile/CtrlActivity` / `ctrl/` → `ConnectedManager` → `ConnectedWifi` → 共用通信层 → 小车 `SocketManager` → `app/MainActivity` → `DeviceManager`（外设）或 `CameraServiceConnection`（摄像头）。
 
-**图像预览（UDP 8000）**
+**图像预览（RTSP 8554）**
 
-手机 `PreviewPresenter` 通过 TCP 控制摄像头，并由 `UdpReceiver` 建立 UDP 接收；小车 `CameraService` / `CameraPresent` 使用 `lib_camera` 采集，经 `video/sender/ConnectSelector` → `UdpSender` 回传画面；手机预览组件解码显示。控制连接正常但无画面时，沿这条独立链路排查。
+手机 `CtrlActivity` 小窗 / `H264Activity` 全屏通过 ExoPlayer 拉取 `rtsp://小车IP:8554/csi`（RTP over TCP），由 `car_pi/deploy/csi/` 的 CSI 摄像头 RTSP 服务提供。控制连接正常但无画面时，沿这条独立链路排查。旧的 UDP 8000 JPEG 预览已从 `app_mobile` 和 `car_pi` 移除，仅 `app`（Android Things 小车端）仍保留发送端代码。
 
 ## 构建与验证入口
 
@@ -100,4 +100,4 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 
 ## 排线 H.264 / RTSP 新预览
 
-720p 低延迟根因与优化记录：[doc/csi-h264-latency-optimization.md](doc/csi-h264-latency-optimization.md)。Pi 服务配置与部署：`car_pi/deploy/csi/`；实机验证脚本：`car_pi/hardware-tests/`；手机入口 `CtrlActivity` 的 `btn_h264`，独立页面 `app_mobile/.../preview/H264Activity.java`。car_pi 已移除旧的 USB JPEG/UDP 视频通路。
+720p 低延迟根因与优化记录：[doc/csi-h264-latency-optimization.md](doc/csi-h264-latency-optimization.md)。Pi 服务配置与部署：`car_pi/deploy/csi/`；实机验证脚本：`car_pi/hardware-tests/`；手机入口 `CtrlActivity` 的 `btn_fullscreen` / 小窗点击，独立页面 `app_mobile/.../preview/H264Activity.java`。car_pi 已移除旧的 USB JPEG/UDP 视频通路。
