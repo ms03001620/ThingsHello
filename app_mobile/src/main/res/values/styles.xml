@@ -1,11 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">@color/cp_yellow</item>
+        <item name="colorPrimaryDark">@color/cp_bg</item>
+        <item name="colorAccent">@color/cp_cyan</item>
+        <item name="android:windowBackground">@color/cp_bg</item>
+        <item name="android:statusBarColor">@color/cp_bg</item>
+        <item name="android:navigationBarColor">@color/cp_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:textColorPrimary">@color/cp_text</item>
+        <item name="android:textColorSecondary">@color/cp_text_dim</item>
     </style>
 
+    <style name="Theme.Cyber" parent="AppTheme" />
+
+    <style name="Theme.Cyber.Fullscreen" parent="Theme.Cyber">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+
+    <style name="TextAppearance.Cyber" parent="@android:style/TextAppearance">
+        <item name="android:textColor">@color/cp_text</item>
+    </style>
+
+    <style name="TextAppearance.Cyber.Display" parent="TextAppearance.Cyber">
+        <item name="android:textSize">34sp</item>
+        <item name="android:textColor">@color/cp_yellow</item>
+        <item name="android:fontFamily">@font/orbitron_black</item>
+        <item name="android:letterSpacing">0.03</item>
+    </style>
+
+    <style name="TextAppearance.Cyber.Label" parent="TextAppearance.Cyber">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/cp_cyan</item>
+        <item name="android:fontFamily">@font/rajdhani_regular</item>
+        <item name="android:letterSpacing">0.08</item>
+    </style>
+
+    <style name="TextAppearance.Cyber.Input" parent="TextAppearance.Cyber">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/cp_white</item>
+        <item name="android:fontFamily">@font/orbitron_bold</item>
+    </style>
+
+    <style name="TextAppearance.Cyber.ButtonL" parent="TextAppearance.Cyber">
+        <item name="android:textSize">17sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/cp_on_yellow</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:letterSpacing">0.18</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
 </resources>

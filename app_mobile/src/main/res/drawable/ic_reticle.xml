@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ThingsHello concept-1 cyberpunk. tint via android:tint / app:tint -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="90dp" android:height="60dp"
+    android:viewportWidth="90" android:viewportHeight="60">
+  <path android:strokeColor="#FFFCEE0A" android:fillColor="#00000000" android:strokeWidth="2" android:pathData="M1,17V1h16M73,1h16v16M1,43v16h16M73,59h16V43"/>
+  <path android:fillColor="#FFFCEE0A" android:pathData="M43,30a2,2 0,1 0,4 0a2,2 0,1 0,-4 0"/>
+</vector>

@@ -1,6 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">app_mobile</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
+    <string name="app_name">ThingsHello</string>
+    <string name="cp_netrunner_tag">// NETRUNNER LINK v2.077</string>
+    <string name="cp_title">THINGS//HELLO</string>
+    <string name="cp_subtitle">树莓派小车 · 远程驾驶终端</string>
+    <string name="cp_target_label">TARGET: RPi-CAR-01</string>
+    <string name="cp_tcp_deco">TCP:8010</string>
+    <string name="cp_label_ip">车辆地址 IP</string>
+    <string name="cp_label_port">端口 PORT</string>
+    <string name="cp_suffix_ipv4">IPv4</string>
+    <string name="cp_suffix_tcp">TCP</string>
+    <string name="cp_default_ip">192.168.8.190</string>
+    <string name="cp_default_port">8010</string>
+    <string name="cp_status_connecting_title">链路建立中</string>
+    <string name="cp_status_connecting_desc">正在握手…</string>
+    <string name="cp_status_online_title">车辆在线 · 空闲</string>
+    <string name="cp_status_online_desc">端口 %1$s 可达 · 可接管控制</string>
+    <string name="cp_status_refused_title">连接被拒</string>
+    <string name="cp_status_refused_desc">车辆可能已被其他终端控制</string>
+    <string name="cp_status_timeout_desc">车辆无响应，请检查网络</string>
+    <string name="cp_retry">重试</string>
+    <string name="cp_connect">接入神经链路 ▸</string>
+    <string name="cp_connecting">链路建立中…</string>
+    <string name="cp_recent">最近连接</string>
+    <string name="cp_input_error">请输入有效的 IP 与端口</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

@@ -1,74 +1,383 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_connect"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:background="@drawable/bg_cyber_window"
     tools:context=".MainActivity">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        app:titleTextColor="#FFF"
-        android:background="?attr/colorPrimary" />
-
-    <LinearLayout
+    <View
+        android:id="@+id/scanline_overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:clickable="false"
+        android:focusable="false" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-
-            <AutoCompleteTextView
-                android:id="@+id/edit_host"
-                android:completionThreshold="0"
-                android:layout_width="180dp"
-                android:hint="host ip address"
-                android:layout_height="wrap_content" />
-
-            <EditText
-                android:id="@+id/edit_port"
-                android:layout_width="70dp"
-                android:inputType="number"
-                android:text="8010"
-                android:layout_height="wrap_content"
-                android:hint="port" />
-
-            <Switch
-                android:id="@+id/fab"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp" />
-
-            <Button
-                android:id="@+id/btnCtrl"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
-                android:enabled="false"
-                android:text="Ctrl"/>
-
-        </LinearLayout>
-
-
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:orientation="vertical"
+            android:paddingStart="@dimen/cp_screen_pad"
+            android:paddingEnd="@dimen/cp_screen_pad"
+            android:paddingTop="10dp"
+            android:paddingBottom="24dp">
 
             <TextView
-                android:id="@+id/text_log"
+                android:id="@+id/text_netrunner"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-        </ScrollView>
-    </LinearLayout>
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/rajdhani_regular"
+                android:letterSpacing="0.12"
+                android:text="@string/cp_netrunner_tag"
+                android:textColor="@color/cp_cyan"
+                android:textSize="11sp" />
 
-</LinearLayout>
+            <org.mark.mobile.ui.cyber.GlitchTextView
+                android:id="@+id/text_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:letterSpacing="0.03"
+                android:text="@string/cp_title"
+                android:textSize="34sp" />
+
+            <TextView
+                android:id="@+id/text_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="0dp"
+                android:fontFamily="sans-serif"
+                android:text="@string/cp_subtitle"
+                android:textColor="@color/cp_sub"
+                android:textSize="13sp" />
+
+            <!-- Vehicle schematic card -->
+            <FrameLayout
+                android:id="@+id/card_car"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/cp_car_card_height"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="10dp">
+
+                <ImageView
+                    android:id="@+id/img_car"
+                    android:layout_width="150dp"
+                    android:layout_height="88dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_car_topview" />
+
+                <View
+                    android:id="@+id/scan_beam"
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:background="@color/cp_cyan"
+                    android:elevation="2dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start|top"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/rajdhani_bold"
+                    android:letterSpacing="0.12"
+                    android:text="@string/cp_target_label"
+                    android:textColor="@color/cp_yellow"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|bottom"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:fontFamily="@font/rajdhani_bold"
+                    android:text="@string/cp_tcp_deco"
+                    android:textColor="@color/cp_red"
+                    android:textSize="10sp" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/label_ip"
+                style="@style/TextAppearance.Cyber.Label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/cp_label_ip" />
+
+            <FrameLayout
+                android:id="@+id/wrap_ip"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/cp_input_height">
+
+                <EditText
+                    android:id="@+id/edit_host"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@null"
+                    android:fontFamily="@font/orbitron_bold"
+                    android:hint="@string/cp_default_ip"
+                    android:imeOptions="actionNext"
+                    android:importantForAutofill="no"
+                    android:inputType="number|numberDecimal"
+                    android:digits="0123456789."
+                    android:paddingStart="14dp"
+                    android:paddingEnd="56dp"
+                    android:singleLine="true"
+                    android:text="@string/cp_default_ip"
+                    android:textColor="@color/cp_white"
+                    android:textColorHint="@color/yellow_60"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|center_vertical"
+                    android:layout_marginEnd="14dp"
+                    android:fontFamily="@font/rajdhani_regular"
+                    android:text="@string/cp_suffix_ipv4"
+                    android:textColor="@color/yellow_60"
+                    android:textSize="11sp" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/text_ip_error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/rajdhani_regular"
+                android:textColor="@color/cp_red"
+                android:textSize="11sp"
+                android:visibility="gone"
+                tools:text="无效 IP"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/label_port"
+                style="@style/TextAppearance.Cyber.Label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/cp_label_port" />
+
+            <FrameLayout
+                android:id="@+id/wrap_port"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/cp_input_height">
+
+                <EditText
+                    android:id="@+id/edit_port"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@null"
+                    android:fontFamily="@font/orbitron_bold"
+                    android:imeOptions="actionDone"
+                    android:importantForAutofill="no"
+                    android:inputType="number"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="56dp"
+                    android:singleLine="true"
+                    android:text="@string/cp_default_port"
+                    android:textColor="@color/cp_white"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|center_vertical"
+                    android:layout_marginEnd="14dp"
+                    android:fontFamily="@font/rajdhani_regular"
+                    android:text="@string/cp_suffix_tcp"
+                    android:textColor="@color/yellow_60"
+                    android:textSize="11sp" />
+            </FrameLayout>
+
+            <!-- Status: online / connecting -->
+            <LinearLayout
+                android:id="@+id/card_status_online"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/cp_status_height"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <View
+                    android:id="@+id/dot_online"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:background="@drawable/bg_status_dot_cyan" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/text_status_online_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif"
+                        android:text="@string/cp_status_online_title"
+                        android:textColor="@color/cp_cyan"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/text_status_online_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:alpha="0.75"
+                        android:fontFamily="@font/rajdhani_regular"
+                        android:textColor="@color/cp_text"
+                        android:textSize="11sp"
+                        tools:text="端口 8010 可达 · 可接管控制" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Status: refused -->
+            <LinearLayout
+                android:id="@+id/card_status_refused"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/cp_status_height"
+                android:layout_marginBottom="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="14dp"
+                android:paddingEnd="10dp"
+                android:visibility="gone"
+                tools:visibility="gone">
+
+                <View
+                    android:id="@+id/dot_refused"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:background="@drawable/bg_status_dot_red" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/text_status_refused_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif"
+                        android:text="@string/cp_status_refused_title"
+                        android:textColor="@color/cp_red"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/text_status_refused_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:alpha="0.75"
+                        android:fontFamily="@font/rajdhani_regular"
+                        android:text="@string/cp_status_refused_desc"
+                        android:textColor="@color/cp_text"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/btn_retry"
+                    android:layout_width="54dp"
+                    android:layout_height="32dp"
+                    android:gravity="center"
+                    android:fontFamily="sans-serif"
+                    android:text="@string/cp_retry"
+                    android:textColor="@color/cp_white"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Main connect button -->
+            <FrameLayout
+                android:id="@+id/btn_connect"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/cp_main_btn_height"
+                android:layout_marginTop="6dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <ProgressBar
+                        android:id="@+id/progress_connect"
+                        style="?android:attr/progressBarStyleSmall"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="10dp"
+                        android:indeterminate="true"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/text_connect"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif"
+                        android:letterSpacing="0.18"
+                        android:text="@string/cp_connect"
+                        android:textColor="@color/cp_on_yellow"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/btn_connect_accent"
+                    android:layout_width="40dp"
+                    android:layout_height="3dp"
+                    android:layout_gravity="end|bottom"
+                    android:layout_marginEnd="26dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@color/cp_red" />
+            </FrameLayout>
+
+            <!-- Recent -->
+            <TextView
+                android:id="@+id/label_recent"
+                style="@style/TextAppearance.Cyber.Label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="@string/cp_recent" />
+
+            <LinearLayout
+                android:id="@+id/list_recent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="vertical" />
+
+            <!-- Hidden legacy ids kept for any residual refs: none -->
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>
