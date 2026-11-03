@@ -123,6 +123,12 @@ public class MainActivity extends AppCompatActivity {
         }
         if (BuildConfig.DEBUG) {
             String s = intent.getStringExtra(EXTRA_DEBUG_STATE);
+            if ("preview_demo".equals(s) || "preview_demo_hidden".equals(s)) {
+                Intent pv = new Intent(this, org.mark.mobile.preview.H264Activity.class);
+                pv.putExtra(EXTRA_DEBUG_STATE, s.substring("preview_".length()));
+                startActivity(pv);
+                return;
+            }
             if ("ctrl".equals(s) || "ctrl_demo".equals(s)) {
                 // Debug-only shortcut to open the (non-exported) control page for screenshots.
                 Intent ctrl = new Intent(this, CtrlActivity.class);

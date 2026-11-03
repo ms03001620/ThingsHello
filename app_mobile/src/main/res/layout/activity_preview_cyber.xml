@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/preview_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black"
+    android:keepScreenOn="true">
+
+    <com.google.android.exoplayer2.ui.PlayerView
+        android:id="@+id/player_full"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:resize_mode="zoom"
+        app:shutter_background_color="@android:color/black"
+        app:surface_type="texture_view"
+        app:use_controller="false" />
+
+    <TextView
+        android:id="@+id/text_no_signal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="56dp"
+        android:fontFamily="@font/rajdhani_bold"
+        android:letterSpacing="0.2"
+        android:text="NO SIGNAL"
+        android:textColor="@color/cyan_60"
+        android:textSize="12sp" />
+
+    <View android:id="@+id/overlay_tint" android:layout_width="match_parent" android:layout_height="match_parent" />
+    <View android:id="@+id/overlay_scan" android:layout_width="match_parent" android:layout_height="match_parent" />
+    <View android:id="@+id/overlay_frame" android:layout_width="match_parent" android:layout_height="match_parent" />
+
+    <ImageView
+        android:id="@+id/img_reticle"
+        android:layout_width="90dp"
+        android:layout_height="60dp"
+        android:layout_gravity="center"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_reticle" />
+
+    <!-- HUD root receives cutout padding -->
+    <FrameLayout
+        android:id="@+id/hud_root"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- persistent: REC -->
+        <TextView
+            android:id="@+id/tag_rec"
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:layout_marginStart="64dp"
+            android:layout_marginTop="23dp"
+            android:background="@color/cp_red"
+            android:fontFamily="@font/rajdhani_bold"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="● REC"
+            android:textColor="@color/cp_white"
+            android:textSize="11sp" />
+
+        <FrameLayout
+            android:id="@+id/hud"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/btn_back_pv"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="14dp"
+                android:contentDescription="返回"
+                android:padding="8dp"
+                android:src="@drawable/ic_back"
+                android:tint="@color/cp_yellow" />
+
+            <TextView
+                android:id="@+id/pill_stream"
+                style="@style/CyberHudPill"
+                android:layout_marginStart="116dp"
+                android:layout_marginTop="23dp"
+                android:text="CSI · 1280×720 · 30FPS · RTSP" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|top"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="16dp"
+                android:orientation="horizontal">
+
+                <TextView android:id="@+id/pill_buf" style="@style/CyberHudPill" android:text="BUF --" />
+                <TextView android:id="@+id/pill_wifi" style="@style/CyberHudPill" android:layout_marginStart="10dp" android:text="手机 WiFi --" />
+                <TextView android:id="@+id/pill_rate" style="@style/CyberHudPill" android:layout_marginStart="10dp" android:text="-- Mbps" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|bottom"
+                android:layout_marginStart="18dp"
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal">
+
+                <TextView android:id="@+id/pill_servo" style="@style/CyberHudPill" android:text="云台 50%" />
+                <TextView android:id="@+id/pill_power" style="@style/CyberHudPill" android:layout_marginStart="10dp" android:text="功率 0%" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|bottom"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="14dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/btn_snap_pv"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:contentDescription="截图"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_snapshot" />
+
+                <ImageView
+                    android:id="@+id/btn_light_pv"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:layout_marginStart="10dp"
+                    android:contentDescription="车灯"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_light" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/text_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginBottom="16dp"
+            android:background="@color/scrim_70"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="▲ 双击屏幕显示/隐藏 HUD"
+            android:textColor="@color/cp_cyan"
+            android:textSize="10sp" />
+    </FrameLayout>
+</FrameLayout>

@@ -29,7 +29,12 @@
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />
         <activity android:name=".preview.PreviewActivity" />
-        <activity android:name=".preview.H264Activity" android:exported="false" />
+        <activity
+            android:name=".preview.H264Activity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:exported="false"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@style/Theme.Cyber.Fullscreen" />
         <activity
             android:name=".TestActivity">
         </activity>

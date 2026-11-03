@@ -51,4 +51,16 @@
         <item name="android:letterSpacing">0.18</item>
         <item name="android:textAllCaps">false</item>
     </style>
+
+    <style name="CyberHudPill">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">21dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:fontFamily">@font/rajdhani_bold</item>
+        <item name="android:textColor">@color/cp_yellow</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:singleLine">true</item>
+    </style>
 </resources>

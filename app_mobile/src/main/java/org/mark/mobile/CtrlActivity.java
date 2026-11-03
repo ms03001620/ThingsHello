@@ -184,19 +184,9 @@ public class CtrlActivity extends AppCompatActivity {
         }
     };
 
-    /** Phone's own Wi-Fi RSSI; null when unavailable (no Wi-Fi / permission). */
     @Nullable
     private Integer readRssi() {
-        try {
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-            if (wm == null || !wm.isWifiEnabled()) return null;
-            WifiInfo info = wm.getConnectionInfo();
-            if (info == null || info.getNetworkId() == -1) return null;
-            int rssi = info.getRssi();
-            return rssi <= -127 || rssi >= 0 ? null : rssi;
-        } catch (SecurityException e) {
-            return null;
-        }
+        return org.mark.mobile.utils.WifiRssi.read(this);
     }
 
     private void showRssi(@Nullable Integer rssi) {
@@ -221,11 +211,30 @@ public class CtrlActivity extends AppCompatActivity {
         full.setBackground(CutShapeHelper.states(
                 CutShapeHelper.panel(color(R.color.cp_yellow), 0, 0, dp(11), 0),
                 CutShapeHelper.panel(color(R.color.cp_yellow_pressed), 0, 0, dp(11), 0)));
-        full.setOnClickListener(v -> {
-            Intent intent = new Intent(this, org.mark.mobile.preview.H264Activity.class);
-            intent.putExtra("host", ConnectedManager.getInstance().getConnectedHost());
-            startActivity(intent);
-        });
+        full.setOnClickListener(v -> openPreview());
+        // Tapping the mini player also enters fullscreen preview (spec: entered from mini player).
+        playerView.setOnClickListener(v -> openPreview());
+    }
+
+    private static final int REQ_PREVIEW = 21;
+
+    private void openPreview() {
+        Intent intent = new Intent(this, org.mark.mobile.preview.H264Activity.class);
+        intent.putExtra("host", ConnectedManager.getInstance().getConnectedHost());
+        intent.putExtra(org.mark.mobile.preview.H264Activity.EXTRA_SERVO, sliderServo.getValue());
+        intent.putExtra(org.mark.mobile.preview.H264Activity.EXTRA_POWER, Math.round(mStickPower * 100));
+        intent.putExtra(org.mark.mobile.preview.H264Activity.EXTRA_LIGHT, mLightOn);
+        if (mDemo) intent.putExtra(MainActivity.EXTRA_DEBUG_STATE, "demo");
+        startActivityForResult(intent, REQ_PREVIEW);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_PREVIEW && data != null) {
+            mLightOn = data.getBooleanExtra(org.mark.mobile.preview.H264Activity.EXTRA_LIGHT, mLightOn);
+            renderLight();
+        }
     }
 
     private void startPlayer() {
@@ -544,33 +553,7 @@ public class CtrlActivity extends AppCompatActivity {
 
     @Nullable
     private Uri saveToGallery(Bitmap bmp) {
-        String name = "ThingsHello_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".jpg";
-        ContentResolver cr = getContentResolver();
-        ContentValues v = new ContentValues();
-        v.put(MediaStore.Images.Media.DISPLAY_NAME, name);
-        v.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-        if (Build.VERSION.SDK_INT >= 29) {
-            v.put("relative_path", "Pictures/ThingsHello"); // MediaStore.MediaColumns.RELATIVE_PATH
-            v.put("is_pending", 1);
-        }
-        Uri uri = null;
-        try {
-            uri = cr.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
-            if (uri == null) return null;
-            try (OutputStream os = cr.openOutputStream(uri)) {
-                if (os == null || !bmp.compress(Bitmap.CompressFormat.JPEG, 92, os)) throw new java.io.IOException("write");
-            }
-            if (Build.VERSION.SDK_INT >= 29) {
-                ContentValues done = new ContentValues();
-                done.put("is_pending", 0);
-                cr.update(uri, done, null, null);
-            }
-            return uri;
-        } catch (Exception e) {
-            Log.e(TAG, "snapshot", e);
-            if (uri != null) cr.delete(uri, null, null);
-            return null;
-        }
+        return org.mark.mobile.utils.GallerySaver.save(this, bmp);
     }
 
     // ---------- debug demo (screenshots only) ----------
