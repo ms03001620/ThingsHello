@@ -227,15 +227,10 @@ public final class CutShapeHelper {
             outer.lineTo(l, t + tl);
             outer.close();
 
-            float barR = l + barWidthPx;
+            // Bar is a plain strip ending where the TL/BL cuts begin, so it never
+            // fills the 45° corner triangle.
             barPath.reset();
-            barPath.moveTo(l + tl, t);
-            barPath.lineTo(barR, t);
-            barPath.lineTo(barR, b);
-            barPath.lineTo(l + bl, b);
-            barPath.lineTo(l, b - bl);
-            barPath.lineTo(l, t + tl);
-            barPath.close();
+            barPath.addRect(l, t + tl, l + barWidthPx, b - bl, Path.Direction.CW);
         }
 
         @Override

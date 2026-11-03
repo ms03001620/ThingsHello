@@ -68,23 +68,22 @@
                 android:layout_marginTop="6dp"
                 android:layout_marginBottom="10dp">
 
-                <ImageView
+                <org.mark.mobile.ui.cyber.GlowImageView
                     android:id="@+id/img_car"
-                    android:layout_width="150dp"
-                    android:layout_height="88dp"
+                    android:layout_width="162dp"
+                    android:layout_height="100dp"
                     android:layout_gravity="center"
                     android:contentDescription="@null"
+                    android:padding="6dp"
                     android:src="@drawable/ic_car_topview" />
 
-                <View
+                <!-- 2dp line + 12dp glow each side; full card width -->
+                <org.mark.mobile.ui.cyber.GlowLineView
                     android:id="@+id/scan_beam"
                     android:layout_width="match_parent"
-                    android:layout_height="2dp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginEnd="12dp"
-                    android:background="@color/cp_cyan"
-                    android:elevation="2dp" />
+                    android:layout_height="26dp"
+                    android:layout_gravity="top"
+                    android:layout_marginTop="77dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -92,8 +91,8 @@
                     android:layout_gravity="start|top"
                     android:layout_marginStart="12dp"
                     android:layout_marginTop="8dp"
-                    android:fontFamily="@font/rajdhani_bold"
-                    android:letterSpacing="0.12"
+                    android:fontFamily="@font/rajdhani_regular"
+                    android:letterSpacing="0.2"
                     android:text="@string/cp_target_label"
                     android:textColor="@color/cp_yellow"
                     android:textSize="10sp" />
@@ -104,7 +103,8 @@
                     android:layout_gravity="end|bottom"
                     android:layout_marginEnd="16dp"
                     android:layout_marginBottom="8dp"
-                    android:fontFamily="@font/rajdhani_bold"
+                    android:letterSpacing="0.2"
+                    android:fontFamily="@font/rajdhani_regular"
                     android:text="@string/cp_tcp_deco"
                     android:textColor="@color/cp_red"
                     android:textSize="10sp" />
@@ -259,6 +259,7 @@
                 android:id="@+id/card_status_refused"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/cp_status_height"
+                android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
