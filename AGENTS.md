@@ -12,7 +12,7 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 
 1. 了解使用流程：[app_mobile/使用说明.md](app_mobile/使用说明.md)。恢复旧设备连接看 [app_mobile/恢复连接.md](app_mobile/恢复连接.md)。
 2. 确认模块范围：[settings.gradle](settings.gradle)，依赖关系看各模块 `build.gradle`。
-3. 主业务从小车端 [MainActivity](app/src/main/java/org/mark/thingshello/MainActivity.java) 和手机端 [MainActivity](app_mobile/src/main/java/org/mark/mobile/MainActivity.java) 开始。
+3. 主业务从小车端 [MainActivity](app/src/main/java/org/mark/thingshello/MainActivity.java) 和手机端 [MainActivity](app_mobile/src/main/kotlin/org/mark/mobile/MainActivity.kt) 开始。
 4. 页面布局、字符串和权限分别查目标模块的 `src/main/res/`、`src/main/AndroidManifest.xml`。
 
 ## 模块地图
@@ -23,7 +23,7 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 | --- | --- | --- |
 | `car_pi` | 独立 Java 21 小车服务，不加入 Android 构建 | `car_pi/README.md`；`car_pi/src/main/kotlin/org/mark/carpi/CarMain.kt`；硬件实现在 `car_pi/src/main/kotlin/org/mark/carpi/repository/linux/`（分层：model/ usecase/ repository/ session/ protocol/ runtime/）；在 `car_pi` 内运行 `./gradlew test installDist` |
 | `app` | 小车主应用：外设控制、接收命令、摄像头服务 | `app/src/main/java/org/mark/thingshello/`；`MainActivity.java` |
-| `app_mobile` | 手机主应用：连接、摇杆遥控、RTSP 视频预览 | `app_mobile/src/main/java/org/mark/mobile/`；`MainActivity.java`、`CtrlActivity.java` |
+| `app_mobile` | 手机主应用：连接、摇杆遥控、RTSP 视频预览（含 Kotlin + MVVM） | 先读 [`app_mobile/AGENTS.md`](app_mobile/AGENTS.md)；`app_mobile/src/main/kotlin/org/mark/mobile/`、`app_mobile/src/main/java/org/mark/mobile/`；`MainActivity.kt`、`CtrlActivity.java` |
 | `lib_unit_socket` | 两端共用的 TCP / UDP 通信、命令类型及数据对象 | `lib_unit_socket/src/main/java/org/mark/lib_unit_socket/`；`SocketManager.java`、`ConnectedThread.java`、`bean/` |
 | `lib_camera` | Camera2 摄像头与采集配置封装 | `lib_camera/src/main/java/org/mark/camera/`；`DoorbellCamera.java`、`ConfigFactory.java`、`IConfig.java` |
 | `lib_base` | 通用线程、图像处理、文件及偏好设置工具 | `lib_base/src/main/java/org/mark/base/`；`thread/`、`executor/` |
@@ -37,7 +37,7 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 
 | 要处理的工作 | 优先查看 |
 | --- | --- |
-| 手机连接、连接状态、IP 保存 | `app_mobile`：`MainActivity.java`、`connect/ConnectedManager.java`、`utils/PreferUtils.java` |
+| 手机连接、连接状态、IP 保存、MVVM 与本地编码约定 | 先读 [`app_mobile/AGENTS.md`](app_mobile/AGENTS.md)；`app_mobile`：`MainActivity.kt`、`viewmodel/MainViewModel.kt`、`repository/MainRepository.kt`、`connect/ConnectedManager.java`、`utils/PreferUtils.java` |
 | 遥控页面、摇杆、速度、转向、灯光按钮 | `app_mobile`：`CtrlActivity.java`、`ctrl/`、`src/main/res/layout/` |
 | 命令格式、类型、新增控制指令 | `lib_unit_socket`：`bean/CmdConstant.java`、`bean/*Cmd.java`、`bean/JsonReceiver.java`；同时检查手机发送处和小车分发处 |
 | TCP 连接、读写、服务端接入 | `lib_unit_socket`：`SocketManager.java`、`SocketService.java`、`ConnectedThread.java`；手机连接封装在 `app_mobile/connect/` |
