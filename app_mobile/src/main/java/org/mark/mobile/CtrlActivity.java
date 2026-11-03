@@ -139,6 +139,7 @@ public class CtrlActivity extends AppCompatActivity {
         setupDrive();
         setupSpeed();
         setupActions();
+        setLive(false);
 
         ConnectedManager.getInstance().addCallback(mClientMessageCallback);
         if (mDemo) applyDemo();
@@ -152,15 +153,22 @@ public class CtrlActivity extends AppCompatActivity {
                 CutShapeHelper.stroked(0x26FCEE0A, color(R.color.cp_yellow), dp(1), 0, 0, dp(11), 0)));
         back.setOnClickListener(v -> finish());
 
-        String host = ConnectedManager.getInstance().getConnectedHost();
-        String port = new org.mark.mobile.utils.PreferUtils(this).getPort();
-        if (host == null) host = "--";
-        if ("0".equals(port)) port = "8010";
-        ((TextView) findViewById(R.id.text_drive_sub)).setText(host + ":" + port + " · 已连接");
+        renderSubtitle();
 
         textWifi = findViewById(R.id.text_wifi);
         wifiBg = new ParallelogramDrawable(color(R.color.cp_cyan), dp(8));
         textWifi.setBackground(wifiBg);
+    }
+
+    private void renderSubtitle() {
+        ConnectedManager cm = ConnectedManager.getInstance();
+        String host = mDemo ? "192.168.8.190" : cm.getConnectedHost();
+        int port = mDemo ? 8010 : cm.getConnectedPort();
+        boolean connected = mDemo || cm.isConnected();
+        String addr = host == null || host.isEmpty() ? "--" : host + ":" + (port > 0 ? port : "--");
+        TextView sub = findViewById(R.id.text_drive_sub);
+        sub.setText(addr + (connected ? " · 已连接" : " · 未连接"));
+        sub.setTextColor(color(connected ? R.color.cp_cyan : R.color.cp_red));
     }
 
     private final Runnable rssiTick = new Runnable() {
@@ -228,7 +236,7 @@ public class CtrlActivity extends AppCompatActivity {
         playerView.setPlayer(player);
         player.addListener(new Player.EventListener() {
             @Override public void onPlaybackStateChanged(int state) {
-                textVideoState.setVisibility(state == Player.STATE_READY ? View.GONE : View.VISIBLE);
+                setLive(state == Player.STATE_READY);
             }
         });
         player.setMediaSource(new RtspMediaSource.Factory().setForceUseRtpTcp(true)
@@ -245,7 +253,12 @@ public class CtrlActivity extends AppCompatActivity {
         }
         lastCounters = null;
         lastRxBytes = -1;
-        textVideoState.setVisibility(View.VISIBLE);
+        setLive(false);
+    }
+
+    private void setLive(boolean live) {
+        textVideoState.setVisibility(live ? View.GONE : View.VISIBLE);
+        findViewById(R.id.tag_live).setVisibility(live ? View.VISIBLE : View.GONE);
     }
 
     // ---------- telemetry ----------
@@ -453,10 +466,12 @@ public class CtrlActivity extends AppCompatActivity {
         horn.setOnTouchListener((v, e) -> {
             int a = e.getActionMasked();
             if (a == MotionEvent.ACTION_DOWN) {
-                ConnectedManager.getInstance().sendObject(new BuzzerCmd(true), CmdConstant.BUZZER);
+                ui.removeCallbacks(hornTick);
+                ui.post(hornTick);
                 setActionColors(v, color(R.color.cp_white), false);
             } else if (a == MotionEvent.ACTION_UP || a == MotionEvent.ACTION_CANCEL) {
-                ConnectedManager.getInstance().sendObject(new BuzzerCmd(false), CmdConstant.BUZZER);
+                // Car beeps 500ms per di:true; just stop resending (di:false is a no-op).
+                ui.removeCallbacks(hornTick);
                 setActionColors(v, color(R.color.cp_text_dim), false);
             }
             return false;
@@ -467,6 +482,14 @@ public class CtrlActivity extends AppCompatActivity {
         snap.setBackground(CutShapeHelper.states(actionBg(color(R.color.cp_panel)), actionBg(0xFF22222E)));
         snap.setOnClickListener(v -> takeSnapshot());
     }
+
+    private static final long HORN_REPEAT_MS = 400;
+    private final Runnable hornTick = new Runnable() {
+        @Override public void run() {
+            ConnectedManager.getInstance().sendObject(new BuzzerCmd(true), CmdConstant.BUZZER);
+            ui.postDelayed(this, HORN_REPEAT_MS);
+        }
+    };
 
     private Drawable actionBg(int fill) {
         return new BottomEdgeCut(fill, color(R.color.cp_action_edge), dp(2), dp(15), dp(14));
@@ -555,6 +578,7 @@ public class CtrlActivity extends AppCompatActivity {
         showRssi(-52);
         mLightOn = true;
         renderLight();
+        findViewById(R.id.tag_live).setVisibility(View.VISIBLE);
     }
 
     // ---------- lifecycle / connection ----------
@@ -570,6 +594,7 @@ public class CtrlActivity extends AppCompatActivity {
     protected void onStop() {
         ui.removeCallbacks(rssiTick);
         ui.removeCallbacks(statsTick);
+        ui.removeCallbacks(hornTick);
         // Stop motion if we leave mid-drive; no servo resend (car releases servo itself).
         servoThrottle.cancel();
         wheelThrottle.sendNow("0,0");
@@ -593,6 +618,7 @@ public class CtrlActivity extends AppCompatActivity {
 
         @Override
         public void onStatusChange(@NonNull Status status) {
+            runOnUiThread(() -> renderSubtitle());
             if (status == Status.NO_CONNECT) {
                 backToConnectRefused();
             }

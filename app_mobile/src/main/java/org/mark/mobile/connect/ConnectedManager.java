@@ -4,6 +4,7 @@ package org.mark.mobile.connect;
 import org.mark.lib_unit_socket.SocketManager;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.ClientMessageCallback;
+import org.mark.lib_unit_socket.ClientMessageCallback.Status;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -40,11 +41,18 @@ public class ConnectedManager extends CmdConstant {
     }
 
     private volatile String connectedHost;
+    private volatile int connectedPort;
+    private volatile Status lastStatus = Status.NO_CONNECT;
+
+    public int getConnectedPort() { return connectedPort; }
+
+    public boolean isConnected() { return lastStatus == Status.CONNECTED; }
 
     public String getConnectedHost() { return connectedHost; }
 
     public void init(final String host, final int port) {
         connectedHost = host;
+        connectedPort = port;
         mExecutorForWrite.execute(new Runnable() {
             @Override
             public void run() {
@@ -78,6 +86,7 @@ public class ConnectedManager extends CmdConstant {
 
                     @Override
                     public void onStatusChange(@NonNull Status status) {
+                        lastStatus = status;
                         if (mCallbackList.size() > 0) {
                             for (ClientMessageCallback callback : mCallbackList) {
                                 callback.onStatusChange(status);

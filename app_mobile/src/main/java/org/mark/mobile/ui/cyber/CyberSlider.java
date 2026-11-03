@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.MotionEvent;
@@ -25,7 +24,9 @@ public class CyberSlider extends View {
     private final Paint track = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint glow = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Drawable thumb;
+    private final Paint thumbFill = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint thumbStroke = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final android.graphics.Path thumbPath = new android.graphics.Path();
     private final float dp;
     private int value = 50;
     private Listener listener;
@@ -38,7 +39,10 @@ public class CyberSlider extends View {
         fill.setColor(y);
         glow.setColor(y);
         glow.setMaskFilter(new BlurMaskFilter(8 * dp, BlurMaskFilter.Blur.NORMAL));
-        thumb = ContextCompat.getDrawable(c, R.drawable.ic_slider_thumb_diamond);
+        thumbFill.setColor(ContextCompat.getColor(c, R.color.cp_bg));
+        thumbStroke.setColor(y);
+        thumbStroke.setStyle(Paint.Style.STROKE);
+        thumbStroke.setStrokeWidth(2 * dp);
         setLayerType(LAYER_TYPE_SOFTWARE, null);
     }
 
@@ -53,7 +57,8 @@ public class CyberSlider extends View {
         if (listener != null) listener.onValueChanged(v, fromUser);
     }
 
-    private float thumbHalf() { return 8 * dp; }
+    /** 16dp square rotated 45° → half-diagonal 8√2 ≈ 11.3dp (outer edge incl. stroke). */
+    private float thumbHalf() { return (float) (8 * Math.sqrt(2)) * dp; }
 
     @Override
     protected void onDraw(Canvas c) {
@@ -63,10 +68,15 @@ public class CyberSlider extends View {
         c.drawRect(left, cy - h, right, cy + h, track);
         c.drawRect(left, cy - h, x, cy + h, glow);
         c.drawRect(left, cy - h, x, cy + h, fill);
-        if (thumb != null) {
-            thumb.setBounds((int) (x - half), (int) (cy - half), (int) (x + half), (int) (cy + half));
-            thumb.draw(c);
-        }
+        float hd = half - dp; // stroke centred inside the 22.6dp diagonal
+        thumbPath.reset();
+        thumbPath.moveTo(x, cy - hd);
+        thumbPath.lineTo(x + hd, cy);
+        thumbPath.lineTo(x, cy + hd);
+        thumbPath.lineTo(x - hd, cy);
+        thumbPath.close();
+        c.drawPath(thumbPath, thumbFill);
+        c.drawPath(thumbPath, thumbStroke);
     }
 
     @Override
