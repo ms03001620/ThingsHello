@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#FCEE0A</color>
-    <color name="colorPrimaryDark">#0B0B14</color>
-    <color name="colorAccent">#02D7F2</color>
-
     <color name="cp_yellow">#FCEE0A</color>
     <color name="cp_cyan">#02D7F2</color>
     <color name="cp_red">#FF003C</color>
@@ -22,14 +18,10 @@
     <color name="red_13">#21FF003C</color>
     <color name="yellow_05">#0DFCEE0A</color>
     <color name="yellow_30">#4DFCEE0A</color>
-    <color name="yellow_40">#66FCEE0A</color>
     <color name="yellow_60">#99FCEE0A</color>
     <color name="cyan_60">#9902D7F2</color>
     <color name="scrim_70">#B30B0B14</color>
-    <color name="scrim_75">#BF0B0B14</color>
     <color name="scanline">#0AFCEE0A</color>
     <color name="cp_yellow_pressed">#E5D800</color>
-    <color name="cp_yellow_disabled">#4DFCEE0A</color>
-    <color name="cp_on_yellow_disabled">#800B0B14</color>
     <color name="cp_action_edge">#333333</color>
 </resources>

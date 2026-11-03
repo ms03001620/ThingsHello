@@ -1,8 +1,6 @@
 package org.mark.mobile;
 
 import android.Manifest;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -15,15 +13,12 @@ import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Process;
 import android.os.SystemClock;
-import android.provider.MediaStore;
 import android.net.TrafficStats;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -31,7 +26,6 @@ import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
@@ -49,7 +43,7 @@ import com.google.android.exoplayer2.decoder.DecoderCounters;
 import com.google.android.exoplayer2.source.rtsp.RtspMediaSource;
 import com.google.android.exoplayer2.ui.PlayerView;
 
-import org.mark.base.PreferUtils;
+import org.mark.mobile.utils.PreferUtils;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.lib_unit_socket.bean.BuzzerCmd;
 import org.mark.lib_unit_socket.bean.CameraServoCmd;
@@ -58,8 +52,7 @@ import org.mark.lib_unit_socket.bean.LightCmd;
 import org.mark.lib_unit_socket.bean.WheelCmd;
 import org.mark.lib_unit_socket.bean.WheelRotateCmd;
 import org.mark.mobile.connect.ConnectedManager;
-import org.mark.mobile.ctrl.KeyIndex;
-import org.mark.mobile.ctrl.RockerListener;
+import org.mark.mobile.ctrl.SpeedMixer;
 import org.mark.mobile.ctrl.Throttle;
 import org.mark.mobile.preview.LowLatencyRenderersFactory;
 import org.mark.mobile.ui.cyber.CutShapeHelper;
@@ -68,9 +61,6 @@ import org.mark.mobile.ui.cyber.OctagonJoystickView;
 import org.mark.mobile.ui.cyber.ParallelogramDrawable;
 import org.mark.mobile.ui.cyber.ScanlineDrawable;
 
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
@@ -179,15 +169,10 @@ public class CtrlActivity extends AppCompatActivity {
 
     private final Runnable rssiTick = new Runnable() {
         @Override public void run() {
-            if (!mDemo) showRssi(readRssi());
+            if (!mDemo) showRssi(org.mark.mobile.utils.WifiRssi.read(CtrlActivity.this));
             ui.postDelayed(this, 2000);
         }
     };
-
-    @Nullable
-    private Integer readRssi() {
-        return org.mark.mobile.utils.WifiRssi.read(this);
-    }
 
     private void showRssi(@Nullable Integer rssi) {
         boolean weak = rssi != null && rssi <= RSSI_WEAK;
@@ -380,13 +365,9 @@ public class CtrlActivity extends AppCompatActivity {
                 CutShapeHelper.panel(color(R.color.cp_panel), 0, 0, dp(14), 0));
         textServo = findViewById(R.id.text_servo);
         sliderServo = findViewById(R.id.slider_servo);
-        sliderServo.setListener(new CyberSlider.Listener() {
-            @Override public void onValueChanged(int value, boolean fromUser) {
-                textServo.setText(value + "%");
-                servoThrottle.submit(value); // only on change, ≤ every 50ms, trailing flush once
-            }
-            @Override public void onStartTracking() { }
-            @Override public void onStopTracking() { }
+        sliderServo.setListener((value, fromUser) -> {
+            textServo.setText(value + "%");
+            servoThrottle.submit(value); // only on change, ≤ every 50ms, trailing flush once
         });
         textServo.setText(sliderServo.getValue() + "%");
         View recenter = findViewById(R.id.btn_recenter);
@@ -405,7 +386,7 @@ public class CtrlActivity extends AppCompatActivity {
                 wheelThrottle.sendNow("0,0");
             } else {
                 mStickPower = power;
-                int[] lr = RockerListener.roundSpeed(angle, Math.round(mSpeedCurrent * power));
+                int[] lr = SpeedMixer.roundSpeed(angle, Math.round(mSpeedCurrent * power));
                 wheelThrottle.submit(lr[0] + "," + lr[1]);
             }
             refreshStickCells();
@@ -443,21 +424,16 @@ public class CtrlActivity extends AppCompatActivity {
     private void setupSpeed() {
         textSpeed = findViewById(R.id.text_speed);
         sliderSpeed = findViewById(R.id.slider_speed);
-        PreferUtils.getInstance().init(this);
-        int saved = PreferUtils.getInstance().get(KeyIndex.SPEED);
+        int saved = PreferUtils.getInstance(this).getSpeed(WheelCmd.DEFAULT_SPEED);
         if (saved <= 0 || saved > 100) saved = WheelCmd.DEFAULT_SPEED;
         mSpeedCurrent = saved;
         sliderSpeed.setValue(saved, false);
         textSpeed.setText(saved + "%");
-        sliderSpeed.setListener(new CyberSlider.Listener() {
-            @Override public void onValueChanged(int value, boolean fromUser) {
-                mSpeedCurrent = value;
-                textSpeed.setText(value + "%");
-                PreferUtils.getInstance().put(KeyIndex.SPEED, value);
-                refreshStickCells();
-            }
-            @Override public void onStartTracking() { }
-            @Override public void onStopTracking() { }
+        sliderSpeed.setListener((value, fromUser) -> {
+            mSpeedCurrent = value;
+            textSpeed.setText(value + "%");
+            PreferUtils.getInstance(this).saveSpeed(value);
+            refreshStickCells();
         });
         refreshStickCells();
     }
@@ -547,13 +523,8 @@ public class CtrlActivity extends AppCompatActivity {
             Toast.makeText(this, "需要存储权限，授权后请再点一次截图", Toast.LENGTH_SHORT).show();
             return;
         }
-        Uri saved = saveToGallery(frame);
+        Uri saved = org.mark.mobile.utils.GallerySaver.save(this, frame);
         Toast.makeText(this, saved != null ? "已保存到相册" : "截图保存失败", Toast.LENGTH_SHORT).show();
-    }
-
-    @Nullable
-    private Uri saveToGallery(Bitmap bmp) {
-        return org.mark.mobile.utils.GallerySaver.save(this, bmp);
     }
 
     // ---------- debug demo (screenshots only) ----------
@@ -594,7 +565,7 @@ public class CtrlActivity extends AppCompatActivity {
             String host = getIntent().getStringExtra(EXTRA_HOST);
             int port = getIntent().getIntExtra(EXTRA_PORT, 0);
             if (host == null || host.isEmpty() || port <= 0) return;
-            org.mark.mobile.utils.PreferUtils p = new org.mark.mobile.utils.PreferUtils(CtrlActivity.this);
+            PreferUtils p = PreferUtils.getInstance(CtrlActivity.this);
             p.add(host, port);
             p.save(host, port);
             mRecentSaved = true;

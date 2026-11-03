@@ -1,27 +1,9 @@
 package org.mark.mobile.ctrl;
 
-import com.gcssloop.widget.RockerView;
-
-
-public abstract class RockerListener implements RockerView.RockerListener {
-    private final static int MAX_DIST = 400;
-
-    @Override
-    public void callback(int eventType, int currentAngle, float currentDistance) {
-        if (eventType == RockerView.EVENT_CLOCK) {
-            return;
-        }
-        currentDistance = currentDistance > MAX_DIST ? MAX_DIST : currentDistance;
-        onEvent(currentAngle, currentDistance * (1.0f / MAX_DIST));
+/** 摇杆角度 → 左右轮差速。 */
+public final class SpeedMixer {
+    private SpeedMixer() {
     }
-
-    /**
-     * 控制杆事件
-     * @param currentAngle 角度（1-360）
-     * @param power 能量(0-1.0);
-     */
-    public abstract void onEvent(int currentAngle, float power);
-
 
     /**
      *
@@ -41,7 +23,6 @@ public abstract class RockerListener implements RockerView.RockerListener {
             return result;
         }
         float p = max / 90.0f;
-
         if (angle <= 90) {
             result[0] = max;
             result[1] = value(p, angle);
@@ -55,13 +36,10 @@ public abstract class RockerListener implements RockerView.RockerListener {
             result[1] = -(max - value(p, angle - 270));
             result[0] = -max;
         }
-
         return result;
     }
 
     private static int value(float p, int angle) {
         return (int) (angle * p);
     }
-
-
 }

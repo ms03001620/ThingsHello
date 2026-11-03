@@ -20,12 +20,12 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import org.mark.base.PreferUtils;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.lib_unit_socket.bean.JsonReceiver;
 import org.mark.mobile.connect.ConnectedManager;
 import org.mark.mobile.ui.cyber.CutShapeHelper;
 import org.mark.mobile.ui.cyber.ScanlineDrawable;
+import org.mark.mobile.utils.PreferUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         REFUSED
     }
 
-    private org.mark.mobile.utils.PreferUtils mPreferUtils;
+    private PreferUtils mPreferUtils;
     private EditText editTextHost;
     private EditText editTextPort;
     private View wrapIp;
@@ -82,8 +82,7 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.cp_bg));
         setContentView(R.layout.activity_main);
 
-        PreferUtils.getInstance().init(this);
-        mPreferUtils = new org.mark.mobile.utils.PreferUtils(this);
+        mPreferUtils = PreferUtils.getInstance(this);
 
         mBarWidthPx = dp(3);
         mCutM = dp(14);

@@ -17,8 +17,6 @@ import org.mark.mobile.R;
 public class CyberSlider extends View {
     public interface Listener {
         void onValueChanged(int value, boolean fromUser);
-        void onStartTracking();
-        void onStopTracking();
     }
 
     private final Paint track = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -87,7 +85,6 @@ public class CyberSlider extends View {
         switch (e.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 getParent().requestDisallowInterceptTouchEvent(true);
-                if (listener != null) listener.onStartTracking();
                 setValue(Math.round(frac * 100), true);
                 return true;
             case MotionEvent.ACTION_MOVE:
@@ -95,7 +92,6 @@ public class CyberSlider extends View {
                 return true;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                if (listener != null) listener.onStopTracking();
                 return true;
             default:
                 return true;

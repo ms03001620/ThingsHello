@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="fab_margin">16dp</dimen>
     <dimen name="cp_screen_pad">20dp</dimen>
-    <dimen name="cp_card_gap">10dp</dimen>
-    <dimen name="cp_cut_xs">8dp</dimen>
-    <dimen name="cp_cut_s">11dp</dimen>
-    <dimen name="cp_cut_m">14dp</dimen>
-    <dimen name="cp_cut_l">22dp</dimen>
-    <dimen name="cp_cut_xl">24dp</dimen>
-    <dimen name="cp_cut_preview">30dp</dimen>
-    <dimen name="cp_accent_bar">3dp</dimen>
     <dimen name="cp_input_height">44dp</dimen>
     <dimen name="cp_status_height">56dp</dimen>
     <dimen name="cp_main_btn_height">54dp</dimen>

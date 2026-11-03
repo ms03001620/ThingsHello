@@ -37,7 +37,7 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 
 | 要处理的工作 | 优先查看 |
 | --- | --- |
-| 手机连接、连接状态、IP 保存 | `app_mobile`：`MainActivity.java`、`connect/ConnectedManager.java`、`connect/ConnectedWifi.java`、`utils/PreferUtils.java` |
+| 手机连接、连接状态、IP 保存 | `app_mobile`：`MainActivity.java`、`connect/ConnectedManager.java`、`utils/PreferUtils.java` |
 | 遥控页面、摇杆、速度、转向、灯光按钮 | `app_mobile`：`CtrlActivity.java`、`ctrl/`、`src/main/res/layout/` |
 | 命令格式、类型、新增控制指令 | `lib_unit_socket`：`bean/CmdConstant.java`、`bean/*Cmd.java`、`bean/JsonReceiver.java`；同时检查手机发送处和小车分发处 |
 | TCP 连接、读写、服务端接入 | `lib_unit_socket`：`SocketManager.java`、`SocketService.java`、`ConnectedThread.java`；手机连接封装在 `app_mobile/connect/` |
@@ -67,7 +67,7 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 
 - 根配置：`build.gradle`、`gradle.properties`、`gradle/wrapper/gradle-wrapper.properties`；当前声明 AGP `7.1.3`、Gradle `7.6.6`，各模块 `compileSdkVersion` 为 `28`。具体配置以文件为准。
 - SDK 本机路径见 `local.properties`；不要将本机路径复制到共享配置。
-- 单元测试位于各模块 `src/test/java/`；手机仪器测试位于 `app_mobile/src/androidTest/java/`。
+- 单元测试位于各模块 `src/test/java/`。
 - 有针对性的测试包括：`app` 的 `CameraServoTest`、`ExclusiveBindTest`，`lib_unit_socket` 的 `ConnectedThreadTest`，`lib_base` 的 `CameraUtilsTest`，`app_prework` 的 `cam/preview/category/*Test`。
 
 在仓库根目录按改动范围选择命令：
@@ -93,7 +93,7 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 - `app_test` 是可安装的外设测试应用；自动化单元测试要找 `src/test/`。
 - `app_prework` 与 `app_rtmp` 都使用 `org.mark.prework` 包名，且当前 `applicationId` 相同。搜索或修改 `MainActivity`、`App` 等同名类时务必限定模块；两者安装到同一设备会共用应用标识。
 - `app_rtmp` 自带 FFmpeg JNI；其 `lib_ffmpeg` 依赖目前被注释。修改推流前先确认实际应用。
-- `CameraUtils` 在 `lib_base` 和 `lib_camera` 中各有一份；`PreferUtils` 在 `lib_base` 和 `app_mobile` 中各有一份。以调用处 import 为准。
+- `CameraUtils` 在 `lib_base` 和 `lib_camera` 中各有一份；`PreferUtils` 在 `lib_base`（通用底层）和 `app_mobile`（手机专属单例，统一管理配置）中各有一份，`app_mobile` 内部已统一使用自身模块的 `PreferUtils`。
 - `app` 与 `app_test` 各有 `com/leinardi/android/things/pio/SoftPwm.java`，修改 PWM 时核对两处用途。
 - 小车硬件初始化受 `DeviceManager` 中 `iot_rpi3` 型号判断限制；普通手机或模拟器上的构建/启动结果不能替代外设验证。设备使用细节见前述使用说明。
 - 搜索优先限定目标模块的 `src/main/java/` 和 `src/main/res/`，默认排除 `build/`、`.gradle/`、`.idea/`；模型、FFmpeg 头文件和二进制库仅在相关任务中展开。

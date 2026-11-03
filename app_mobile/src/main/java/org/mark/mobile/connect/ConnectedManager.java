@@ -1,7 +1,7 @@
 package org.mark.mobile.connect;
 
 
-import org.mark.lib_unit_socket.SocketManager;
+import org.mark.lib_unit_socket.ConnectedThread;
 import org.mark.lib_unit_socket.bean.CmdConstant;
 import org.mark.lib_unit_socket.ClientMessageCallback;
 import org.mark.lib_unit_socket.ClientMessageCallback.Status;
@@ -20,7 +20,7 @@ import androidx.annotation.Nullable;
 public class ConnectedManager extends CmdConstant {
     private static ConnectedManager instance;
     @Nullable
-    private IConnect mDefaultConnect;
+    private ConnectedThread mDefaultConnect;
     private ExecutorService mExecutorForWrite;
     private List<ClientMessageCallback> mCallbackList;
 
@@ -56,7 +56,7 @@ public class ConnectedManager extends CmdConstant {
         mExecutorForWrite.execute(new Runnable() {
             @Override
             public void run() {
-                mDefaultConnect = new ConnectedWifi(host, port, new ClientMessageCallback() {
+                mDefaultConnect = new ConnectedThread(host, port, new ClientMessageCallback() {
                     @Override
                     public void onReceiveMessage(byte[] bytes, int type) {
                         if (mCallbackList.size() > 0) {
@@ -107,7 +107,7 @@ public class ConnectedManager extends CmdConstant {
             @Override
             public void run() {
                 if (mDefaultConnect != null) {
-                    mDefaultConnect.stop();
+                    mDefaultConnect.stop(true);
                 }
             }
         });
@@ -128,7 +128,7 @@ public class ConnectedManager extends CmdConstant {
             @Override
             public void run() {
                 if (mDefaultConnect != null) {
-                    mDefaultConnect.sendMessage(message, type);
+                    mDefaultConnect.write(message, (byte) type);
                 }
             }
         });

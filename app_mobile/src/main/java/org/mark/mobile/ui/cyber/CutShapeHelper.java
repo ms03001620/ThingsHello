@@ -74,24 +74,6 @@ public final class CutShapeHelper {
         return s;
     }
 
-    public static void setLeftBarColor(View view, @ColorInt int barColor) {
-        Drawable bg = view.getBackground();
-        if (bg instanceof LeftBarCutDrawable) {
-            ((LeftBarCutDrawable) bg).setBarColor(barColor);
-            view.invalidate();
-        }
-    }
-
-    public static void setLeftBarAndFill(View view, @ColorInt int fill, @ColorInt int bar) {
-        Drawable bg = view.getBackground();
-        if (bg instanceof LeftBarCutDrawable) {
-            LeftBarCutDrawable d = (LeftBarCutDrawable) bg;
-            d.setFillColor(fill);
-            d.setBarColor(bar);
-            view.invalidate();
-        }
-    }
-
     /** Single-fill cut rectangle. */
     public static class CutDrawable extends Drawable {
         private final Paint fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -117,11 +99,6 @@ public final class CutShapeHelper {
             this.cutTr = cutTr;
             this.cutBr = cutBr;
             this.cutBl = cutBl;
-        }
-
-        public void setFillColor(@ColorInt int color) {
-            fillPaint.setColor(color);
-            invalidateSelf();
         }
 
         @Override
@@ -203,16 +180,6 @@ public final class CutShapeHelper {
             this.cutTr = cutTr;
             this.cutBr = cutBr;
             this.cutBl = cutBl;
-        }
-
-        void setFillColor(@ColorInt int color) {
-            fillPaint.setColor(color);
-            invalidateSelf();
-        }
-
-        void setBarColor(@ColorInt int color) {
-            barPaint.setColor(color);
-            invalidateSelf();
         }
 
         @Override
