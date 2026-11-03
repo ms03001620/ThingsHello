@@ -222,7 +222,7 @@ public class CtrlActivity extends AppCompatActivity {
         Intent intent = new Intent(this, org.mark.mobile.preview.H264Activity.class);
         intent.putExtra("host", ConnectedManager.getInstance().getConnectedHost());
         intent.putExtra(org.mark.mobile.preview.H264Activity.EXTRA_SERVO, sliderServo.getValue());
-        intent.putExtra(org.mark.mobile.preview.H264Activity.EXTRA_POWER, Math.round(mStickPower * 100));
+        intent.putExtra(org.mark.mobile.preview.H264Activity.EXTRA_SPEED_LIMIT, sliderSpeed.getValue());
         intent.putExtra(org.mark.mobile.preview.H264Activity.EXTRA_LIGHT, mLightOn);
         if (mDemo) intent.putExtra(MainActivity.EXTRA_DEBUG_STATE, "demo");
         startActivityForResult(intent, REQ_PREVIEW);

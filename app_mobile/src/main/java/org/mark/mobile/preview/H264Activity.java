@@ -49,14 +49,14 @@ import java.util.Locale;
 /** Fullscreen CSI preview (2077 HUD). ExoPlayer handles RTSP/H264 over TCP. */
 public final class H264Activity extends AppCompatActivity {
     public static final String EXTRA_SERVO = "servo";
-    public static final String EXTRA_POWER = "power";
+    public static final String EXTRA_SPEED_LIMIT = "speed_limit";
     public static final String EXTRA_LIGHT = "light";
     private static final long HUD_AUTO_HIDE_MS = 4000;
 
     private PlayerView video;
     private SimpleExoPlayer player;
     private View hud, tagRec, hint, hudRoot;
-    private TextView noSignal, pillStream, pillBuf, pillWifi, pillRate, pillServo, pillPower;
+    private TextView noSignal, pillStream, pillBuf, pillWifi, pillRate, pillServo, pillSpeed;
     private ImageView btnLight;
     private boolean demo, lightOn, hudVisible = true;
     private long lastStatsTime, lastRxBytes = -1;
@@ -117,12 +117,12 @@ public final class H264Activity extends AppCompatActivity {
         pillWifi = findViewById(R.id.pill_wifi);
         pillRate = findViewById(R.id.pill_rate);
         pillServo = findViewById(R.id.pill_servo);
-        pillPower = findViewById(R.id.pill_power);
+        pillSpeed = findViewById(R.id.pill_speed);
         btnLight = findViewById(R.id.btn_light_pv);
 
         int yellow = color(R.color.cp_yellow);
         int pillBg = color(R.color.scrim_70);
-        for (TextView p : new TextView[]{pillStream, pillBuf, pillWifi, pillRate, pillServo, pillPower}) {
+        for (TextView p : new TextView[]{pillStream, pillBuf, pillWifi, pillRate, pillServo, pillSpeed}) {
             CutShapeHelper.applyWithLeftBar(p, pillBg, color(R.color.cp_cyan), dp(2), 0, 0, 0, 0);
         }
         hint.setBackground(CutShapeHelper.panel(pillBg, 0, 0, 0, 0));
@@ -154,7 +154,8 @@ public final class H264Activity extends AppCompatActivity {
         renderLight();
 
         pillServo.setText(String.format(Locale.US, "云台 %d%%", getIntent().getIntExtra(EXTRA_SERVO, 50)));
-        pillPower.setText(String.format(Locale.US, "功率 %d%%", getIntent().getIntExtra(EXTRA_POWER, 0)));
+        int speedLimit = getIntent().getIntExtra(EXTRA_SPEED_LIMIT, -1);
+        pillSpeed.setText(speedLimit < 0 ? "限速 --" : String.format(Locale.US, "限速 %d%%", speedLimit));
 
         GestureDetector gd = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
             @Override public boolean onDown(MotionEvent e) { return true; }
@@ -365,7 +366,7 @@ public final class H264Activity extends AppCompatActivity {
         pillWifi.setText("手机 WiFi -52dBm");
         pillRate.setText("4.2Mbps");
         pillServo.setText("云台 65%");
-        pillPower.setText("功率 72%");
+        pillSpeed.setText("限速 72%");
         String s = getIntent().getStringExtra(MainActivity.EXTRA_DEBUG_STATE);
         if ("demo_hidden".equals(s)) { hudVisible = false; hud.setVisibility(View.INVISIBLE); }
     }
