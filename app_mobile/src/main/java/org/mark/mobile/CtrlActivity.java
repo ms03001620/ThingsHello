@@ -141,8 +141,10 @@ public class CtrlActivity extends AppCompatActivity {
         setupActions();
         setLive(false);
 
+        // Register first, then check: a disconnect that landed before registration is caught here.
         ConnectedManager.getInstance().addCallback(mClientMessageCallback);
         if (mDemo) applyDemo();
+        checkStillConnected();
     }
 
     // ---------- top bar ----------
@@ -582,6 +584,19 @@ public class CtrlActivity extends AppCompatActivity {
     }
 
     // ---------- lifecycle / connection ----------
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkStillConnected();
+    }
+
+    /** Car closes a rejected 2nd controller ~500ms after accept; we may open after that. */
+    private void checkStillConnected() {
+        if (!mDemo && !ConnectedManager.getInstance().isConnected()) {
+            backToConnectRefused();
+        }
+    }
+
     @Override
     protected void onStart() {
         super.onStart();

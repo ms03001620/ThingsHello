@@ -437,6 +437,18 @@ public class MainActivity extends AppCompatActivity {
                 || lower.contains("no route");
     }
 
+    private void saveRecent() {
+        final String textHost = editTextHost.getText().toString().trim();
+        final String text = editTextPort.getText().toString().trim();
+        try {
+            final int port = Integer.parseInt(text);
+            mPreferUtils.add(textHost, port);
+            mPreferUtils.save(textHost, port);
+            populateRecent();
+        } catch (Exception ignored) {
+        }
+    }
+
     private void openControl() {
         startActivity(new Intent(MainActivity.this, CtrlActivity.class));
     }
@@ -491,21 +503,15 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case CONNECTED:
+                // Connect succeeded: any later NO_CONNECT is a real disconnect, not our own stop().
+                mIgnoreNextNoConnect = false;
                 showState(UiState.ONLINE);
-                final String textHost = editTextHost.getText().toString().trim();
-                final String text = editTextPort.getText().toString().trim();
-                try {
-                    final int port = Integer.parseInt(text);
-                    mPreferUtils.add(textHost, port);
-                    mPreferUtils.save(textHost, port);
-                    populateRecent();
-                } catch (Exception ignored) {
-                }
                 // Navigate to control after a brief beat so online card is visible
                 btnConnect.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        if (mUiState == UiState.ONLINE) {
+                        if (mUiState == UiState.ONLINE && ConnectedManager.getInstance().isConnected()) {
+                            saveRecent(); // only once truly online, not on bare TCP connect
                             openControl();
                         }
                     }
