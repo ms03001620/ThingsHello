@@ -16,6 +16,15 @@ import org.mark.mobile.repository.IMainRepository
 interface UiScheduler {
     fun runOnUi(block: () -> Unit)
     fun postDelayed(delayMillis: Long, block: () -> Unit)
+    fun scheduleCancellable(delayMillis: Long, block: () -> Unit): () -> Unit {
+        var cancelled = false
+        postDelayed(delayMillis) {
+            if (!cancelled) {
+                block()
+            }
+        }
+        return { cancelled = true }
+    }
     fun cancelAll()
 }
 
@@ -32,6 +41,12 @@ class AndroidUiScheduler : UiScheduler {
 
     override fun postDelayed(delayMillis: Long, block: () -> Unit) {
         handler.postDelayed(block, delayMillis)
+    }
+
+    override fun scheduleCancellable(delayMillis: Long, block: () -> Unit): () -> Unit {
+        val runnable = Runnable { block() }
+        handler.postDelayed(runnable, delayMillis)
+        return { handler.removeCallbacks(runnable) }
     }
 
     override fun cancelAll() {
