@@ -19,7 +19,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import org.mark.mobile.databinding.ActivityMainBinding
-import org.mark.mobile.preview.H264Activity
 import org.mark.mobile.repository.MainRepository
 import org.mark.mobile.ui.cyber.CutShapeHelper
 import org.mark.mobile.ui.cyber.ScanlineDrawable

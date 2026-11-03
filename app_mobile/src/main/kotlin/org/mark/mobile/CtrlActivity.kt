@@ -47,7 +47,6 @@ import com.google.android.exoplayer2.decoder.DecoderCounters
 import com.google.android.exoplayer2.source.rtsp.RtspMediaSource
 import org.mark.mobile.databinding.ActivityCtrlBinding
 import org.mark.mobile.databinding.ItemCyberActionBinding
-import org.mark.mobile.preview.H264Activity
 import org.mark.mobile.preview.LowLatencyRenderersFactory
 import org.mark.mobile.repository.CtrlRepository
 import org.mark.mobile.ui.cyber.CutShapeHelper
@@ -242,7 +241,7 @@ class CtrlActivity : AppCompatActivity() {
     private fun openPreview() {
         val state = viewModel.uiState.value ?: CtrlUiState()
         val intent = Intent(this, H264Activity::class.java).apply {
-            putExtra("host", viewModel.getConnectedHost())
+            putExtra(H264Activity.EXTRA_HOST, viewModel.getConnectedHost())
             putExtra(H264Activity.EXTRA_SERVO, state.servoPercent)
             putExtra(H264Activity.EXTRA_SPEED_LIMIT, state.speedLimit)
             putExtra(H264Activity.EXTRA_LIGHT, state.isLightOn)

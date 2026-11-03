@@ -44,7 +44,7 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 | 小车命令分发、硬件初始化、引脚 | `app`：`MainActivity.java`、`ctrl/DeviceManager.java`、`ctrl/DeviceHelper.java`、`ctrl/BoardDefaults.java` |
 | 车轮、摄像头舵机、灯、蜂鸣器 | `app`：`ctrl/wheel/`、`ctrl/servo/`、`ctrl/light/`、`ctrl/voice/`；车轮与舵机互斥见 `ctrl/comp/bind/ExclusiveBind.java` |
 | 小车摄像头开关、采集与图像发送 | `app`：`video/CameraServiceConnection.java`、`video/CameraService.java`、`video/CameraPresent.java`、`video/sender/`；底层见 `lib_camera` |
-| 手机预览、图像接收、画面渲染 | `app_mobile`：`CtrlActivity.kt`（RTSP 小窗）、`preview/H264Activity.java`（全屏）、`preview/LowLatencyRenderersFactory.java` |
+| 手机预览、图像接收、画面渲染 | 先读 [`app_mobile/AGENTS.md`](app_mobile/AGENTS.md)；`app_mobile`：`CtrlActivity.kt`（RTSP 小窗）、`preview/H264Activity.kt`（全屏）、`viewmodel/H264ViewModel.kt`、`preview/LowLatencyRenderersFactory.java` |
 | 模型加载、分类器与标签 | `lib_tensorflow`；`app/tensorflow/ImageClassifierFactory.java`；模型与标签在 `app/src/main/assets/` |
 | 分类预览、结果排序和平滑 | `app_prework`：`cam/TfliteConfigActivity.java`、`cam/preview/`、`cam/preview/category/`；绑定模型在 `src/main/ml/` |
 | 图片检查与网格浏览 | `app_prework`：`CheckActivity.java`、`CheckPresent.java`、`grid/`、`db/DbMock.java` |
@@ -100,4 +100,4 @@ ThingsHello 是以 Java 为主的 Android 多模块项目，核心用途是通�
 
 ## 排线 H.264 / RTSP 新预览
 
-720p 低延迟根因与优化记录：[doc/csi-h264-latency-optimization.md](doc/csi-h264-latency-optimization.md)。Pi 服务配置与部署：`car_pi/deploy/csi/`；实机验证脚本：`car_pi/hardware-tests/`；手机入口 `CtrlActivity` 的 `btn_fullscreen` / 小窗点击，独立页面 `app_mobile/.../preview/H264Activity.java`。car_pi 已移除旧的 USB JPEG/UDP 视频通路。
+720p 低延迟根因与优化记录：[doc/csi-h264-latency-optimization.md](doc/csi-h264-latency-optimization.md)。Pi 服务配置与部署：`car_pi/deploy/csi/`；实机验证脚本：`car_pi/hardware-tests/`；手机入口 `CtrlActivity` 的 `btn_fullscreen` / 小窗点击，独立页面 `app_mobile/.../preview/H264Activity.kt`。car_pi 已移除旧的 USB JPEG/UDP 视频通路。

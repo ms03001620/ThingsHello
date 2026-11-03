@@ -13,11 +13,11 @@
 | 包 / 目录 | 职责说明 | 核心文件 |
 | --- | --- | --- |
 | `org.mark.mobile` | 页面入口（Activity / View 层） | `MainActivity.kt`（连接页，MVVM）、`CtrlActivity.kt`（遥控页，MVVM） |
-| `viewmodel/` | MVVM 视图模型与 UI 状态定义 | `MainViewModel.kt`、`MainUiState.kt`、`CtrlViewModel.kt`、`CtrlUiState.kt` |
-| `repository/` | MVVM 数据仓库层（隔离底层通信与 SP） | `MainRepository.kt`（`IMainRepository`）、`CtrlRepository.kt`（`ICtrlRepository`） |
+| `viewmodel/` | MVVM 视图模型与 UI 状态定义 | `MainViewModel.kt`、`MainUiState.kt`、`CtrlViewModel.kt`、`CtrlUiState.kt`、`H264ViewModel.kt`、`H264UiState.kt` |
+| `repository/` | MVVM 数据仓库层（隔离底层通信与 SP） | `MainRepository.kt`（`IMainRepository`）、`CtrlRepository.kt`（`ICtrlRepository`）、`H264Repository.kt`（`IH264Repository`） |
 | `connect/` | TCP 连接管理单例 | `ConnectedManager.java` |
 | `ctrl/` | 遥控指令节流与差速混控算法 | `SpeedMixer.java`、`Throttle.java` |
-| `preview/` | RTSP H.264 全屏预览与低延迟渲染 | `H264Activity.java`、`LowLatencyRenderersFactory.java` |
+| `preview/` | RTSP H.264 全屏预览与低延迟渲染 | `H264Activity.kt`（全屏预览页，MVVM）、`LowLatencyRenderersFactory.java` |
 | `ui/cyber/` | Cyberpunk 2077 风格自定义控件与 Drawable | `CutShapeHelper.java`、`OctagonJoystickView.java`、`CyberSlider.java`、`ScanlineDrawable.java` |
 | `utils/` | 手机端本地配置与通用扩展函数 | `PreferUtils.java`、`ViewExtensions.kt` |
 
