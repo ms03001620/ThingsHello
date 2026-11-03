@@ -111,11 +111,7 @@ class OctagonJoystickView @JvmOverloads constructor(
         val maxDist = (s - s * 64f / 190f) / 2f
 
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                parent?.requestDisallowInterceptTouchEvent(true)
-                handleMove(event.x - cx, event.y - cy, maxDist)
-            }
-            MotionEvent.ACTION_MOVE -> {
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
                 handleMove(event.x - cx, event.y - cy, maxDist)
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {

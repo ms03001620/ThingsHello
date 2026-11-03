@@ -65,7 +65,7 @@ class CtrlViewModel(
 
     init {
         val rawSaved = prefsRepository.getSavedSpeed(WheelCmd.DEFAULT_SPEED)
-        val initialSpeed = if (rawSaved in 1..100) rawSaved else WheelCmd.DEFAULT_SPEED
+        val initialSpeed = if (rawSaved in WheelCmd.DEFAULT_SPEED..100) rawSaved else WheelCmd.DEFAULT_SPEED
         val (subtitle, connected) = resolveSubtitleAndStatus()
 
         uiState.value = CtrlUiState(

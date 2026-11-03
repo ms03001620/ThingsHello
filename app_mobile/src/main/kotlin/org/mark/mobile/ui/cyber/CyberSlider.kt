@@ -91,11 +91,7 @@ class CyberSlider @JvmOverloads constructor(
         if (!isEnabled) return false
         val frac = (event.x - thumbHalf) / max(1f, width - 2f * thumbHalf)
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                parent?.requestDisallowInterceptTouchEvent(true)
-                setValue((frac * 100f).roundToInt(), true)
-            }
-            MotionEvent.ACTION_MOVE -> {
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
                 setValue((frac * 100f).roundToInt(), true)
             }
         }

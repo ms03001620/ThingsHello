@@ -68,6 +68,13 @@ class CtrlViewModelTest {
     }
 
     @Test
+    fun `sub-threshold saved speed falls back to DEFAULT_SPEED`() {
+        fakePrefsRepo.savedSpeed = 28
+        val vm = createViewModel()
+        assertEquals(WheelCmd.DEFAULT_SPEED, vm.uiState.value!!.speedLimit)
+    }
+
+    @Test
     fun `disconnected on init emits single-shot returnToConnectRefused`() {
         fakeControlRepo.connected = false
         val vm = createViewModel()

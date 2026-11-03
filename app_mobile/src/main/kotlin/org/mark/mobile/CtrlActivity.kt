@@ -116,12 +116,17 @@ class CtrlActivity : AppCompatActivity() {
     private val rotateTouchListener = View.OnTouchListener { v, event ->
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                v.parent?.requestDisallowInterceptTouchEvent(true)
+                v.isPressed = true
                 viewModel.onRotatePressed(isLeft = v === binding.btnLeft)
+                true
             }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> viewModel.onRotateReleased(isLeft = v === binding.btnLeft)
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                v.isPressed = false
+                viewModel.onRotateReleased(isLeft = v === binding.btnLeft)
+                true
+            }
+            else -> false
         }
-        false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
