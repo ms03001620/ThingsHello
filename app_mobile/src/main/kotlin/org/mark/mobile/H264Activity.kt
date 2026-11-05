@@ -197,6 +197,8 @@ class H264Activity : AppCompatActivity() {
         binding.btnBackPv.background = CutShapeHelper.stroked(pillBg, yellow, dpF(1), cutBr = dpF(10))
         binding.btnSnapPv.background = CutShapeHelper.stroked(pillBg, yellow, dpF(1), cutBr = dpF(10))
         binding.btnSnapPv.setColorFilter(yellow)
+        binding.btnAutohidePv.background = CutShapeHelper.stroked(pillBg, yellow, dpF(1), cutBr = dpF(10))
+        binding.btnAutohidePv.setColorFilter(yellow)
 
         if (viewModel.isDemo) {
             binding.playerFull.setBackgroundColor(0xFF1A1A22.toInt())
@@ -311,15 +313,15 @@ class H264Activity : AppCompatActivity() {
     }
 
     private fun renderAutoHide(enabled: Boolean) {
+        // 与车灯按钮同一套描边：始终 cp_yellow + 1dp，靠填充区分开关态
         val yellow = colorCompat(R.color.cp_yellow)
-        val muted = (yellow and 0x00FFFFFF) or 0x73000000 // 45% 黄，未选中暗淡
         binding.btnAutohidePv.background = CutShapeHelper.stroked(
             if (enabled) yellow else colorCompat(R.color.scrim_70),
-            if (enabled) yellow else muted,
+            yellow,
             dpF(1),
             cutBr = dpF(10)
         )
-        binding.btnAutohidePv.setColorFilter(if (enabled) colorCompat(R.color.cp_bg) else muted)
+        binding.btnAutohidePv.setColorFilter(if (enabled) colorCompat(R.color.cp_bg) else yellow)
         binding.btnAutohidePv.isSelected = enabled
         binding.btnAutohidePv.contentDescription = if (enabled) "自动隐藏界面：开" else "自动隐藏界面：关"
     }
