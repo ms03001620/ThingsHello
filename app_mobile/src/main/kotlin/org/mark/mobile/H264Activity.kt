@@ -249,8 +249,11 @@ class H264Activity : AppCompatActivity() {
     }
 
     private fun renderUiState(state: H264UiState) {
-        if (state.isLive) {
+        if (state.isLive && state.isHudVisible) {
             binding.tagRec.show()
+            binding.textNoSignal.hide()
+        } else if (state.isLive) {
+            // HUD 隐藏中：REC 由 setFilterOverlaysVisible 处理，这里只保证无信号文案关掉
             binding.textNoSignal.hide()
         } else {
             binding.tagRec.hide()
@@ -314,29 +317,36 @@ class H264Activity : AppCompatActivity() {
             .start()
     }
 
-    /** HUD 隐藏时同步关掉色调/扫描线/外框滤镜和中心焦点，露出干净画面 */
+    /** HUD 隐藏时同步关掉滤镜、中心焦点和 REC 红标，露出干净画面 */
     private fun setFilterOverlaysVisible(show: Boolean, animate: Boolean) {
+        val live = viewModel.uiState.value?.isLive == true
         val overlays = arrayOf(binding.overlayTint, binding.overlayScan, binding.overlayFrame, binding.imgReticle)
         for (view in overlays) {
-            view.animate().cancel()
-            if (!animate) {
-                view.alpha = if (show) 1f else 0f
-                view.visibility = if (show) View.VISIBLE else View.INVISIBLE
-                continue
-            }
-            if (show) {
-                view.visibility = View.VISIBLE
-            }
-            view.animate()
-                .alpha(if (show) 1f else 0f)
-                .setDuration(FADE_DURATION_MS)
-                .withEndAction {
-                    if (!show && viewModel.uiState.value?.isHudVisible == false) {
-                        view.visibility = View.INVISIBLE
-                    }
-                }
-                .start()
+            applyOverlayVisibility(view, show, animate)
         }
+        // REC 仅在有信号且 HUD 显示时出现
+        applyOverlayVisibility(binding.tagRec, show && live, animate)
+    }
+
+    private fun applyOverlayVisibility(view: View, show: Boolean, animate: Boolean) {
+        view.animate().cancel()
+        if (!animate) {
+            view.alpha = if (show) 1f else 0f
+            view.visibility = if (show) View.VISIBLE else View.INVISIBLE
+            return
+        }
+        if (show) {
+            view.visibility = View.VISIBLE
+        }
+        view.animate()
+            .alpha(if (show) 1f else 0f)
+            .setDuration(FADE_DURATION_MS)
+            .withEndAction {
+                if (!show) {
+                    view.visibility = View.INVISIBLE
+                }
+            }
+            .start()
     }
 
     private fun renderAutoHide(enabled: Boolean) {
