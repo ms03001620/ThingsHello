@@ -195,11 +195,12 @@ class CtrlViewModel(
     }
 
     fun onWifiRssiUpdated(rssi: Int?) {
-        if (isDemo) return
         val current = uiState.value ?: CtrlUiState()
-        val weak = rssi != null && rssi <= RSSI_WEAK
+        // Demo 读不到时回落 -52；能读到真实 RSSI 时优先用真实值。
+        val value = rssi ?: if (isDemo) -52 else null
+        val weak = value != null && value <= RSSI_WEAK
         uiState.value = current.copy(
-            wifiRssi = rssi,
+            wifiRssi = value,
             isWifiWeak = weak
         )
     }

@@ -97,9 +97,7 @@ class CtrlActivity : AppCompatActivity() {
 
     private val rssiTick = object : Runnable {
         override fun run() {
-            if (!viewModel.isDemo) {
-                viewModel.onWifiRssiUpdated(WifiRssi.read(this@CtrlActivity))
-            }
+            viewModel.onWifiRssiUpdated(WifiRssi.read(this@CtrlActivity))
             uiHandler.postDelayed(this, RSSI_POLL_MS)
         }
     }
