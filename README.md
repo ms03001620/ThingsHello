@@ -1,6 +1,5 @@
 # Android things & Raspberry Pi & Car
 
-![Demo](https://github.com/ms03001620/ThingsHello/blob/master/doc/art1.png)
 ![Demo](https://github.com/ms03001620/ThingsHello/blob/master/doc/art2.png)
 
 
