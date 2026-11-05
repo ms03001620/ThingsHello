@@ -291,8 +291,7 @@
                 android:clickable="true"
                 android:clipChildren="false"
                 android:clipToPadding="false"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
+                android:focusable="true">
 
                 <LinearLayout
                     android:layout_width="match_parent"
