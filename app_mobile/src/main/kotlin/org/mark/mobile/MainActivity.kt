@@ -193,10 +193,22 @@ class MainActivity : AppCompatActivity() {
             }
         }
         binding.lottieTarget.apply {
-            setAnimation(sessionLottieRes)
+            setAnimation(resolveLottieRes())
             repeatCount = LottieDrawable.INFINITE
             playAnimation()
         }
+    }
+
+    /** Debug: `--es lottie breach|reticle|terminal` 强制指定；正式路径仍按进程随机一次。 */
+    private fun resolveLottieRes(): Int {
+        if (BuildConfig.DEBUG) {
+            when (intent.getStringExtra("lottie")) {
+                "breach" -> return R.raw.lottie_breach
+                "reticle" -> return R.raw.lottie_reticle
+                "terminal" -> return R.raw.lottie_terminal
+            }
+        }
+        return sessionLottieRes
     }
 
     private fun setupInputs() {
