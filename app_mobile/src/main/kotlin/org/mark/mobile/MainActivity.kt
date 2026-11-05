@@ -1,7 +1,5 @@
 package org.mark.mobile
 
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.PorterDuff
@@ -11,12 +9,12 @@ import android.text.TextWatcher
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
-import android.view.animation.LinearInterpolator
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.airbnb.lottie.LottieDrawable
 import org.mark.mobile.databinding.ActivityMainBinding
 import org.mark.mobile.repository.CarControlRepository
 import org.mark.mobile.repository.CarPrefsRepository
@@ -41,12 +39,18 @@ class MainActivity : AppCompatActivity() {
         const val EXTRA_REFUSED = "extra_refused"
         /** Debug only: force UI state for screenshots (idle/connecting/online/refused). */
         const val EXTRA_DEBUG_STATE = "debug_state"
+
+        private val LOTTIE_TARGETS = intArrayOf(
+            R.raw.lottie_breach, R.raw.lottie_reticle, R.raw.lottie_terminal
+        )
+
+        /** Picked once per process (cold start); stays fixed for the whole session. */
+        private val sessionLottieRes: Int by lazy { LOTTIE_TARGETS.random() }
     }
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: MainViewModel
 
-    private var beamAnimator: ObjectAnimator? = null
     private var initialInputApplied: Boolean = false
     private var barWidthPx: Int = 0
     private var cutM: Float = 0f
@@ -179,25 +183,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startBeamAnimation() {
-        binding.scanBeam.post(object : Runnable {
-            override fun run() {
-                val parent = binding.scanBeam.parent as? View
-                if (parent == null || parent.height == 0) {
-                    binding.scanBeam.post(this)
-                    return
-                }
-                val travel = parent.height * 0.5f
-                beamAnimator = ObjectAnimator.ofFloat(
-                    binding.scanBeam, View.TRANSLATION_Y, -travel * 0.3f, travel * 0.3f
-                ).apply {
-                    duration = 2000
-                    repeatMode = ValueAnimator.REVERSE
-                    repeatCount = ValueAnimator.INFINITE
-                    interpolator = LinearInterpolator()
-                    start()
-                }
+        val card = binding.cardCar
+        card.post {
+            val w = card.width
+            if (w > 0) {
+                val lp = card.layoutParams
+                lp.height = w * 300 / 750
+                card.layoutParams = lp
             }
-        })
+        }
+        binding.lottieTarget.apply {
+            setAnimation(sessionLottieRes)
+            repeatCount = LottieDrawable.INFINITE
+            playAnimation()
+        }
     }
 
     private fun setupInputs() {
@@ -366,7 +365,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        beamAnimator?.cancel()
+        binding.lottieTarget.cancelAnimation()
         if (isFinishing) {
             viewModel.onActivityFinishing()
         }

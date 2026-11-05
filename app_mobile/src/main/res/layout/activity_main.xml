@@ -68,22 +68,14 @@
                 android:layout_marginTop="6dp"
                 android:layout_marginBottom="10dp">
 
-                <org.mark.mobile.ui.cyber.GlowImageView
-                    android:id="@+id/img_car"
-                    android:layout_width="162dp"
-                    android:layout_height="100dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@null"
-                    android:padding="6dp"
-                    android:src="@drawable/ic_car_topview" />
-
-                <!-- 2dp line + 12dp glow each side; full card width -->
-                <org.mark.mobile.ui.cyber.GlowLineView
-                    android:id="@+id/scan_beam"
+                <!-- Lottie 750x300 (2.5:1); card height set to width/2.5 in code -->
+                <com.airbnb.lottie.LottieAnimationView
+                    android:id="@+id/lottie_target"
                     android:layout_width="match_parent"
-                    android:layout_height="26dp"
-                    android:layout_gravity="top"
-                    android:layout_marginTop="77dp" />
+                    android:layout_height="match_parent"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    app:lottie_loop="true" />
 
                 <TextView
                     android:layout_width="wrap_content"
