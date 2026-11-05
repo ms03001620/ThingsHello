@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity() {
     private var cutL: Float = 0f
     private var cutInputBr: Float = 0f
     private var connectLabelAnimator: Animator? = null
-    private var pendingConnectLabelRes: Int? = null
+    private var connectGlitchActive: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -182,11 +182,6 @@ class MainActivity : AppCompatActivity() {
         )
         CutShapeHelper.applyButton(binding.btnRetry, red, Color.WHITE, cutBr = dpF(11))
 
-        @Suppress("DEPRECATION")
-        binding.progressConnect.indeterminateDrawable?.setColorFilter(
-            colorCompat(R.color.cp_on_yellow), PorterDuff.Mode.SRC_IN
-        )
-
         startBeamAnimation()
     }
 
@@ -245,7 +240,6 @@ class MainActivity : AppCompatActivity() {
             if (viewModel.uiState.value?.status == ConnectStatus.CONNECTING) return@setOnClickListener
             val host = binding.editHost.text?.toString().orEmpty()
             val port = binding.editPort.text?.toString().orEmpty()
-            playConnectLabelGlitch()
             if (viewModel.onConnectClicked(host, port)) {
                 hideKeyboard()
             }
@@ -326,13 +320,13 @@ class MainActivity : AppCompatActivity() {
 
         binding.cardStatusOnline.hide()
         binding.cardStatusRefused.hide()
-        binding.progressConnect.hide()
         binding.btnConnect.isEnabled = true
         binding.btnConnect.alpha = 1f
         binding.textConnect.alpha = 1f
 
         when (state.status) {
             ConnectStatus.IDLE -> {
+                stopConnectLabelGlitch()
                 setConnectLabel(R.string.cp_connect)
                 CutShapeHelper.applyButton(
                     binding.btnConnect,
@@ -344,7 +338,7 @@ class MainActivity : AppCompatActivity() {
             }
             ConnectStatus.CONNECTING -> {
                 setConnectLabel(R.string.cp_connecting)
-                binding.progressConnect.show()
+                startConnectLabelGlitchLoop()
                 binding.textStatusOnlineTitle.setText(R.string.cp_status_connecting_title)
                 binding.textStatusOnlineDesc.setText(R.string.cp_status_connecting_desc)
                 binding.cardStatusOnline.show()
@@ -352,12 +346,14 @@ class MainActivity : AppCompatActivity() {
                 binding.btnConnect.alpha = 0.85f
             }
             ConnectStatus.ONLINE -> {
+                stopConnectLabelGlitch()
                 setConnectLabel(R.string.cp_connect)
                 binding.textStatusOnlineTitle.setText(R.string.cp_status_online_title)
                 binding.textStatusOnlineDesc.text = getString(R.string.cp_status_online_desc, state.connectedPort)
                 binding.cardStatusOnline.show()
             }
             ConnectStatus.REFUSED -> {
+                stopConnectLabelGlitch()
                 setConnectLabel(R.string.cp_connect)
                 binding.textStatusRefusedDesc.setText(
                     if (state.isTimeoutError) R.string.cp_status_timeout_desc else R.string.cp_status_refused_desc
@@ -369,11 +365,6 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun setConnectLabel(resId: Int) {
-        if (connectLabelAnimator?.isRunning == true && resId == R.string.cp_connecting) {
-            pendingConnectLabelRes = resId
-            return
-        }
-        pendingConnectLabelRes = null
         binding.textConnect.setText(resId)
         syncConnectGhostLabels()
     }
@@ -384,10 +375,27 @@ class MainActivity : AppCompatActivity() {
         binding.textConnectGhostBlue.text = label
     }
 
-    /** 主按钮文字：小幅抖动 + 红/蓝色差虚影；不带动底板与红条。 */
-    private fun playConnectLabelGlitch() {
+    /** 「链路建立中…」循环故障闪烁：抖 + 红蓝虚影；底板与红条不动。 */
+    private fun startConnectLabelGlitchLoop() {
+        if (connectGlitchActive) return
+        connectGlitchActive = true
+        runConnectGlitchCycle()
+    }
+
+    private fun stopConnectLabelGlitch() {
+        connectGlitchActive = false
+        binding.btnConnect.removeCallbacks(connectGlitchGapRunnable)
         connectLabelAnimator?.cancel()
-        pendingConnectLabelRes = null
+        connectLabelAnimator = null
+        resetConnectLabelTransforms()
+    }
+
+    private val connectGlitchGapRunnable = Runnable {
+        if (connectGlitchActive) runConnectGlitchCycle()
+    }
+
+    private fun runConnectGlitchCycle() {
+        if (!connectGlitchActive) return
         syncConnectGhostLabels()
 
         val main = binding.textConnect
@@ -397,16 +405,13 @@ class MainActivity : AppCompatActivity() {
         val shakeYMax = dpF(1)
         val chroma = dpF(2) * 0.875f
 
-        red.alpha = 0.9f
-        blue.alpha = 0.9f
-
         val anim = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 280L
+            duration = 300L
             interpolator = LinearInterpolator()
             addUpdateListener { animator ->
-                val t = animator.animatedFraction
-                val decay = 1f - t
-                val wave = (t * 5f * 2f * PI).toFloat()
+                val tFrac = animator.animatedFraction
+                val decay = 1f - tFrac
+                val wave = (tFrac * 5f * 2f * PI).toFloat()
                 val dx = sin(wave.toDouble()).toFloat() * shakeXMax * decay
                 val dy = cos(wave.toDouble()).toFloat() * shakeYMax * decay
                 main.translationX = dx
@@ -417,17 +422,15 @@ class MainActivity : AppCompatActivity() {
                 red.translationY = dy
                 blue.translationX = dx - chromaAmt + opposite
                 blue.translationY = dy
-                val fade = if (t < 0.7f) 0.9f else 0.9f * ((1f - t) / 0.3f).coerceIn(0f, 1f)
+                val fade = if (tFrac < 0.7f) 0.9f else 0.9f * ((1f - tFrac) / 0.3f).coerceIn(0f, 1f)
                 red.alpha = fade
                 blue.alpha = fade
             }
             addListener(object : android.animation.AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     resetConnectLabelTransforms()
-                    val pending = pendingConnectLabelRes
-                    pendingConnectLabelRes = null
-                    if (pending != null) {
-                        setConnectLabel(pending)
+                    if (connectGlitchActive) {
+                        binding.btnConnect.postDelayed(connectGlitchGapRunnable, 500L)
                     }
                 }
 
@@ -471,7 +474,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        connectLabelAnimator?.cancel()
+        stopConnectLabelGlitch()
         binding.lottieTarget.cancelAnimation()
         if (isFinishing) {
             viewModel.onActivityFinishing()

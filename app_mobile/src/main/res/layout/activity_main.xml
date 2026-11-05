@@ -289,28 +289,25 @@
                 android:layout_height="@dimen/cp_main_btn_height"
                 android:layout_marginTop="6dp"
                 android:clickable="true"
+                android:clipChildren="false"
+                android:clipToPadding="false"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
                     android:gravity="center"
                     android:orientation="horizontal">
-
-                    <ProgressBar
-                        android:id="@+id/progress_connect"
-                        style="?android:attr/progressBarStyleSmall"
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:layout_marginEnd="10dp"
-                        android:indeterminate="true"
-                        android:visibility="gone" />
 
                     <FrameLayout
                         android:id="@+id/wrap_connect_label"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:clipChildren="false"
+                        android:clipToPadding="false">
 
                         <TextView
                             android:id="@+id/text_connect_ghost_red"
