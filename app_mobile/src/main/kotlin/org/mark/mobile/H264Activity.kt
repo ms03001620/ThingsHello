@@ -279,9 +279,11 @@ class H264Activity : AppCompatActivity() {
             binding.hud.animate().cancel()
             binding.hud.alpha = if (state.isHudVisible) 1f else 0f
             binding.hud.visibility = if (state.isHudVisible) View.VISIBLE else View.INVISIBLE
+            setFilterOverlaysVisible(state.isHudVisible, animate = false)
         } else if (lastRenderedHudVisible != state.isHudVisible) {
             lastRenderedHudVisible = state.isHudVisible
             animateHud(state.isHudVisible)
+            setFilterOverlaysVisible(state.isHudVisible, animate = true)
         }
 
         if (lastRenderedHintVisible == null) {
@@ -310,6 +312,31 @@ class H264Activity : AppCompatActivity() {
                 }
             }
             .start()
+    }
+
+    /** HUD 隐藏时同步关掉色调/扫描线/外框滤镜，露出干净画面 */
+    private fun setFilterOverlaysVisible(show: Boolean, animate: Boolean) {
+        val overlays = arrayOf(binding.overlayTint, binding.overlayScan, binding.overlayFrame)
+        for (view in overlays) {
+            view.animate().cancel()
+            if (!animate) {
+                view.alpha = if (show) 1f else 0f
+                view.visibility = if (show) View.VISIBLE else View.INVISIBLE
+                continue
+            }
+            if (show) {
+                view.visibility = View.VISIBLE
+            }
+            view.animate()
+                .alpha(if (show) 1f else 0f)
+                .setDuration(FADE_DURATION_MS)
+                .withEndAction {
+                    if (!show && viewModel.uiState.value?.isHudVisible == false) {
+                        view.visibility = View.INVISIBLE
+                    }
+                }
+                .start()
+        }
     }
 
     private fun renderAutoHide(enabled: Boolean) {
