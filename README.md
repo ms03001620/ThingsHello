@@ -4,6 +4,14 @@
 ![Demo](https://github.com/ms03001620/ThingsHello/blob/master/doc/art2.png)
 
 
+## 更新 / Update
+
+- 手机端 `app_mobile` 换上赛博朋克 2077 风格界面（连接 / 驾驶控制 / 全屏预览）。
+  The mobile app now has a Cyberpunk 2077 style UI.
+- 新增树莓派小车端 `car_pi`，从 Android Things 迁移到 Raspberry Pi。
+  Added `car_pi` for the Raspberry Pi car.
+- [手机端界面与使用说明](app_mobile/使用说明.md)
+
 ## License
 
     Copyright (C) 2019 zhenjin ma
