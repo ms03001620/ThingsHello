@@ -314,9 +314,9 @@ class H264Activity : AppCompatActivity() {
             .start()
     }
 
-    /** HUD 隐藏时同步关掉色调/扫描线/外框滤镜，露出干净画面 */
+    /** HUD 隐藏时同步关掉色调/扫描线/外框滤镜和中心焦点，露出干净画面 */
     private fun setFilterOverlaysVisible(show: Boolean, animate: Boolean) {
-        val overlays = arrayOf(binding.overlayTint, binding.overlayScan, binding.overlayFrame)
+        val overlays = arrayOf(binding.overlayTint, binding.overlayScan, binding.overlayFrame, binding.imgReticle)
         for (view in overlays) {
             view.animate().cancel()
             if (!animate) {
