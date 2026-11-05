@@ -142,7 +142,7 @@
                     android:layout_marginStart="10dp"
                     android:contentDescription="自动隐藏界面"
                     android:padding="8dp"
-                    android:src="@drawable/ic_auto_hide" />
+                    android:src="@drawable/ic_hud_autohide" />
             </LinearLayout>
         </FrameLayout>
 

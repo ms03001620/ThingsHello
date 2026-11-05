@@ -2,6 +2,7 @@ package org.mark.mobile
 
 import android.Manifest
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.drawable.GradientDrawable
 import android.net.TrafficStats
@@ -18,6 +19,7 @@ import android.view.TextureView
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.ImageViewCompat
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -198,7 +200,8 @@ class H264Activity : AppCompatActivity() {
         binding.btnSnapPv.background = CutShapeHelper.stroked(pillBg, yellow, dpF(1), cutBr = dpF(10))
         binding.btnSnapPv.setColorFilter(yellow)
         binding.btnAutohidePv.background = CutShapeHelper.stroked(pillBg, yellow, dpF(1), cutBr = dpF(10))
-        binding.btnAutohidePv.setColorFilter(yellow)
+        binding.btnAutohidePv.clearColorFilter()
+        ImageViewCompat.setImageTintList(binding.btnAutohidePv, ColorStateList.valueOf(yellow))
 
         if (viewModel.isDemo) {
             binding.playerFull.setBackgroundColor(0xFF1A1A22.toInt())
@@ -350,7 +353,7 @@ class H264Activity : AppCompatActivity() {
     }
 
     private fun renderAutoHide(enabled: Boolean) {
-        // 与车灯按钮同一套描边：始终 cp_yellow + 1dp，靠填充区分开关态
+        // 描边与截图/车灯一致：1dp 实色 #FCEE0A；图标用 tint 保留矢量里信息条的透明度
         val yellow = colorCompat(R.color.cp_yellow)
         binding.btnAutohidePv.background = CutShapeHelper.stroked(
             if (enabled) yellow else colorCompat(R.color.scrim_70),
@@ -358,7 +361,9 @@ class H264Activity : AppCompatActivity() {
             dpF(1),
             cutBr = dpF(10)
         )
-        binding.btnAutohidePv.setColorFilter(if (enabled) colorCompat(R.color.cp_bg) else yellow)
+        binding.btnAutohidePv.clearColorFilter()
+        val iconColor = if (enabled) colorCompat(R.color.cp_bg) else yellow
+        ImageViewCompat.setImageTintList(binding.btnAutohidePv, ColorStateList.valueOf(iconColor))
         binding.btnAutohidePv.isSelected = enabled
         binding.btnAutohidePv.contentDescription = if (enabled) "自动隐藏界面：开" else "自动隐藏界面：关"
     }
