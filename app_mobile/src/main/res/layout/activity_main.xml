@@ -307,16 +307,46 @@
                         android:indeterminate="true"
                         android:visibility="gone" />
 
-                    <TextView
-                        android:id="@+id/text_connect"
+                    <FrameLayout
+                        android:id="@+id/wrap_connect_label"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="sans-serif"
-                        android:letterSpacing="0.18"
-                        android:text="@string/cp_connect"
-                        android:textColor="@color/cp_on_yellow"
-                        android:textSize="17sp"
-                        android:textStyle="bold" />
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/text_connect_ghost_red"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:alpha="0"
+                            android:fontFamily="sans-serif"
+                            android:letterSpacing="0.18"
+                            android:text="@string/cp_connect"
+                            android:textColor="@color/cp_red"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/text_connect_ghost_blue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:alpha="0"
+                            android:fontFamily="sans-serif"
+                            android:letterSpacing="0.18"
+                            android:text="@string/cp_connect"
+                            android:textColor="@color/cp_cyan"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/text_connect"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif"
+                            android:letterSpacing="0.18"
+                            android:text="@string/cp_connect"
+                            android:textColor="@color/cp_on_yellow"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+                    </FrameLayout>
                 </LinearLayout>
 
                 <View

@@ -3,11 +3,14 @@ package org.mark.mobile
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.PorterDuff
+import android.animation.Animator
+import android.animation.ValueAnimator
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.TypedValue
 import android.view.MotionEvent
+import android.view.animation.LinearInterpolator
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
@@ -29,6 +32,9 @@ import org.mark.mobile.utils.show
 import org.mark.mobile.viewmodel.ConnectStatus
 import org.mark.mobile.viewmodel.MainUiState
 import org.mark.mobile.viewmodel.MainViewModel
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Cyberpunk 2077 Connect screen (MVVM View Layer).
@@ -56,6 +62,8 @@ class MainActivity : AppCompatActivity() {
     private var cutM: Float = 0f
     private var cutL: Float = 0f
     private var cutInputBr: Float = 0f
+    private var connectLabelAnimator: Animator? = null
+    private var pendingConnectLabelRes: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -234,8 +242,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupActions() {
         binding.btnConnect.setOnClickListener {
+            if (viewModel.uiState.value?.status == ConnectStatus.CONNECTING) return@setOnClickListener
             val host = binding.editHost.text?.toString().orEmpty()
             val port = binding.editPort.text?.toString().orEmpty()
+            playConnectLabelGlitch()
             if (viewModel.onConnectClicked(host, port)) {
                 hideKeyboard()
             }
@@ -323,7 +333,7 @@ class MainActivity : AppCompatActivity() {
 
         when (state.status) {
             ConnectStatus.IDLE -> {
-                binding.textConnect.setText(R.string.cp_connect)
+                setConnectLabel(R.string.cp_connect)
                 CutShapeHelper.applyButton(
                     binding.btnConnect,
                     colorCompat(R.color.cp_yellow),
@@ -333,7 +343,7 @@ class MainActivity : AppCompatActivity() {
                 )
             }
             ConnectStatus.CONNECTING -> {
-                binding.textConnect.setText(R.string.cp_connecting)
+                setConnectLabel(R.string.cp_connecting)
                 binding.progressConnect.show()
                 binding.textStatusOnlineTitle.setText(R.string.cp_status_connecting_title)
                 binding.textStatusOnlineDesc.setText(R.string.cp_status_connecting_desc)
@@ -342,19 +352,103 @@ class MainActivity : AppCompatActivity() {
                 binding.btnConnect.alpha = 0.85f
             }
             ConnectStatus.ONLINE -> {
-                binding.textConnect.setText(R.string.cp_connect)
+                setConnectLabel(R.string.cp_connect)
                 binding.textStatusOnlineTitle.setText(R.string.cp_status_online_title)
                 binding.textStatusOnlineDesc.text = getString(R.string.cp_status_online_desc, state.connectedPort)
                 binding.cardStatusOnline.show()
             }
             ConnectStatus.REFUSED -> {
-                binding.textConnect.setText(R.string.cp_connect)
+                setConnectLabel(R.string.cp_connect)
                 binding.textStatusRefusedDesc.setText(
                     if (state.isTimeoutError) R.string.cp_status_timeout_desc else R.string.cp_status_refused_desc
                 )
                 binding.cardStatusRefused.show()
             }
         }
+    }
+
+
+    private fun setConnectLabel(resId: Int) {
+        if (connectLabelAnimator?.isRunning == true && resId == R.string.cp_connecting) {
+            pendingConnectLabelRes = resId
+            return
+        }
+        pendingConnectLabelRes = null
+        binding.textConnect.setText(resId)
+        syncConnectGhostLabels()
+    }
+
+    private fun syncConnectGhostLabels() {
+        val label = binding.textConnect.text
+        binding.textConnectGhostRed.text = label
+        binding.textConnectGhostBlue.text = label
+    }
+
+    /** 主按钮文字：小幅抖动 + 红/蓝色差虚影；不带动底板与红条。 */
+    private fun playConnectLabelGlitch() {
+        connectLabelAnimator?.cancel()
+        pendingConnectLabelRes = null
+        syncConnectGhostLabels()
+
+        val main = binding.textConnect
+        val red = binding.textConnectGhostRed
+        val blue = binding.textConnectGhostBlue
+        val shakeXMax = dpF(2)
+        val shakeYMax = dpF(1)
+        val chroma = dpF(2) * 0.875f
+
+        red.alpha = 0.9f
+        blue.alpha = 0.9f
+
+        val anim = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = 280L
+            interpolator = LinearInterpolator()
+            addUpdateListener { animator ->
+                val t = animator.animatedFraction
+                val decay = 1f - t
+                val wave = (t * 5f * 2f * PI).toFloat()
+                val dx = sin(wave.toDouble()).toFloat() * shakeXMax * decay
+                val dy = cos(wave.toDouble()).toFloat() * shakeYMax * decay
+                main.translationX = dx
+                main.translationY = dy
+                val chromaAmt = chroma * decay
+                val opposite = -dx * 0.35f
+                red.translationX = dx + chromaAmt + opposite
+                red.translationY = dy
+                blue.translationX = dx - chromaAmt + opposite
+                blue.translationY = dy
+                val fade = if (t < 0.7f) 0.9f else 0.9f * ((1f - t) / 0.3f).coerceIn(0f, 1f)
+                red.alpha = fade
+                blue.alpha = fade
+            }
+            addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    resetConnectLabelTransforms()
+                    val pending = pendingConnectLabelRes
+                    pendingConnectLabelRes = null
+                    if (pending != null) {
+                        setConnectLabel(pending)
+                    }
+                }
+
+                override fun onAnimationCancel(animation: Animator) {
+                    resetConnectLabelTransforms()
+                }
+            })
+        }
+        connectLabelAnimator = anim
+        anim.start()
+    }
+
+    private fun resetConnectLabelTransforms() {
+        binding.textConnect.translationX = 0f
+        binding.textConnect.translationY = 0f
+        binding.textConnectGhostRed.translationX = 0f
+        binding.textConnectGhostRed.translationY = 0f
+        binding.textConnectGhostRed.alpha = 0f
+        binding.textConnectGhostBlue.translationX = 0f
+        binding.textConnectGhostBlue.translationY = 0f
+        binding.textConnectGhostBlue.alpha = 0f
     }
 
     private fun openControl(host: String, port: Int) {
@@ -377,6 +471,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        connectLabelAnimator?.cancel()
         binding.lottieTarget.cancelAnimation()
         if (isFinishing) {
             viewModel.onActivityFinishing()
