@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ThingsHello cyber: 眼睛 + 计时器 = 自动隐藏 UI。tint via setColorFilter -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+  <path android:strokeColor="#FFFFFFFF" android:fillColor="#00000000" android:strokeWidth="2"
+      android:pathData="M13,17.8C12.7,17.9 12.3,18 12,18C6.5,18 2,12 2,12C2,12 6.5,6 12,6C17.5,6 22,12 22,12M12,9.5a2.5,2.5 0,1 0,0.01 0"/>
+  <path android:strokeColor="#FFFFFFFF" android:fillColor="#00000000" android:strokeWidth="1.6"
+      android:pathData="M18.5,19m-4,0a4,4 0,1 0,8 0a4,4 0,1 0,-8 0M18.5,17v2.2h1.6"/>
+</vector>

@@ -134,6 +134,15 @@
                     android:contentDescription="车灯"
                     android:padding="8dp"
                     android:src="@drawable/ic_light" />
+
+                <ImageView
+                    android:id="@+id/btn_autohide_pv"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:layout_marginStart="10dp"
+                    android:contentDescription="自动隐藏界面"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_auto_hide" />
             </LinearLayout>
         </FrameLayout>
 

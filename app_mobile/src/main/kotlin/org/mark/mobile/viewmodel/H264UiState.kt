@@ -9,6 +9,8 @@ data class H264UiState(
     val isHudVisible: Boolean = true,
     val isHintVisible: Boolean = true,
     val isLightOn: Boolean = false,
+    /** 「自动隐藏 UI」开关，每次进入默认关闭，不持久化 */
+    val autoHideEnabled: Boolean = false,
     val streamPillText: String = "CSI · -- · --FPS · RTSP",
     val bufPillText: String = "BUF --",
     val wifiPillText: String = "手机 WiFi --",

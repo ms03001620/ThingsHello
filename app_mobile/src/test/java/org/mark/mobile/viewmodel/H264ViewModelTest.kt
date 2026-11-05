@@ -62,9 +62,34 @@ class H264ViewModelTest {
         fakeScheduler.advanceBy(H264ViewModel.HINT_HIDE_DELAY_MS)
         assertFalse(vm.uiState.value!!.isHintVisible)
         assertTrue(vm.uiState.value!!.isHudVisible)
+        assertFalse(state.autoHideEnabled)
 
-        fakeScheduler.advanceBy(1000L)
+        // 默认关闭自动隐藏：HUD 常驻
+        fakeScheduler.advanceBy(10_000L)
+        assertTrue(vm.uiState.value!!.isHudVisible)
+    }
+
+    @Test
+    fun `auto-hide toggle enables timer and disabling cancels and shows hud`() {
+        val vm = createViewModel()
+        vm.onToggleAutoHide()
+        assertTrue(vm.uiState.value!!.autoHideEnabled)
+        fakeScheduler.advanceBy(H264ViewModel.HUD_AUTO_HIDE_MS)
         assertFalse(vm.uiState.value!!.isHudVisible)
+
+        vm.onToggleAutoHide()
+        assertFalse(vm.uiState.value!!.autoHideEnabled)
+        assertTrue(vm.uiState.value!!.isHudVisible)
+        fakeScheduler.advanceBy(10_000L)
+        assertTrue(vm.uiState.value!!.isHudVisible)
+
+        // 双击仍可切换
+        vm.onScreenDoubleTap(hasPlayerError = false)
+        assertFalse(vm.uiState.value!!.isHudVisible)
+        fakeScheduler.advanceBy(10_000L)
+        assertFalse(vm.uiState.value!!.isHudVisible)
+        vm.onScreenDoubleTap(hasPlayerError = false)
+        assertTrue(vm.uiState.value!!.isHudVisible)
     }
 
     @Test
@@ -100,6 +125,7 @@ class H264ViewModelTest {
     @Test
     fun `toggle light sends command, updates state and bumps hud`() {
         val vm = createViewModel(initialLightOn = false)
+        vm.onToggleAutoHide()
         fakeScheduler.advanceBy(H264ViewModel.HUD_AUTO_HIDE_MS)
         assertFalse(vm.uiState.value!!.isHudVisible)
 

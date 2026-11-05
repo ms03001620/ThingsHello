@@ -98,8 +98,19 @@ class H264ViewModel(
             }
         }
 
-        if (!isDemo) {
+        // 自动隐藏默认关闭：初始化时不再调度，需用户打开开关
+    }
+
+    /** 切换「自动隐藏 UI」：打开时开始计时；关闭时取消计时并立即显示 HUD */
+    fun onToggleAutoHide() {
+        val current = uiState.value ?: H264UiState()
+        val enabled = !current.autoHideEnabled
+        uiState.value = current.copy(autoHideEnabled = enabled, isHudVisible = true)
+        if (enabled) {
             scheduleAutoHide()
+        } else {
+            cancelAutoHideTask?.invoke()
+            cancelAutoHideTask = null
         }
     }
 
@@ -221,7 +232,7 @@ class H264ViewModel(
     private fun scheduleAutoHide() {
         cancelAutoHideTask?.invoke()
         cancelAutoHideTask = null
-        if (!isDemo) {
+        if (!isDemo && uiState.value?.autoHideEnabled == true) {
             cancelAutoHideTask = scheduler.scheduleCancellable(HUD_AUTO_HIDE_MS) {
                 setHudVisible(false)
             }

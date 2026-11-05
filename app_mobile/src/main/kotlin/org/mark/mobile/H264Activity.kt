@@ -81,6 +81,7 @@ class H264Activity : AppCompatActivity() {
     private var lastRenderedHudVisible: Boolean? = null
     private var lastRenderedHintVisible: Boolean? = null
     private var lastRenderedLightOn: Boolean? = null
+    private var lastRenderedAutoHide: Boolean? = null
 
     private val catchUp = object : Runnable {
         override fun run() {
@@ -209,6 +210,7 @@ class H264Activity : AppCompatActivity() {
             viewModel.bumpHud()
         }
         binding.btnLightPv.setOnClickListener { viewModel.onToggleLight() }
+        binding.btnAutohidePv.setOnClickListener { viewModel.onToggleAutoHide() }
     }
 
     private fun setupGesturesAndInsets() {
@@ -265,6 +267,10 @@ class H264Activity : AppCompatActivity() {
             lastRenderedLightOn = state.isLightOn
             renderLight(state.isLightOn)
         }
+        if (lastRenderedAutoHide != state.autoHideEnabled) {
+            lastRenderedAutoHide = state.autoHideEnabled
+            renderAutoHide(state.autoHideEnabled)
+        }
 
         if (lastRenderedHudVisible == null) {
             lastRenderedHudVisible = state.isHudVisible
@@ -302,6 +308,20 @@ class H264Activity : AppCompatActivity() {
                 }
             }
             .start()
+    }
+
+    private fun renderAutoHide(enabled: Boolean) {
+        val yellow = colorCompat(R.color.cp_yellow)
+        val muted = (yellow and 0x00FFFFFF) or 0x73000000 // 45% 黄，未选中暗淡
+        binding.btnAutohidePv.background = CutShapeHelper.stroked(
+            if (enabled) yellow else colorCompat(R.color.scrim_70),
+            if (enabled) yellow else muted,
+            dpF(1),
+            cutBr = dpF(10)
+        )
+        binding.btnAutohidePv.setColorFilter(if (enabled) colorCompat(R.color.cp_bg) else muted)
+        binding.btnAutohidePv.isSelected = enabled
+        binding.btnAutohidePv.contentDescription = if (enabled) "自动隐藏界面：开" else "自动隐藏界面：关"
     }
 
     private fun renderLight(lightOn: Boolean) {
