@@ -3,8 +3,5 @@
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
   <group android:pivotX="54" android:pivotY="54" android:scaleX="1" android:scaleY="1">
   <path android:fillColor="#0B0B14" android:fillAlpha="1" android:pathData="M0,0 L108,0 L108,108 L0,108 Z"/>
-  <path android:fillColor="#02D7F2" android:fillAlpha="0.07" android:pathData="M0,2 L108,2 L108,3 L0,3 Z M0,6 L108,6 L108,7 L0,7 Z M0,10 L108,10 L108,11 L0,11 Z M0,14 L108,14 L108,15 L0,15 Z M0,18 L108,18 L108,19 L0,19 Z M0,22 L108,22 L108,23 L0,23 Z M0,26 L108,26 L108,27 L0,27 Z M0,30 L108,30 L108,31 L0,31 Z M0,34 L108,34 L108,35 L0,35 Z M0,38 L108,38 L108,39 L0,39 Z M0,42 L108,42 L108,43 L0,43 Z M0,46 L108,46 L108,47 L0,47 Z M0,50 L108,50 L108,51 L0,51 Z M0,54 L108,54 L108,55 L0,55 Z M0,58 L108,58 L108,59 L0,59 Z M0,62 L108,62 L108,63 L0,63 Z M0,66 L108,66 L108,67 L0,67 Z M0,70 L108,70 L108,71 L0,71 Z M0,74 L108,74 L108,75 L0,75 Z M0,78 L108,78 L108,79 L0,79 Z M0,82 L108,82 L108,83 L0,83 Z M0,86 L108,86 L108,87 L0,87 Z M0,90 L108,90 L108,91 L0,91 Z M0,94 L108,94 L108,95 L0,95 Z M0,98 L108,98 L108,99 L0,99 Z M0,102 L108,102 L108,103 L0,103 Z M0,106 L108,106 L108,107 L0,107 Z"/>
-  <path android:fillColor="#FF003C" android:fillAlpha="0.9" android:pathData="M0,80 L28,108 L0,108 Z"/>
-  <path android:fillColor="#02D7F2" android:fillAlpha="0.5" android:pathData="M108,0 L108,24 L84,0 Z"/>
   </group>
 </vector>
